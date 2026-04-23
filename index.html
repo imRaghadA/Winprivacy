@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WinPrivacy — Know Before You Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── DARK THEME (default) ── */
+:root {
+  --bg: #0a0d14;
+  --surface: #11151f;
+  --surface2: #1a1f2e;
+  --border: rgba(100,140,255,0.12);
+  --border2: rgba(100,140,255,0.22);
+  --nav-bg: rgba(10,13,20,0.82);
+  --accent: #4f8fff;
+  --accent2: #6eb8ff;
+  --text: #e8edf8;
+  --muted: #7a86a0;
+  --danger: #ff5b5b;
+  --warn: #f5a623;
+  --safe: #3ecf8e;
+  --font-ar: 'Tajawal', sans-serif;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --r: 14px;
+  --r-lg: 22px;
+}
+
+/* ── LIGHT THEME ── */
+body.light {
+  --bg: #eef2ff;
+  --surface: #ffffff;
+  --surface2: #dde6fb;
+  --border: rgba(50,90,210,0.13);
+  --border2: rgba(50,90,210,0.25);
+  --nav-bg: rgba(238,242,255,0.90);
+  --accent: #2563eb;
+  --accent2: #3b82f6;
+  --text: #0c1a40;
+  --muted: #5566 88;
+  --danger: #dc2626;
+  --warn: #c2820a;
+  --safe: #047857;
+}
+body.light { --muted: #556688; }
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background .3s, color .3s;
+}
+
+/* Arabic font */
+html[lang="ar"] body { font-family: var(--font-ar); }
+html[lang="ar"] h1,
+html[lang="ar"] .nav-logo span,
+html[lang="ar"] .section-title,
+html[lang="ar"] .section-label,
+html[lang="ar"] .how-card h4,
+html[lang="ar"] .result-appname,
+html[lang="ar"] .how-num,
+html[lang="ar"] .footer-logo { font-family: var(--font-ar) !important; letter-spacing: 0 !important; }
+html[lang="ar"] h1 { line-height: 1.35; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 40px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(16px);
+  border-bottom: 0.5px solid var(--border);
+  transition: background .3s;
+}
+.nav-left { display: flex; align-items: center; gap: 32px; }
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-display); font-size: 19px; font-weight: 800;
+  color: var(--text); text-decoration: none; letter-spacing: -0.5px;
+}
+.nav-links { display: flex; gap: 28px; list-style: none; }
+.nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; text-decoration: none; transition: color .2s; }
+.nav-links a:hover { color: var(--text); }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.toggle-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 0.5px solid var(--border2);
+  color: var(--text); cursor: pointer; padding: 7px 14px; border-radius: 30px;
+  font-size: 13px; font-weight: 500; transition: all .2s; font-family: inherit;
+  white-space: nowrap;
+}
+.toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-cta {
+  background: var(--accent); color: #fff; border: none; cursor: pointer;
+  padding: 9px 20px; border-radius: 30px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  transition: background .2s, transform .15s;
+}
+.nav-cta:hover { background: var(--accent2); transform: scale(1.03); }
+
+/* ── HERO ── */
+.hero {
+  padding: 160px 40px 100px;
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 420px; gap: 60px; align-items: center;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(79,143,255,0.1); border: 0.5px solid rgba(79,143,255,0.3);
+  color: var(--accent2); font-size: 12px; font-weight: 500; letter-spacing: 0.5px;
+  padding: 5px 14px; border-radius: 30px; margin-bottom: 24px;
+  text-transform: uppercase;
+}
+html[lang="ar"] .hero-badge { text-transform: none; letter-spacing: 0; font-size: 13px; }
+body.light .hero-badge { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.2); }
+.hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
+h1 {
+  font-family: var(--font-display); font-size: clamp(36px,5vw,56px); font-weight: 800;
+  line-height: 1.08; letter-spacing: -1.5px; margin-bottom: 20px; color: var(--text);
+}
+h1 em { font-style: normal; color: var(--accent); }
+.hero-sub { font-size: 17px; color: var(--muted); line-height: 1.7; max-width: 480px; margin-bottom: 36px; }
+.search-box {
+  display: flex; border-radius: var(--r-lg); overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border2);
+  transition: border-color .2s, box-shadow .2s;
+}
+.search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,143,255,0.14); }
+body.light .search-box:focus-within { box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+.search-box input {
+  flex: 1; background: transparent; border: none; outline: none;
+  padding: 16px 20px; color: var(--text); font-family: inherit; font-size: 15px;
+}
+html[lang="ar"] .search-box input { text-align: right; }
+.search-box input::placeholder { color: var(--muted); }
+.search-box button {
+  background: var(--accent); border: none; cursor: pointer;
+  padding: 14px 24px; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700;
+  transition: background .2s; display: flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.search-box button:hover { background: var(--accent2); }
+.hero-hint { margin-top: 14px; font-size: 12px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.hero-hint span {
+  background: var(--surface); border: 0.5px solid var(--border);
+  padding: 4px 12px; border-radius: 20px; cursor: pointer; transition: all .2s;
+}
+.hero-hint span:hover { border-color: var(--accent); color: var(--accent); }
+
+#winnyFloat {
+  position: fixed;
+  bottom: 220px; right: 32px;
+  z-index: 999;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+  pointer-events: none;
+}
+#winnyFloat svg { pointer-events: all; }
+#winnySvg {
+  cursor: grab;
+  filter: drop-shadow(0 8px 24px rgba(79,143,255,0.25));
+  transform-origin: center bottom;
+  will-change: transform;
+}
+#winnySvg:hover { filter: drop-shadow(0 8px 32px rgba(79,143,255,0.5)); }
+#winnySvg:active { cursor: grabbing; }
+.winny-bubble {
+  background: var(--surface2); border: 0.5px solid var(--border2);
+  border-radius: 16px 16px 4px 16px;
+  padding: 14px 18px; font-size: 13px; color: var(--text); line-height: 1.6;
+  max-width: 260px; position: relative;
+  pointer-events: all;
+  opacity: 0; transform: translateY(6px) scale(0.95);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+.winny-bubble.visible { opacity: 1; transform: translateY(0) scale(1); }
+.winny-bubble::after {
+  content: ''; position: absolute; bottom: -9px; right: 22px;
+  border: 5px solid transparent; border-top-color: var(--border2);
+}
+.winny-bubble.bubble-left::after { right: auto; left: 22px; }
+
+/* ── RESULTS ── */
+#results { max-width: 1100px; margin: 0 auto; padding: 0 40px 80px; display: none; }
+.result-card {
+  background: var(--surface); border: 0.5px solid var(--border2);
+  border-radius: var(--r-lg); padding: 32px; margin-bottom: 24px;
+}
+body.light .result-card { box-shadow: 0 2px 20px rgba(20,50,160,0.06); }
+.result-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 20px; }
+.result-appname { font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.result-publisher { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.ser-score { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ser-ring { position: relative; width: 90px; height: 90px; }
+.ser-ring svg { transform: rotate(-90deg); }
+.ser-ring .track { fill: none; stroke: var(--surface2); stroke-width: 8; }
+.ser-ring .fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+.ser-ring .ser-label {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 22px; font-weight: 800;
+}
+.ser-ring .ser-label small { font-size: 9px; font-weight: 400; color: var(--muted); margin-top: -2px; }
+.ser-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; }
+html[lang="ar"] .ser-title { text-transform: none; letter-spacing: 0; font-size: 12px; }
+.pill {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+html[lang="ar"] .pill { text-transform: none; letter-spacing: 0; font-size: 12px; }
+.pill-safe { background: rgba(62,207,142,0.12); color: var(--safe); border: 0.5px solid rgba(62,207,142,0.3); }
+.pill-warn { background: rgba(245,166,35,0.12); color: var(--warn); border: 0.5px solid rgba(245,166,35,0.25); }
+.pill-danger { background: rgba(255,91,91,0.1); color: var(--danger); border: 0.5px solid rgba(255,91,91,0.25); }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 14px; margin-bottom: 28px; }
+.detail-item { background: var(--surface2); border-radius: var(--r); padding: 16px; border: 0.5px solid var(--border); }
+.detail-item .d-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+html[lang="ar"] .detail-item .d-label { text-transform: none; letter-spacing: 0; font-size: 12px; }
+.detail-item .d-val { font-size: 15px; font-weight: 500; }
+.perms-section h3 { font-size: 12px; font-weight: 700; margin-bottom: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+html[lang="ar"] .perms-section h3 { text-transform: none; letter-spacing: 0; font-size: 13px; }
+.perm-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.perm-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(79,143,255,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+.perm-name { font-size: 14px; font-weight: 500; flex: 1; }
+.perm-risk { font-size: 11px; width: 66px; text-align: right; flex-shrink: 0; }
+html[lang="ar"] .perm-risk { text-align: left; }
+.perm-bar-wrap { flex: 2; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; min-width: 60px; }
+.perm-bar { height: 100%; border-radius: 4px; transition: width 1s ease; }
+.winny-comment {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: rgba(79,143,255,0.06); border: 0.5px solid rgba(79,143,255,0.2);
+  border-radius: var(--r); padding: 16px; margin-top: 20px;
+}
+body.light .winny-comment { background: rgba(37,99,235,0.05); }
+.winny-comment p { font-size: 14px; line-height: 1.7; }
+.winny-comment p strong.hl { color: var(--accent2); }
+body.light .winny-comment p strong.hl { color: var(--accent); }
+.divider { border: none; border-top: 0.5px solid var(--border); margin: 24px 0; }
+
+/* ── HOW IT WORKS ── */
+.how-section { max-width: 1100px; margin: 0 auto; padding: 0 40px 100px; }
+.section-label { font-family: var(--font-display); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; color: var(--accent); margin-bottom: 10px; }
+.section-title { font-family: var(--font-display); font-size: 30px; font-weight: 800; letter-spacing: -0.6px; margin-bottom: 36px; color: var(--text); }
+.how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+.how-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 28px; }
+body.light .how-card { box-shadow: 0 2px 14px rgba(20,50,160,0.05); }
+.how-num { font-family: var(--font-display); font-size: 44px; font-weight: 800; color: var(--border2); line-height: 1; margin-bottom: 14px; }
+.how-card h4 { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+.how-card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 0.5px solid var(--border); padding: 36px 40px;
+  max-width: 1100px; margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--muted); font-size: 13px; flex-wrap: wrap; gap: 16px;
+}
+.footer-logo { font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--text); margin-bottom: 4px; }
+footer a { color: var(--muted); text-decoration: none; transition: color .2s; }
+footer a:hover { color: var(--accent); }
+
+/* ── UTILS ── */
+.loading { display: flex; align-items: center; gap: 12px; padding: 48px; justify-content: center; }
+.spinner { width: 22px; height: 22px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  nav { padding: 12px 16px; }
+  .nav-links { display: none; }
+  .hero { grid-template-columns: 1fr; padding: 120px 20px 60px; gap: 36px; }
+  .winny-wrap { order: -1; }
+  .how-grid { grid-template-columns: 1fr; }
+  #results, .how-section { padding: 0 20px 60px; }
+  footer { padding: 28px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <a href="#" class="nav-logo">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <rect width="26" height="26" rx="7" fill="#4f8fff" opacity="0.15"/>
+        <path d="M13 4L6 8v6c0 4.4 3 8.5 7 9.5 4-1 7-5.1 7-9.5V8L13 4z" fill="#4f8fff"/>
+        <path d="M10 13l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span data-en="WinPrivacy" data-ar="وين برايفسي">WinPrivacy</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#how" data-en="How it works" data-ar="كيف يعمل">How it works</a></li>
+      <li><a href="#" data-en="About SER" data-ar="عن نقاط SER">About SER</a></li>
+      <li><a href="#" data-en="Submit App" data-ar="أضف تطبيقًا">Submit App</a></li>
+    </ul>
+  </div>
+  <div class="nav-right">
+    <button class="toggle-btn" onclick="toggleTheme()" id="themeBtn">
+      <span id="themeIcon">☀️</span>
+      <span id="themeLabel" data-en="Light" data-ar="فاتح">Light</span>
+    </button>
+    <button class="toggle-btn" onclick="toggleLang()">
+      <span>🌐</span>
+      <span id="langLabel">العربية</span>
+    </button>
+    <button class="nav-cta" data-en="Get API Access" data-ar="الوصول للـ API">Get API Access</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-badge">
+      <span class="dot"></span>
+      <span data-en="Privacy Intelligence for Windows" data-ar="ذكاء الخصوصية لويندوز">Privacy Intelligence for Windows</span>
+    </div>
+    <h1 data-en='Know if an app is<br><em>safe to run.</em>' data-ar='اعرف إذا كان التطبيق<br><em>آمنًا للتشغيل.</em>'>Know if an app is<br><em>safe to run.</em></h1>
+    <p class="hero-sub"
+      data-en="WinPrivacy scans Windows applications against our database and gives you a transparent <strong>SER Score</strong> — Safety, Exposure &amp; Risk — so you're never in the dark."
+      data-ar="يفحص WinPrivacy تطبيقات ويندوز مقابل قاعدة بياناتنا ويمنحك <strong>نقاط SER</strong> الشفافة — الأمان والتعرض والمخاطر — حتى لا تكون في الظلام أبدًا.">
+      WinPrivacy scans Windows applications against our database and gives you a transparent <strong>SER Score</strong> — Safety, Exposure &amp; Risk — so you're never in the dark.
+    </p>
+    <div class="search-box">
+      <input type="text" id="appInput"
+        placeholder="Enter app name, e.g. Spotify, CCleaner…"
+        data-ph-en="Enter app name, e.g. Spotify, CCleaner…"
+        data-ph-ar="أدخل اسم التطبيق، مثل Spotify أو CCleaner…"
+        onkeydown="if(event.key==='Enter')runSearch()">
+      <button onclick="runSearch()">
+        <svg width="15" height="15" fill="none" viewBox="0 0 16 16">
+          <circle cx="6.5" cy="6.5" r="5" stroke="white" stroke-width="1.5"/>
+          <path d="M10.5 10.5L14 14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span data-en="Analyze" data-ar="تحليل">Analyze</span>
+      </button>
+    </div>
+    <div class="hero-hint">
+      <span onclick="quickSearch('CCleaner')">CCleaner</span>
+      <span onclick="quickSearch('uTorrent')">uTorrent</span>
+      <span onclick="quickSearch('VLC Media Player')">VLC</span>
+      <span onclick="quickSearch('Discord')">Discord</span>
+      <span onclick="quickSearch('Spotify')">Spotify</span>
+    </div>
+  </div>
+
+  <!-- hero right col placeholder so grid stays balanced -->
+  <div style="height:220px"></div>
+</section>
+
+<!-- FLOATING WINNY -->
+<div id="winnyFloat">
+  <div class="winny-bubble" id="winnyBubble">
+    <span id="winnyText"
+      data-en="Hey! I'm <strong>Winny</strong> 👋<br>Type any Windows app and I'll tell you how safe it is!"
+      data-ar="أهلاً! أنا <strong>ويني</strong> 👋<br>اكتب اسم أي تطبيق ويندوز وسأخبرك بمدى أمانه!">
+      Hey! I'm <strong>Winny</strong> 👋<br>Type any Windows app and I'll tell you how safe it is!
+    </span>
+  </div>
+  <svg id="winnySvg" width="200" height="220" viewBox="0 0 200 220" fill="none" style="cursor:pointer;filter:drop-shadow(0 8px 24px rgba(79,143,255,0.25))">
+    <!-- body -->
+    <rect x="60" y="130" width="80" height="70" rx="18" fill="#1a2540"/>
+    <rect x="60" y="130" width="80" height="70" rx="18" fill="#4f8fff" fill-opacity="0.12"/>
+    <path d="M100 145l-16 8v10c0 8.8 6 17 16 19 10-2 16-10.2 16-19v-10l-16-8z" fill="#4f8fff" fill-opacity="0.35"/>
+    <path d="M96 163l3 3 6-6" stroke="#6eb8ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- arms -->
+    <rect id="winnyArmL" x="28" y="138" width="34" height="16" rx="8" fill="#1e2d4a"/>
+    <rect id="winnyArmR" x="138" y="138" width="34" height="16" rx="8" fill="#1e2d4a"/>
+    <circle cx="24" cy="146" r="8" fill="#4f8fff" fill-opacity="0.5"/>
+    <circle cx="176" cy="146" r="8" fill="#4f8fff" fill-opacity="0.5"/>
+    <!-- head -->
+    <rect x="52" y="30" width="96" height="100" rx="30" fill="#1a2845"/>
+    <rect x="52" y="30" width="96" height="100" rx="30" fill="#4f8fff" fill-opacity="0.08" stroke="#4f8fff" stroke-width="0.8" stroke-opacity="0.3"/>
+    <!-- screen visor -->
+    <rect x="62" y="46" width="76" height="52" rx="12" fill="#0d1a2e"/>
+    <rect x="62" y="46" width="76" height="52" rx="12" fill="#4f8fff" fill-opacity="0.05" stroke="#4f8fff" stroke-width="0.5" stroke-opacity="0.4"/>
+    <!-- left eye -->
+    <circle cx="84" cy="72" r="11" fill="#4f8fff" fill-opacity="0.2"/>
+    <circle cx="84" cy="72" r="7" fill="#6eb8ff"/>
+    <circle cx="84" cy="72" r="4" fill="white"/>
+    <circle id="pupilL" cx="86" cy="70" r="1.5" fill="#0d1a2e"/>
+    <!-- right eye -->
+    <circle cx="116" cy="72" r="11" fill="#4f8fff" fill-opacity="0.2"/>
+    <circle cx="116" cy="72" r="7" fill="#6eb8ff"/>
+    <circle cx="116" cy="72" r="4" fill="white"/>
+    <circle id="pupilR" cx="118" cy="70" r="1.5" fill="#0d1a2e"/>
+    <!-- mouth -->
+    <path id="winnyMouth" d="M90 89 Q100 97 110 89" stroke="#6eb8ff" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- ears -->
+    <rect x="44" y="58" width="12" height="22" rx="6" fill="#1a2845" stroke="#4f8fff" stroke-width="0.5" stroke-opacity="0.3"/>
+    <rect x="144" y="58" width="12" height="22" rx="6" fill="#1a2845" stroke="#4f8fff" stroke-width="0.5" stroke-opacity="0.3"/>
+    <!-- antenna -->
+    <line x1="100" y1="30" x2="100" y2="10" stroke="#4f8fff" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="100" cy="8" r="5" fill="#4f8fff"/>
+    <circle cx="100" cy="8" r="2.5" fill="white" fill-opacity="0.9"/>
+    <!-- cape (hidden by default, shown during flight) -->
+    <g id="winnyCape" style="display:none">
+      <!-- cape collar -->
+      <path d="M72 138 Q100 130 128 138" fill="#ff4466" stroke="#cc2244" stroke-width="1"/>
+      <!-- cape body flowing behind -->
+      <path id="capeBody" d="M72 138 Q55 160 48 200 Q70 185 100 195 Q130 185 152 200 Q145 160 128 138 Q100 148 72 138Z" fill="#ff4466" opacity="0.9"/>
+      <!-- cape shimmer -->
+      <path d="M85 145 Q90 170 88 195" stroke="#ff88aa" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+      <path d="M115 145 Q110 170 112 195" stroke="#ff88aa" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+      <!-- star on cape -->
+      <text x="100" y="178" text-anchor="middle" font-size="18" fill="white" opacity="0.9">★</text>
+    </g>
+    <!-- feet (hidden during flight) -->
+    <g id="winnyFeet">
+      <rect x="72" y="196" width="22" height="20" rx="8" fill="#1a2845"/>
+      <rect x="106" y="196" width="22" height="20" rx="8" fill="#1a2845"/>
+      <rect x="68" y="212" width="30" height="10" rx="5" fill="#4f8fff" fill-opacity="0.5"/>
+      <rect x="102" y="212" width="30" height="10" rx="5" fill="#4f8fff" fill-opacity="0.5"/>
+    </g>
+  </svg>
+</div>
+
+<!-- RESULTS -->
+<div id="results"><div id="resultsInner"></div></div>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-label" data-en="Process" data-ar="الطريقة">Process</div>
+  <div class="section-title" data-en="How WinPrivacy works" data-ar="كيف يعمل WinPrivacy">How WinPrivacy works</div>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-num">01</div>
+      <h4 data-en="You search an app" data-ar="تبحث عن تطبيق">You search an app</h4>
+      <p data-en="Enter any Windows application name into the search bar. Winny immediately begins cross-referencing our database for a full analysis." data-ar="أدخل اسم أي تطبيق ويندوز في شريط البحث. يبدأ ويني فورًا في مطابقته بقاعدة بياناتنا لتحليل شامل.">Enter any Windows application name into the search bar. Winny immediately begins cross-referencing our database for a full analysis.</p>
+    </div>
+    <div class="how-card">
+      <div class="how-num">02</div>
+      <h4 data-en="We compute the SER Score" data-ar="نحسب نقاط SER">We compute the SER Score</h4>
+      <p data-en="Our algorithm weighs Safety indicators, Exposure vectors, and Risk factors from our database to produce one clear score out of 100." data-ar="تقيس خوارزميتنا مؤشرات الأمان وعوامل التعرض ودرجات المخاطر من قاعدة بياناتنا لإنتاج نقاط واضحة من 100.">Our algorithm weighs Safety indicators, Exposure vectors, and Risk factors from our database to produce one clear score out of 100.</p>
+    </div>
+    <div class="how-card">
+      <div class="how-num">03</div>
+      <h4 data-en="You make an informed call" data-ar="تتخذ قرارًا مدروسًا">You make an informed call</h4>
+      <p data-en="You get a full breakdown of permissions, telemetry, known issues, and Winny's plain-language verdict — no security PhD required." data-ar="تحصل على تفصيل كامل للأذونات والمراقبة والمشاكل المعروفة وحكم ويني بلغة بسيطة — لا تحتاج خبرة أمنية.">You get a full breakdown of permissions, telemetry, known issues, and Winny's plain-language verdict — no security PhD required.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo" data-en="WinPrivacy" data-ar="وين برايفسي">WinPrivacy</div>
+    <div data-en="© 2025 WinPrivacy. Privacy intelligence for Windows users." data-ar="© 2025 WinPrivacy. ذكاء الخصوصية لمستخدمي ويندوز.">© 2025 WinPrivacy. Privacy intelligence for Windows users.</div>
+  </div>
+  <div style="display:flex;gap:22px;">
+    <a href="#" data-en="Privacy Policy" data-ar="سياسة الخصوصية">Privacy Policy</a>
+    <a href="#" data-en="Terms" data-ar="الشروط">Terms</a>
+    <a href="#" data-en="API Docs" data-ar="توثيق API">API Docs</a>
+    <a href="#" data-en="Submit App" data-ar="أضف تطبيقًا">Submit App</a>
+  </div>
+</footer>
+
+<script>
+/* ── STATE ── */
+let lang = 'en';
+let isDark = true;
+
+/* ── STRINGS ── */
+const S = {
+  en: {
+    scanning: n => `Scanning <strong>${n}</strong>… checking database and permissions 🔍`,
+    safe:     n => `<strong style="color:var(--safe)">All good!</strong> ${n} has a solid SER score. ✅`,
+    warn:     n => `<strong style="color:var(--warn)">Heads up!</strong> ${n} has some privacy concerns. ⚠️`,
+    danger:   n => `<strong style="color:var(--danger)">Warning!</strong> ${n} scored poorly. Think twice. 🚨`,
+    notfound: n => `I couldn't find <strong>${n}</strong> yet. Submit it for review below!`,
+    nfTitle:  'App not found in database',
+    nfDesc:   n => `"<strong style="color:var(--text)">${n}</strong>" isn't in our database yet.`,
+    nfBtn:    '+ Submit this app for review',
+    nfWinny:  'Hmm, not found yet! Try <strong>CCleaner</strong>, <strong>Discord</strong>, or <strong>VLC</strong>.',
+    winnySays:'Winny says:',
+    safety:   'Safety Index', exposure: 'Exposure Level', risk: 'Risk Factor', reviewed: 'Last Reviewed',
+    perms:    'Permission Analysis', ser: 'SER Score',
+    high:'High', medium:'Medium', low:'Low', critical:'Critical',
+  },
+  ar: {
+    scanning: n => `جاري فحص <strong>${n}</strong>… التحقق من قاعدة البيانات 🔍`,
+    safe:     n => `<strong style="color:var(--safe)">ممتاز!</strong> حصل ${n} على نقاط SER قوية. ✅`,
+    warn:     n => `<strong style="color:var(--warn)">انتبه!</strong> لدى ${n} بعض مخاوف الخصوصية. ⚠️`,
+    danger:   n => `<strong style="color:var(--danger)">تحذير!</strong> حصل ${n} على نقاط منخفضة. كن حذرًا. 🚨`,
+    notfound: n => `لم أجد <strong>${n}</strong> بعد. أرسله للمراجعة أدناه!`,
+    nfTitle:  'التطبيق غير موجود في قاعدة البيانات',
+    nfDesc:   n => `"<strong style="color:var(--text)">${n}</strong>" غير موجود في قاعدة بياناتنا بعد.`,
+    nfBtn:    '+ إرسال هذا التطبيق للمراجعة',
+    nfWinny:  'لم أجده بعد! جرّب <strong>CCleaner</strong> أو <strong>Discord</strong> أو <strong>VLC</strong>.',
+    winnySays:'يقول ويني:',
+    safety:   'مؤشر الأمان', exposure: 'مستوى التعرض', risk: 'عامل الخطر', reviewed: 'آخر مراجعة',
+    perms:    'تحليل الأذونات', ser: 'نقاط SER',
+    high:'عالٍ', medium:'متوسط', low:'منخفض', critical:'حرج',
+  }
+};
+const t = k => S[lang][k];
+
+/* ── DATABASE — fetched from your API ── */
+
+// 🔧 Change this to your real API endpoint when ready
+const API_BASE = 'https://your-api.example.com';
+
+// Maps the DB row + permissions array → the shape the UI expects
+function rowToApp(row) {
+  return {
+    name:      row.name,
+    publisher: row.publisher,
+    version:   row.version,
+    cat:       { en: row.category_en, ar: row.category_ar },
+    date:      row.date_reviewed,
+    ser:       row.ser,
+    safety:    row.safety,
+    exposure:  row.exposure,
+    risk:      row.risk,
+    verdict:   row.verdict,
+    label:     { en: row.label_en, ar: row.label_ar },
+    perms:     (row.permissions || []).map(p => ({
+      name:  { en: p.name_en, ar: p.name_ar },
+      icon:  p.icon,
+      level: p.level,
+      risk:  p.risk
+    })),
+    comment:   { en: row.comment_en, ar: row.comment_ar }
+  };
+}
+
+async function fetchApp(name) {
+  const slug = encodeURIComponent(name.trim().toLowerCase());
+  try {
+    const res = await fetch(`${API_BASE}/api/apps/${slug}`);
+    if (!res.ok) return null;
+    const row = await res.json();
+    return rowToApp(row);
+  } catch (err) {
+    console.error('API error:', err);
+    return null;
+  }
+}
+
+function quickSearch(n) { document.getElementById('appInput').value = n; runSearch(); }
+
+async function runSearch() {
+  const val = document.getElementById('appInput').value.trim();
+  if (!val) return;
+  const wrap = document.getElementById('results');
+  const inner = document.getElementById('resultsInner');
+  wrap.style.display = 'block';
+  inner.innerHTML = `<div class="loading"><div class="spinner"></div><span style="color:var(--muted);font-size:14px;">${t('scanning')(val)}</span></div>`;
+
+  // Launch Winny to go fetch the result!
+  if (window._winnyLaunch) window._winnyLaunch();
+
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
+  const d = await fetchApp(val);
+  if (d) { inner.innerHTML = buildResult(d); animateSer(d.ser); setWinny('done', val, d.verdict); }
+  else   { inner.innerHTML = buildNotFound(val); setWinny('notfound', val); }
+}
+
+function vc(v) { return v==='safe'?'var(--safe)':v==='warn'?'var(--warn)':'var(--danger)'; }
+function vp(v) { return v==='safe'?'pill-safe':v==='warn'?'pill-warn':'pill-danger'; }
+
+function buildResult(d) {
+  const circ = 2*Math.PI*33;
+  const offset = circ - (d.ser/100)*circ;
+  const c = vc(d.verdict);
+  const L = lang;
+  const permsHtml = d.perms.map(p => {
+    const bc = p.level>75?'var(--danger)':p.level>50?'var(--warn)':'var(--safe)';
+    return `<div class="perm-row">
+      <div class="perm-icon">${p.icon}</div>
+      <div class="perm-name">${p.name[L]}</div>
+      <div class="perm-risk" style="color:${bc}">${t(p.risk)}</div>
+      <div class="perm-bar-wrap"><div class="perm-bar" style="width:0%;background:${bc}" data-w="${p.level}%"></div></div>
+    </div>`;
+  }).join('');
+
+  return `<div class="result-card">
+    <div class="result-header">
+      <div>
+        <div class="result-appname">${d.name}</div>
+        <div class="result-publisher">${d.publisher} · v${d.version} · ${d.cat[L]}</div>
+        <div style="margin-top:10px"><span class="pill ${vp(d.verdict)}">${d.label[L]}</span></div>
+      </div>
+      <div class="ser-score">
+        <div class="ser-ring">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle class="track" cx="45" cy="45" r="33"/>
+            <circle class="fill" id="serArc" cx="45" cy="45" r="33"
+              stroke="${c}" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" data-offset="${offset}"/>
+          </svg>
+          <div class="ser-label" style="color:${c}"><span id="serNum">0</span><small>/ 100</small></div>
+        </div>
+        <div class="ser-title">${t('ser')}</div>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="d-label">${t('safety')}</div><div class="d-val" style="color:var(--safe)">${d.safety}/100</div></div>
+      <div class="detail-item"><div class="d-label">${t('exposure')}</div><div class="d-val" style="color:${d.exposure>60?'var(--danger)':d.exposure>35?'var(--warn)':'var(--safe)'}">${d.exposure}/100</div></div>
+      <div class="detail-item"><div class="d-label">${t('risk')}</div><div class="d-val" style="color:${d.risk>60?'var(--danger)':d.risk>35?'var(--warn)':'var(--safe)'}">${d.risk}/100</div></div>
+      <div class="detail-item"><div class="d-label">${t('reviewed')}</div><div class="d-val">${d.date}</div></div>
+    </div>
+    <hr class="divider">
+    <div class="perms-section"><h3>${t('perms')}</h3>${permsHtml}</div>
+    <div class="winny-comment">
+      <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
+        <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
+        <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
+        <path d="M15 17.5l2.5 2.5 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p><strong>${t('winnySays')}</strong> ${d.comment[L]}</p>
+    </div>
+  </div>`;
+}
+
+function buildNotFound(name) {
+  return `<div class="result-card" style="text-align:center;padding:48px">
+    <div style="font-size:48px;margin-bottom:16px">🔍</div>
+    <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:10px">${t('nfTitle')}</div>
+    <div style="color:var(--muted);font-size:14px;max-width:400px;margin:0 auto 24px">${t('nfDesc')(name)}</div>
+    <button onclick="alert('Submission form coming soon!')"
+      style="background:var(--accent);color:white;border:none;cursor:pointer;padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600">${t('nfBtn')}</button>
+    <div class="winny-comment" style="text-align:${lang==='ar'?'right':'left'};margin-top:28px">
+      <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
+        <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
+        <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
+        <path d="M15 17.5l2.5 2.5 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p>${t('nfWinny')}</p>
+    </div>
+  </div>`;
+}
+
+function animateSer(target) {
+  const arc = document.getElementById('serArc');
+  const num = document.getElementById('serNum');
+  if (!arc || !num) return;
+  requestAnimationFrame(() => { arc.style.strokeDashoffset = arc.dataset.offset; });
+  let c = 0; const step = target/50;
+  const timer = setInterval(() => {
+    c = Math.min(c+step, target); num.textContent = Math.round(c);
+    if (c >= target) clearInterval(timer);
+  }, 18);
+  setTimeout(() => document.querySelectorAll('.perm-bar').forEach(b => b.style.width = b.dataset.w), 200);
+}
+
+function setWinny(state, name, verdict) {
+  const mouth = document.getElementById('winnyMouth');
+  let msg = '';
+
+  if (state === 'scanning') {
+    msg = t('scanning')(name);
+    mouth && mouth.setAttribute('d','M90 91 Q100 91 110 91');
+    if (window._winnyWave) window._winnyWave(800);
+  } else if (state === 'done') {
+    msg = t(verdict)(name);
+    if (mouth) {
+      if (verdict==='safe')     mouth.setAttribute('d','M88 88 Q100 98 112 88');
+      else if(verdict==='warn') mouth.setAttribute('d','M90 92 Q100 92 110 92');
+      else                      mouth.setAttribute('d','M90 95 Q100 88 110 95');
+    }
+    if (verdict === 'safe' && window._winnyJump) window._winnyJump(-22);
+  } else {
+    msg = t('notfound')(name);
+    mouth && mouth.setAttribute('d','M90 92 Q100 89 110 92');
+  }
+
+  if (msg) {
+    // If still flying, queue it to show on landing
+    if (window._winnyIsFlying && window._winnyIsFlying()) {
+      window._winnyPendingMsg = msg;
+    } else if (window._winnyShowBubble) {
+      window._winnyShowBubble(msg, 6000);
+    }
+  }
+}
+
+/* ── WINNY — smooth spring physics engine ── */
+(function() {
+  const floatEl = document.getElementById('winnyFloat');
+  const svgEl   = document.getElementById('winnySvg');
+  const bubble  = document.getElementById('winnyBubble');
+  const pupilL  = document.getElementById('pupilL');
+  const pupilR  = document.getElementById('pupilR');
+  const armL    = document.getElementById('winnyArmL');
+
+  /* ─ Spring state ─ */
+  // Bob (vertical idle float)
+  let bobY = 0, bobVY = 0;
+  // Tilt (lean toward cursor)
+  let tilt = 0, tiltV = 0;
+  // Squash/stretch on land
+  let scaleY = 1, scaleYV = 0;
+  let scaleX = 1, scaleXV = 0;
+  // Eye pupils (smooth lag)
+  let eyeX = 0, eyeXV = 0;
+  let eyeY = 0, eyeYV = 0;
+  // Jump impulse
+  let jumpY = 0, jumpVY = 0;
+  // Wave angle
+  let waveAngle = 0, waveAngleV = 0;
+  let isWaving = false;
+  let waveTimer = null;
+
+  // Mouse position (normalized, -1..1 from center of viewport)
+  let mouseNX = 0, mouseNY = 0;
+
+  document.addEventListener('mousemove', e => {
+    mouseNX = (e.clientX / window.innerWidth  - 0.5) * 2;
+    mouseNY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  /* ─ Spring helper: stiffness k, damping d ─ */
+  function spring(pos, vel, target, k, d) {
+    const force = (target - pos) * k - vel * d;
+    vel += force;
+    pos += vel;
+    return [pos, vel];
+  }
+
+  /* ─ Idle bob oscillator ─ */
+  let bobTime = 0;
+
+  /* ─ rAF loop ─ */
+  function tick() {
+    bobTime += 0.018;
+
+    // Smooth idle bob — sinusoidal target
+    const bobTarget = Math.sin(bobTime) * 9 + Math.sin(bobTime * 1.7) * 3;
+    [bobY, bobVY] = spring(bobY, bobVY, bobTarget, 0.04, 0.18);
+
+    // Tilt toward mouse X (lean left/right gently)
+    const tiltTarget = mouseNX * 6; // max ±6deg
+    [tilt, tiltV] = spring(tilt, tiltV, tiltTarget, 0.06, 0.22);
+
+    // Jump spring (impulse added externally via jumpVY)
+    const jumpTarget = 0;
+    [jumpY, jumpVY] = spring(jumpY, jumpVY, jumpTarget, 0.07, 0.28);
+
+    // Squash when landing (scaleY inverse of jumpY derivative)
+    const land = Math.abs(jumpVY) * 0.08;
+    const squashY = 1 - land * 0.5;
+    const squashX = 1 + land * 0.3;
+    [scaleY, scaleYV] = spring(scaleY, scaleYV, squashY, 0.25, 0.55);
+    [scaleX, scaleXV] = spring(scaleX, scaleXV, squashX, 0.25, 0.55);
+
+    // Eye pupils — lag behind mouse with spring
+    const eyeTargetX = mouseNX * 2.2;
+    const eyeTargetY = mouseNY * 1.8;
+    [eyeX, eyeXV] = spring(eyeX, eyeXV, eyeTargetX, 0.08, 0.30);
+    [eyeY, eyeYV] = spring(eyeY, eyeYV, eyeTargetY, 0.08, 0.30);
+
+    // Wave arm spring
+    if (isWaving) {
+      const waveTarget = Math.sin(bobTime * 12) * 25;
+      [waveAngle, waveAngleV] = spring(waveAngle, waveAngleV, waveTarget, 0.35, 0.28);
+    } else {
+      [waveAngle, waveAngleV] = spring(waveAngle, waveAngleV, 0, 0.12, 0.45);
+    }
+
+    // ── Apply transforms ──
+    const totalY = bobY + jumpY;
+    svgEl.style.transform =
+      `translateY(${totalY}px) rotate(${tilt}deg) scaleY(${scaleY}) scaleX(${scaleX})`;
+    svgEl.style.transformOrigin = 'center bottom';
+
+    // Pupils — base L: 86,70  R: 118,70
+    if (pupilL) {
+      pupilL.setAttribute('cx', 86 + eyeX);
+      pupilL.setAttribute('cy', 70 + eyeY);
+    }
+    if (pupilR) {
+      pupilR.setAttribute('cx', 118 + eyeX);
+      pupilR.setAttribute('cy', 70 + eyeY);
+    }
+
+    // Wave arm
+    if (armL) {
+      armL.style.transform = `rotate(${waveAngle}deg)`;
+      armL.style.transformOrigin = '45px 146px';
+    }
+
+    // Avoidance position spring
+    tickAvoidance();
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* ─ Position: scroll tracking + drag ─ */
+  let posX = 32;   // distance from right edge
+  let posY = 220;  // start higher — beside the hero title
+  let curPosX = 32, curPosY = 220;
+  let posVX = 0,   posVY = 0;
+
+  let isDragging = false;
+  let dragOffX = 0, dragOffY = 0;
+  let userDragged = false; // once user drags, stop auto scroll-tracking
+
+  // ── Scroll tracking: Winny slides down as you scroll down ──
+  function onScroll() {
+    if (userDragged || isDragging) return;
+    const scrolled  = window.scrollY;
+    const maxScroll = document.body.scrollHeight - window.innerHeight;
+    const ratio     = maxScroll > 0 ? scrolled / maxScroll : 0;
+    const vh        = window.innerHeight;
+    const winH      = floatEl.offsetHeight || 280;
+    // Start high (beside hero title) → settle at bottom as user scrolls
+    const startBottom = 220; // beside hero title
+    const endBottom   = 32;  // bottom of screen when scrolled down
+    posY = startBottom - ratio * (startBottom - endBottom);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // ── Drag to reposition ──
+  // Drag handle = the SVG itself
+  function startDrag(clientX, clientY) {
+    isDragging = true;
+    userDragged = true;
+    const rect = floatEl.getBoundingClientRect();
+    // Offset from pointer to floatEl top-left corner
+    dragOffX = clientX - rect.left;
+    dragOffY = clientY - rect.top;
+    floatEl.style.cursor = 'grabbing';
+    svgEl.style.cursor   = 'grabbing';
+  }
+
+  function moveDrag(clientX, clientY) {
+    if (!isDragging) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const winW = floatEl.offsetWidth  || 220;
+    const winH = floatEl.offsetHeight || 280;
+    // Convert pointer → right/bottom anchored values
+    const newRight  = vw - (clientX - dragOffX) - winW;
+    const newBottom = vh - (clientY - dragOffY) - winH;
+    // Clamp within viewport
+    posX = Math.max(8, Math.min(newRight,  vw - winW - 8));
+    posY = Math.max(8, Math.min(newBottom, vh - winH - 8));
+  }
+
+  // Track drag velocity for launch
+  let lastDragX = 0, lastDragY = 0;
+  let dragVelX = 0, dragVelY = 0;
+  let prevClientX = 0, prevClientY = 0;
+
+  function endDrag(clientX, clientY) {
+    if (!isDragging) return;
+    isDragging = false;
+    svgEl.style.cursor = 'grab';
+
+    // Calculate release velocity
+    dragVelX = clientX - prevClientX;
+    dragVelY = clientY - prevClientY;
+    const speed = Math.sqrt(dragVelX * dragVelX + dragVelY * dragVelY);
+
+    if (speed > 18 && dragMoved) {
+      // Fast throw → launch Winny!
+      doLaunch(dragVelX, dragVelY);
+    } else {
+      // Slow release → snap to nearest horizontal edge
+      const vw   = window.innerWidth;
+      const winW = floatEl.offsetWidth || 220;
+      const currentLeft = vw - curPosX - winW;
+      if (currentLeft < vw / 2) {
+        posX = vw - winW - 32; // snap left edge (right value = far left)
+      } else {
+        posX = 32; // snap right edge
+      }
+    }
+  }
+
+  // Mouse
+  svgEl.addEventListener('mousedown', e => {
+    e.preventDefault();
+    dragMoved = false;
+    prevClientX = e.clientX; prevClientY = e.clientY;
+    startDrag(e.clientX, e.clientY);
+  });
+  document.addEventListener('mousemove', e => {
+    if (isDragging) {
+      prevClientX = e.clientX; prevClientY = e.clientY;
+      dragMoved = true;
+    }
+    moveDrag(e.clientX, e.clientY);
+  });
+  document.addEventListener('mouseup', e => endDrag(e.clientX, e.clientY));
+
+  // Touch
+  svgEl.addEventListener('touchstart', e => {
+    e.preventDefault();
+    dragMoved = false;
+    prevClientX = e.touches[0].clientX; prevClientY = e.touches[0].clientY;
+    startDrag(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: false });
+  document.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    e.preventDefault();
+    prevClientX = e.touches[0].clientX; prevClientY = e.touches[0].clientY;
+    dragMoved = true;
+    moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: false });
+  document.addEventListener('touchend', e => {
+    const t = e.changedTouches[0];
+    endDrag(t.clientX, t.clientY);
+  });
+
+  /* ─ LAUNCH — superhero flight across screen ─ */
+  let isFlying = false;
+  const cape       = document.getElementById('winnyCape');
+  const speedLines = document.getElementById('winnySpeedLines');
+  const feet       = document.getElementById('winnyFeet');
+  const mouth      = document.getElementById('winnyMouth');
+
+  function doLaunch(velX, velY) {
+    if (isFlying) return;
+    isFlying = true;
+    userDragged = false; // re-enable scroll tracking after landing
+
+    // Enter superhero mode
+    if (cape)       cape.style.display       = 'block';
+    if (speedLines) speedLines.style.display  = 'block';
+    if (feet)       feet.style.display        = 'none';
+    if (mouth)      mouth.setAttribute('d', 'M88 86 Q100 96 112 86'); // big excited grin
+
+    // Determine which side Winny is currently on and where he lands
+    const vw   = window.innerWidth;
+    const winW = floatEl.offsetWidth || 220;
+    const currentLeft = vw - curPosX - winW; // Winny's left edge px from left
+    const flyingRight = velX > 0 || currentLeft < vw / 2;
+
+    // Flip speed lines direction
+    if (speedLines) {
+      speedLines.style.transform = flyingRight ? 'scaleX(-1)' : 'scaleX(1)';
+      speedLines.style.transformOrigin = 'center';
+    }
+
+    // Flip cape based on direction
+    if (cape) {
+      cape.style.transform = flyingRight ? 'scaleX(-1)' : 'scaleX(1)';
+      cape.style.transformOrigin = '100px 138px';
+    }
+
+    // Arc flight path using rAF
+    const startRight  = curPosX;
+    const startBottom = curPosY;
+    const endRight    = flyingRight ? 32 : vw - winW - 32; // land on opposite side
+    const endBottom   = curPosY;
+
+    const duration = 1400; // ms
+    const startTime = performance.now();
+
+    // Disable spring during flight
+
+    function flyTick(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+      // Ease: cubic in-out
+      const ease = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+      // Arc — peak in the middle
+      const arc  = Math.sin(t * Math.PI) * -280; // fly high
+
+      // Direct set (bypass spring during flight)
+      const r = startRight  + (endRight  - startRight)  * ease;
+      const b = startBottom + (endBottom - startBottom) * ease + arc;
+      floatEl.style.right  = r + 'px';
+      floatEl.style.bottom = b + 'px';
+      curPosX = r; curPosY = b;
+
+      // Rotate Winny to face direction + arc
+      const angle = flyingRight
+        ? -30 + Math.sin(t * Math.PI) * -20
+        :  30 + Math.sin(t * Math.PI) *  20;
+      svgEl.style.transform = `rotate(${angle}deg) scaleX(${flyingRight ? -1 : 1})`;
+
+      if (t < 1) {
+        requestAnimationFrame(flyTick);
+      } else {
+        // Land!
+        land(flyingRight ? 32 : 32, endBottom, flyingRight);
+      }
+    }
+    requestAnimationFrame(flyTick);
+  }
+
+  function land(newPosX, newPosY, landedRight) {
+    isFlying = false;
+
+    // Reset transforms
+    svgEl.style.transform = '';
+    posX = newPosX;
+    posY = newPosY;
+    curPosX = newPosX;
+    posVX = 0;
+
+    // Remove cape & speed lines
+    setTimeout(() => {
+      if (cape)       cape.style.display       = 'none';
+      if (speedLines) speedLines.style.display  = 'none';
+      if (feet)       feet.style.display        = 'block';
+      if (mouth)      mouth.setAttribute('d', 'M88 88 Q100 98 112 88'); // smile
+    }, 120);
+
+    // Landing squash
+    scaleYV = 0; scaleXV = 0;
+    scaleY = 0.6; scaleX = 1.4;
+
+    // Jump celebrate
+    doJump(-16);
+
+    // If there's a pending result message, show it now
+    if (window._winnyPendingMsg) {
+      showBubble(window._winnyPendingMsg, 5000);
+      window._winnyPendingMsg = null;
+    } else {
+      const msg = lang === 'ar' ? '💨 وصلت! دعنا نرى النتائج... 🔍' : '💨 I\'m back with the results! 🔍';
+      showBubble(msg, 3000);
+    }
+  }
+
+  // ── Apply position spring each frame ──
+  function tickAvoidance() {
+    if (isFlying) return; // flight path handles position directly
+    if (isDragging) {
+      curPosX = posX; curPosY = posY;
+      posVX = 0;      posVY = 0;
+    } else {
+      [curPosX, posVX] = spring(curPosX, posVX, posX, 0.045, 0.32);
+      [curPosY, posVY] = spring(curPosY, posVY, posY, 0.045, 0.32);
+    }
+    floatEl.style.right  = curPosX + 'px';
+    floatEl.style.bottom = curPosY + 'px';
+  }
+
+  /* ─ Jump impulse ─ */
+  function doJump(strength = -18) {
+    jumpVY += strength;
+  }
+
+  /* ─ Wave ─ */
+  function doWave(duration = 1200) {
+    isWaving = true;
+    clearTimeout(waveTimer);
+    waveTimer = setTimeout(() => { isWaving = false; }, duration);
+  }
+
+  /* ─ Bubble helpers ─ */
+  let bubbleTimer = null;
+  function showBubble(html, duration = 4000) {
+    const el = document.getElementById('winnyText');
+    if (el) el.innerHTML = html;
+    bubble.classList.add('visible');
+    clearTimeout(bubbleTimer);
+    if (duration > 0) bubbleTimer = setTimeout(() => bubble.classList.remove('visible'), duration);
+  }
+
+  /* ─ Click → wave + message (only if not a drag) ─ */
+  let dragMoved = false;
+  svgEl.addEventListener('mousedown', () => { dragMoved = false; });
+  document.addEventListener('mousemove', () => { if (isDragging) dragMoved = true; });
+
+  const hiMessages = {
+    en: ["Need help? Type an app name up there! 👆", "I scan apps so you don't have to worry 🛡️", "Ask me about any Windows app! 🔍", "Privacy is literally my job. 😄"],
+    ar: ["تحتاج مساعدة؟ اكتب اسم تطبيق هناك! 👆", "أفحص التطبيقات حتى لا تقلق 🛡️", "اسألني عن أي تطبيق ويندوز! 🔍", "الخصوصية هي اختصاصي! 😄"]
+  };
+  let hiIdx = 0;
+  svgEl.addEventListener('dblclick', () => {
+    if (isFlying) return;
+    // Determine direction: fly to opposite side from where Winny currently is
+    const vw = window.innerWidth;
+    const winW = floatEl.offsetWidth || 220;
+    const currentLeft = vw - curPosX - winW;
+    const flyRight = currentLeft < vw / 2; // if on right side, fly left, and vice versa
+    doLaunch(flyRight ? 30 : -30, 0);
+  });
+
+  svgEl.addEventListener('click', () => {
+    if (dragMoved || isFlying) return;
+    const msgs = hiMessages[lang] || hiMessages.en;
+    showBubble(msgs[hiIdx % msgs.length], 4000);
+    hiIdx++;
+    doWave(1400);
+    doJump(-14);
+  });
+
+  /* ─ Hover ─ */
+  svgEl.addEventListener('mouseenter', () => {
+    if (!bubble.classList.contains('visible')) {
+      const greet = lang === 'ar'
+        ? 'أهلاً! اضغط عليّ 😊'
+        : "Hi! Click me 😊";
+      showBubble(greet, 2500);
+    }
+  });
+
+  /* ─ Scroll-aware messages ─ */
+  const sectionMsgs = {
+    how:     { en: "This is how I work my magic! 🔮", ar: "هكذا أعمل بسحرتي! 🔮" },
+    results: { en: "Results are in — let's see! 🔍",  ar: "النتائج جاهزة! 🔍" }
+  };
+  let lastSection = '';
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const id = entry.target.id;
+      if (id === lastSection) return;
+      lastSection = id;
+      const msgs = sectionMsgs[id];
+      if (msgs) {
+        showBubble(msgs[lang] || msgs.en, 3500);
+        doJump(-20);
+      }
+    });
+  }, { threshold: 0.3 });
+  ['how', 'results'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+
+  /* ─ Search input ─ */
+  const inp = document.getElementById('appInput');
+  if (inp) {
+    inp.addEventListener('focus', () => {
+      showBubble(lang === 'ar' ? 'هيا! أدخل اسم التطبيق 🎯' : 'Go ahead, type an app name! 🎯', 3000);
+      doWave(900);
+    });
+    inp.addEventListener('input', () => {
+      clearTimeout(bubbleTimer);
+      bubble.classList.remove('visible');
+    });
+  }
+
+  /* ─ Initial greeting ─ */
+  setTimeout(() => {
+    showBubble(
+      lang === 'ar'
+        ? "أهلاً! أنا <strong>ويني</strong> 👋<br>اكتب اسم أي تطبيق ويندوز وسأخبرك بمدى أمانه!"
+        : "Hey! I'm <strong>Winny</strong> 👋<br>Type any Windows app and I'll tell you how safe it is!",
+      5000
+    );
+    doWave(1000);
+  }, 1200);
+
+  /* ─ Expose to setWinny ─ */
+  window._winnyShowBubble = showBubble;
+  window._winnyJump = doJump;
+  window._winnyWave = doWave;
+  window._winnyIsFlying = () => isFlying;
+
+  // Launch triggered by search — flies off, lands when result is ready
+  window._winnyLaunch = function() {
+    if (isFlying) return;
+    const vw = window.innerWidth;
+    const winW = floatEl.offsetWidth || 220;
+    const currentLeft = vw - curPosX - winW;
+    const flyRight = currentLeft < vw / 2;
+    doLaunch(flyRight ? 30 : -30, 0);
+  };
+})();
+
+/* ── THEME ── */
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+  const lbl = document.getElementById('themeLabel');
+  lbl.textContent = isDark
+    ? (lang==='ar' ? 'فاتح' : 'Light')
+    : (lang==='ar' ? 'داكن' : 'Dark');
+  lbl.setAttribute('data-en', isDark ? 'Light' : 'Dark');
+  lbl.setAttribute('data-ar', isDark ? 'فاتح' : 'داكن');
+}
+
+/* ── LANGUAGE ── */
+function toggleLang() {
+  lang = lang==='en' ? 'ar' : 'en';
+  const isAr = lang==='ar';
+  document.documentElement.lang = lang;
+  document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+  document.getElementById('langLabel').textContent = isAr ? 'English' : 'العربية';
+
+  // Swap all data-en / data-ar text nodes
+  document.querySelectorAll('[data-en]').forEach(el => {
+    const val = el.getAttribute(isAr ? 'data-ar' : 'data-en');
+    if (val !== null) el.innerHTML = val;
+  });
+
+  // Input placeholder
+  const inp = document.getElementById('appInput');
+  inp.placeholder = inp.getAttribute(isAr ? 'data-ph-ar' : 'data-ph-en');
+
+  // Theme label
+  const lbl = document.getElementById('themeLabel');
+  lbl.textContent = isDark
+    ? (isAr ? 'فاتح' : 'Light')
+    : (isAr ? 'داكن' : 'Dark');
+
+  // Winny bubble tail direction
+  const wb = document.getElementById('winnyBubble');
+  if (wb) {
+    if (isAr) {
+      wb.style.borderRadius = '16px 16px 16px 4px';
+      wb.style.marginLeft = '0'; wb.style.marginRight = '20px';
+      wb.style.alignSelf = 'flex-end';
+    } else {
+      wb.style.borderRadius = '16px 16px 4px 16px';
+      wb.style.marginLeft = '20px'; wb.style.marginRight = '0';
+      wb.style.alignSelf = 'flex-start';
+    }
+  }
+
+  // Re-render results in new language
+  const wrap = document.getElementById('results');
+  if (wrap.style.display !== 'none') {
+    const val = document.getElementById('appInput').value.trim();
+    if (val) {
+      const inner = document.getElementById('resultsInner');
+      fetchApp(val).then(d => {
+        if (d) { inner.innerHTML = buildResult(d); animateSer(d.ser); }
+        else inner.innerHTML = buildNotFound(val);
+      });
+    }
+  }
+}
+</script>
+</body>
+</html>
