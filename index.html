@@ -287,6 +287,15 @@ footer {
 footer a { color: var(--muted); text-decoration: none; transition: color .2s; }
 footer a:hover { color: var(--accent); }
 
+/* ── PERMISSIONS ── */
+.perms-section h3 { font-size: 12px; font-weight: 700; margin-bottom: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+.perm-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.perm-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(79,143,255,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+.perm-name { font-size: 14px; font-weight: 500; flex: 1; }
+.perm-risk { font-size: 11px; width: 66px; text-align: right; flex-shrink: 0; }
+.perm-bar-wrap { flex: 2; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; min-width: 60px; }
+.perm-bar { height: 100%; border-radius: 4px; width: 0%; }
+
 /* ── UTILS ── */
 .loading { display: flex; align-items: center; gap: 12px; padding: 48px; justify-content: center; }
 .spinner { width: 22px; height: 22px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
