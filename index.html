@@ -598,7 +598,7 @@ async function runSearch() {
   if (window._winnyLaunch) window._winnyLaunch();
   wrap.scrollIntoView({ behavior:'smooth', block:'start' });
   const d = await fetchApp(val);
-  if (d) { inner.innerHTML = buildResult(d); animateRs(d.rs); setWinny('done', val, d.verdict); }
+  if (d) { inner.innerHTML = buildResult(d); animateRs(d.rs); animateBars(); setWinny('done', val, d.verdict); }
   else   { inner.innerHTML = buildNotFound(val); setWinny('notfound', val); }
 }
 
@@ -624,27 +624,42 @@ function levelBg(k) {
   return 'rgba(239,68,68,0.14)';
 }
 
-/* ── build result card (NO permission analysis) ── */
+/* ── build result card ── */
 function buildResult(d) {
-  const circ   = 2 * Math.PI * 48;
   const pct    = Math.min(d.rs / 4, 1);
-  const offset = circ - pct * circ;
   const c      = vc(d.verdict);
   const L      = lang;
 
-  const vLabel  = S[L].verdictLabel[d.verdict]     || d.verdict;
-  const lvlLabel= S[L].rsLevelLabel[d.rsLevelKey]  || d.rsLevelKey;
+  const vLabel  = S[L].verdictLabel[d.verdict]    || d.verdict;
+  const lvlLabel= S[L].rsLevelLabel[d.rsLevelKey] || d.rsLevelKey;
   const lvlClr  = levelColor(d.rsLevelKey);
   const lvlBg   = levelBg(d.rsLevelKey);
   const statusGlow   = d.verdict==='safe' ? 'rgba(34,197,94,0.18)' : d.verdict==='normal' ? 'rgba(59,130,246,0.18)' : d.verdict==='anomaly' ? 'rgba(234,179,8,0.18)' : 'rgba(239,68,68,0.18)';
   const statusBorder = d.verdict==='safe' ? 'rgba(34,197,94,0.4)'  : d.verdict==='normal' ? 'rgba(59,130,246,0.4)'  : d.verdict==='anomaly' ? 'rgba(234,179,8,0.4)'  : 'rgba(239,68,68,0.4)';
+
+  const permsHtml = (d.permissions || []).map(p => {
+    const bc = p.risk==='high' ? 'var(--danger)' : p.risk==='medium' ? 'var(--warn)' : 'var(--safe)';
+    const riskLabel = p.risk==='high' ? (L==='ar'?'مرتفع':'High') : p.risk==='medium' ? (L==='ar'?'متوسط':'Medium') : (L==='ar'?'منخفض':'Low');
+    return `<div class="perm-row">
+      <div class="perm-icon">${p.icon}</div>
+      <div class="perm-name">${p.name[L]}</div>
+      <div class="perm-risk" style="color:${bc}">${riskLabel}</div>
+      <div class="perm-bar-wrap"><div class="perm-bar" style="width:0%;background:${bc}" data-w="${p.level}%"></div></div>
+    </div>`;
+  }).join('');
+
+  const permsSection = d.permissions && d.permissions.length > 0 ? `
+    <hr class="divider">
+    <div class="perms-section">
+      <h3>${L==='ar'?'تحليل الأذونات':'Permission Analysis'}</h3>
+      ${permsHtml}
+    </div>` : '';
 
   return `<div class="result-card">
     <div class="result-header">
       <div style="flex:1;">
         <div class="result-appname">${d.name}</div>
         <div class="result-publisher">${d.publisher} · v${d.version} · ${d.cat[L]}</div>
-
         <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
           <div style="display:inline-flex;flex-direction:column;gap:4px;background:${statusGlow};border:1px solid ${statusBorder};border-radius:14px;padding:12px 20px;backdrop-filter:blur(8px);">
             <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);">${S[L].appStatus}</span>
@@ -670,8 +685,8 @@ function buildResult(d) {
         <div class="ser-title" style="text-align:center;margin-top:6px;">${S[L].rsScore}</div>
       </div>
     </div>
-
-    <div class="winny-comment">
+    ${permsSection}
+    <div class="winny-comment" style="margin-top:20px;">
       <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
         <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
         <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
@@ -714,6 +729,15 @@ function animateRs(target) {
     num.textContent = c.toFixed(1);
     if (c >= target) { num.textContent = target.toFixed(1); clearInterval(timer); }
   }, 16);
+
+function animateBars() {
+  setTimeout(() => {
+    document.querySelectorAll('.perm-bar').forEach(bar => {
+      bar.style.transition = 'width 1s ease';
+      bar.style.width = bar.dataset.w;
+    });
+  }, 50);
+}
 }
 
 function setWinny(state, name, verdict) {
@@ -1272,7 +1296,7 @@ function toggleLang() {
     if (val) {
       const inner = document.getElementById('resultsInner');
       fetchApp(val).then(d => {
-        if (d) { inner.innerHTML = buildResult(d); animateRs(d.rs); }
+        if (d) { inner.innerHTML = buildResult(d); animateRs(d.rs); animateBars(); }
         else inner.innerHTML = buildNotFound(val);
       });
     }
