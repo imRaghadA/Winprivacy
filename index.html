@@ -506,45 +506,6 @@ const t = k => S[lang][k];
 
 /* ── DATABASE — fetched from your API ── */
 
-// 🔧 Change this to your real API endpoint when ready
-const API_BASE = 'https://your-api.example.com';
-
-// Maps the DB row + permissions array → the shape the UI expects
-function rowToApp(row) {
-  return {
-    name:      row.name,
-    publisher: row.publisher,
-    version:   row.version,
-    cat:       { en: row.category_en, ar: row.category_ar },
-    date:      row.date_reviewed,
-    ser:       row.ser,
-    safety:    row.safety,
-    exposure:  row.exposure,
-    risk:      row.risk,
-    verdict:   row.verdict,
-    label:     { en: row.label_en, ar: row.label_ar },
-    perms:     (row.permissions || []).map(p => ({
-      name:  { en: p.name_en, ar: p.name_ar },
-      icon:  p.icon,
-      level: p.level,
-      risk:  p.risk
-    })),
-    comment:   { en: row.comment_en, ar: row.comment_ar }
-  };
-}
-
-async function fetchApp(name) {
-  const slug = encodeURIComponent(name.trim().toLowerCase());
-  try {
-    const res = await fetch(`${API_BASE}/api/apps/${slug}`);
-    if (!res.ok) return null;
-    const row = await res.json();
-    return rowToApp(row);
-  } catch (err) {
-    console.error('API error:', err);
-    return null;
-  }
-}
 
 function quickSearch(n) { document.getElementById('appInput').value = n; runSearch(); }
 
@@ -1230,5 +1191,12 @@ function toggleLang() {
   }
 }
 </script>
+...last JS functions...
+
+</script>
+<script src="data/apps.js"></script>
+<script src="js/search.js"></script>
+</body>
+</html>
 </body>
 </html>
