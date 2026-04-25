@@ -287,6 +287,15 @@ footer {
 footer a { color: var(--muted); text-decoration: none; transition: color .2s; }
 footer a:hover { color: var(--accent); }
 
+/* ── PERMISSIONS ── */
+.perms-section h3 { font-size: 12px; font-weight: 700; margin-bottom: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+.perm-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.perm-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(79,143,255,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+.perm-name { font-size: 14px; font-weight: 500; flex: 1; }
+.perm-risk { font-size: 11px; width: 66px; text-align: right; flex-shrink: 0; }
+.perm-bar-wrap { flex: 2; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; min-width: 60px; }
+.perm-bar { height: 100%; border-radius: 4px; width: 0%; transition: width 1s ease; }
+
 /* ── UTILS ── */
 .loading { display: flex; align-items: center; gap: 12px; padding: 48px; justify-content: center; }
 .spinner { width: 22px; height: 22px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
@@ -584,80 +593,7 @@ const S = {
 };
 const t = k => S[lang][k];
 
-/* ═══════════════════════════════════════════════
-   MOCK DATABASE
-   RS  : Risk Score 0–4  (voted bins from FinalRiskScore_v4)
-   rsLevelKey: 'Safe/Very Low' | 'Low' | 'Medium' | 'High' | 'Very High'
-   verdict:    'safe' | 'normal' | 'anomaly' | 'highrisk'
-═══════════════════════════════════════════════ */
-const MOCK_DB = {
-  'ccleaner': {
-    name:'CCleaner', publisher:'Piriform / Avast', version:'6.23.1', date:'Apr 2025',
-    cat:{ en:'System Utility', ar:'أداة نظام' },
-    rs: 3.4, rsLevelKey: 'Very High',
-    verdict: 'highrisk',
-    comment:{
-      en:'CCleaner has a troubled history — the 2017 supply-chain attack injected malware into millions of installs. Current versions still request unusually broad permissions for a cleaner. <strong class="hl">Use with caution.</strong>',
-      ar:'لدى CCleaner تاريخ مثير للقلق — هجوم سلسلة التوريد عام 2017 حقن برمجيات خبيثة في ملايين التثبيتات. الإصدارات الحالية لا تزال تطلب صلاحيات واسعة بشكل غير عادي. <strong class="hl">استخدمه بحذر.</strong>'
-    }
-  },
-  'utorrent': {
-    name:'uTorrent', publisher:'BitTorrent Inc.', version:'3.6.0', date:'Mar 2025',
-    cat:{ en:'File Sharing', ar:'مشاركة الملفات' },
-    rs: 3.7, rsLevelKey: 'Very High',
-    verdict: 'highrisk',
-    comment:{
-      en:'uTorrent is one of the most permission-hungry apps on Windows. Its adware history and always-on network listener make it a privacy liability. <strong class="hl">Consider qBittorrent as a clean alternative.</strong>',
-      ar:'uTorrent أحد أكثر التطبيقات طلبًا للصلاحيات على ويندوز. تاريخه مع الإعلانات والمنافذ المفتوحة دائمًا يجعله خطرًا على الخصوصية. <strong class="hl">فكر في qBittorrent كبديل نظيف.</strong>'
-    }
-  },
-  'vlc': {
-    name:'VLC Media Player', publisher:'VideoLAN', version:'3.0.21', date:'Apr 2025',
-    cat:{ en:'Media Player', ar:'مشغل وسائط' },
-    rs: 0.2, rsLevelKey: 'Safe/Very Low',
-    verdict: 'safe',
-    comment:{
-      en:"VLC is one of the most privacy-respecting media players available. It's open-source, ships no telemetry, and its permissions match exactly what you'd expect. <strong class=\"hl\">Solid choice.</strong>",
-      ar:'VLC أحد أكثر مشغلات الوسائط احترامًا للخصوصية. مفتوح المصدر، لا يرسل بيانات إحصائية، وصلاحياته تطابق ما هو متوقع تمامًا. <strong class="hl">اختيار ممتاز.</strong>'
-    }
-  },
-  'vlc media player': {
-    name:'VLC Media Player', publisher:'VideoLAN', version:'3.0.21', date:'Apr 2025',
-    cat:{ en:'Media Player', ar:'مشغل وسائط' },
-    rs: 0.2, rsLevelKey: 'Safe/Very Low',
-    verdict: 'safe',
-    comment:{
-      en:"VLC is one of the most privacy-respecting media players available. It's open-source, ships no telemetry, and its permissions match exactly what you'd expect. <strong class=\"hl\">Solid choice.</strong>",
-      ar:'VLC أحد أكثر مشغلات الوسائط احترامًا للخصوصية. مفتوح المصدر، لا يرسل بيانات إحصائية، وصلاحياته تطابق ما هو متوقع تمامًا. <strong class="hl">اختيار ممتاز.</strong>'
-    }
-  },
-  'discord': {
-    name:'Discord', publisher:'Discord Inc.', version:'1.0.9178', date:'Apr 2025',
-    cat:{ en:'Communication', ar:'تواصل' },
-    rs: 2.3, rsLevelKey: 'High',
-    verdict: 'anomaly',
-    comment:{
-      en:"Discord's screen-capture and global keyboard hook are unusual for a chat app. They're justified by streaming features, but represent an anomalous permission footprint compared to similar apps. <strong class=\"hl\">Consider disabling screen share if not used.</strong>",
-      ar:'التقاط الشاشة وخطاف لوحة المفاتيح العالمي غير معتادين لتطبيق دردشة. لهما مبرر بميزات البث، لكنهما يمثلان بصمة أذونات شاذة مقارنةً بالتطبيقات المشابهة. <strong class="hl">فكر في تعطيل مشاركة الشاشة إن لم تستخدمها.</strong>'
-    }
-  },
-  'spotify': {
-    name:'Spotify', publisher:'Spotify AB', version:'1.2.40', date:'Mar 2025',
-    cat:{ en:'Music & Audio', ar:'موسيقى وصوت' },
-    rs: 1.1, rsLevelKey: 'Low',
-    verdict: 'normal',
-    comment:{
-      en:"Spotify's permissions are typical for a streaming music service. Hardware fingerprinting is the only slightly elevated element, used for DRM. <strong class=\"hl\">Normal for its category.</strong>",
-      ar:'صلاحيات Spotify نموذجية لخدمة بث موسيقي. بصمة الأجهزة هي العنصر الوحيد المرتفع قليلًا وتُستخدم لـ DRM. <strong class="hl">طبيعي لفئته.</strong>'
-    }
-  },
-};
-
-async function fetchApp(name) {
-  const key = name.trim().toLowerCase();
-  await new Promise(r => setTimeout(r, 900 + Math.random() * 600));
-  return MOCK_DB[key] || null;
-}
+/* ── Supabase query handled by js/search.js ── */
 
 function quickSearch(n) { document.getElementById('appInput').value = n; runSearch(); }
 
@@ -697,7 +633,7 @@ function levelBg(k) {
   return 'rgba(239,68,68,0.14)';
 }
 
-/* ── build result card (NO permission analysis) ── */
+/* ── build result card ── */
 function buildResult(d) {
   const circ   = 2 * Math.PI * 48;
   const pct    = Math.min(d.rs / 4, 1);
@@ -711,6 +647,17 @@ function buildResult(d) {
   const lvlBg   = levelBg(d.rsLevelKey);
   const statusGlow   = d.verdict==='safe' ? 'rgba(34,197,94,0.18)' : d.verdict==='normal' ? 'rgba(59,130,246,0.18)' : d.verdict==='anomaly' ? 'rgba(234,179,8,0.18)' : 'rgba(239,68,68,0.18)';
   const statusBorder = d.verdict==='safe' ? 'rgba(34,197,94,0.4)'  : d.verdict==='normal' ? 'rgba(59,130,246,0.4)'  : d.verdict==='anomaly' ? 'rgba(234,179,8,0.4)'  : 'rgba(239,68,68,0.4)';
+
+  const permsHtml = (d.permissions && d.permissions.length > 0) ? `
+    <hr style="border:none;border-top:0.5px solid var(--border);margin:20px 0;">
+    <div class="perms-section">
+      <h3>${lang==='ar'?'تحليل الأذونات':'Permission Analysis'}</h3>
+      ${(d.permissions||[]).map(p => {
+        const bc = p.risk==='high' ? 'var(--danger)' : p.risk==='medium' ? 'var(--warn)' : 'var(--safe)';
+        const rl = p.risk==='high' ? (lang==='ar'?'مرتفع':'High') : p.risk==='medium' ? (lang==='ar'?'متوسط':'Medium') : (lang==='ar'?'منخفض':'Low');
+        return '<div class="perm-row"><div class="perm-icon">'+p.icon+'</div><div class="perm-name">'+p.name[lang]+'</div><div class="perm-risk" style="color:'+bc+'">'+rl+'</div><div class="perm-bar-wrap"><div class="perm-bar" style="background:'+bc+';width:'+p.level+'%"></div></div></div>';
+      }).join('')}
+    </div>` : '';
 
   return `<div class="result-card">
     <div class="result-header">
@@ -1352,5 +1299,6 @@ function toggleLang() {
   }
 }
 </script>
+<script src="js/search.js"></script>
 </body>
 </html>
