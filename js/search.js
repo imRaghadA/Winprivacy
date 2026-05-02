@@ -327,10 +327,10 @@ function showRequestPending(appName, email) {
         ${L === 'ar' ? 'تم إرسال الطلب مسبقاً!' : 'Already Requested!'}
       </div>
       <div style="color:var(--muted);font-size:15px;line-height:1.7;max-width:440px;margin:0 auto 28px;">
-        ${L === 'ar' ? 'لقد قمتِ بالفعل بإرسال طلب لفحص' : "You've already submitted a request for"}
+        ${L === 'ar' ? 'لقد قمت بالفعل بإرسال طلب لفحص' : "You've already submitted a request for"}
         <strong style="color:var(--text);">${appName}</strong>
         ${L === 'ar' ? 'باستخدام' : 'using'} <strong style="color:var(--accent2);">${email}</strong>.
-        ${L === 'ar' ? 'طلبكِ حالياً قيد المراجعة.' : 'Your request is currently pending.'}
+        ${L === 'ar' ? 'طلبك حالياً قيد المراجعة.' : 'Your request is currently pending.'}
       </div>
       <div style="display:inline-flex;align-items:center;gap:10px;
         background:rgba(79,143,255,0.08);border:0.5px solid rgba(79,143,255,0.25);
@@ -338,7 +338,7 @@ function showRequestPending(appName, email) {
         <span style="font-size:22px;">🛡️</span>
         <span style="font-size:13px;color:var(--muted);text-align:${L === 'ar' ? 'right' : 'left'};line-height:1.6;">
           ${L === 'ar' 
-            ? `لا تقلقي — سنقوم بمعالجة طلبكِ في أقرب وقت ممكن. سنرسل لكِ بريداً إلكترونياً على <strong style="color:var(--text);">${email}</strong> فور اكتمال عملية التحليل.` 
+            ? `لا تقلق — سنقوم بمعالجة طلبك في أقرب وقت ممكن. سنرسل لك بريداً إلكترونياً على <strong style="color:var(--text);">${email}</strong> فور اكتمال عملية التحليل.` 
             : `Don't worry — we are going to process your request as soon as possible. We'll send you an email at <strong style="color:var(--text);">${email}</strong> the moment the analysis is ready.`}
         </span>
       </div>
