@@ -387,37 +387,23 @@ async function submitRequest(searchedName) {
   const storeId = appName.toLowerCase().replace(/\s+/g, '-') + '-requested';
 
   try {
-    // 1. Upsert into apps_requested (increment count if already exists)
-    const upsertRes = await fetch(`${SUPABASE_URL}/rest/v1/apps_requested`, {
+    // 1. Upsert app request — single RPC call handles insert OR increment
+    const appRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_app_request`, {
       method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({
-        microsoft_store_id: storeId,
-        app_name: appName,
-        request_count: 1
-      })
+      headers: HEADERS,
+      body: JSON.stringify({ p_store_id: storeId, p_app_name: appName })
     });
+    if (!appRes.ok) throw new Error('Failed to submit app request');
 
-    // If app already existed, increment the count
-    if (upsertRes.status === 409 || upsertRes.ok) {
-      await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_request_count`, {
-        method: 'POST',
-        headers: HEADERS,
-        body: JSON.stringify({ store_id: storeId })
-      });
-    }
-
-    // 2. Insert into user_requests
-    await fetch(`${SUPABASE_URL}/rest/v1/user_requests`, {
+    // 2. Insert user request — unique constraint prevents duplicates silently
+    const userRes = await fetch(`${SUPABASE_URL}/rest/v1/user_requests`, {
       method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({
-        microsoft_store_id: storeId,
-        requester_email: email
-      })
+      headers: { ...HEADERS, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify({ microsoft_store_id: storeId, requester_email: email })
     });
+    if (!userRes.ok && userRes.status !== 409) throw new Error('Failed to save email');
 
-    // 3. Show success message
+    // 3. Show success
     showRequestSuccess(appName, email);
 
   } catch (e) {
@@ -503,4 +489,8 @@ function buildNotFound(name) {
 // ════════════════════════════════════════
 // 13. INIT
 // ════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', initLiveSearch);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initLiveSearch);
+} else {
+  initLiveSearch();
+}
