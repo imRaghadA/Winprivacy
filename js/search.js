@@ -310,38 +310,55 @@ async function showAlternatives(category, excludeRaw, container) {
 // ════════════════════════════════════════
 
 // Already requested — show pending message
+
+
+
+
+
+
 function showRequestPending(appName, email) {
+  // تحديد اللغة الحالية بناءً على المتغير العام lang
+  const L = typeof lang !== 'undefined' ? lang : 'en';
+
   document.getElementById('resultsInner').innerHTML = `
     <div class="result-card" style="text-align:center;padding:56px 32px;">
       <div style="font-size:56px;margin-bottom:20px;">⏳</div>
       <div style="font-family:var(--font-display);font-size:24px;font-weight:800;margin-bottom:12px;">
-        Already Requested!
+        ${L === 'ar' ? 'تم إرسال الطلب مسبقاً!' : 'Already Requested!'}
       </div>
       <div style="color:var(--muted);font-size:15px;line-height:1.7;max-width:440px;margin:0 auto 28px;">
-        You've already submitted a request for
+        ${L === 'ar' ? 'لقد قمتِ بالفعل بإرسال طلب لفحص' : "You've already submitted a request for"}
         <strong style="color:var(--text);">${appName}</strong>
-        using <strong style="color:var(--accent2);">${email}</strong>.
-        Your request is currently pending.
+        ${L === 'ar' ? 'باستخدام' : 'using'} <strong style="color:var(--accent2);">${email}</strong>.
+        ${L === 'ar' ? 'طلبكِ حالياً قيد المراجعة.' : 'Your request is currently pending.'}
       </div>
       <div style="display:inline-flex;align-items:center;gap:10px;
         background:rgba(79,143,255,0.08);border:0.5px solid rgba(79,143,255,0.25);
         border-radius:14px;padding:16px 24px;margin-bottom:32px;max-width:440px;">
         <span style="font-size:22px;">🛡️</span>
-        <span style="font-size:13px;color:var(--muted);text-align:left;line-height:1.6;">
-          Don't worry — we are going to process your request as soon as possible.
-          We'll send you an email at <strong style="color:var(--text);">${email}</strong>
-          the moment the analysis is ready.
+        <span style="font-size:13px;color:var(--muted);text-align:${L === 'ar' ? 'right' : 'left'};line-height:1.6;">
+          ${L === 'ar' 
+            ? `لا تقلقي — سنقوم بمعالجة طلبكِ في أقرب وقت ممكن. سنرسل لكِ بريداً إلكترونياً على <strong style="color:var(--text);">${email}</strong> فور اكتمال عملية التحليل.` 
+            : `Don't worry — we are going to process your request as soon as possible. We'll send you an email at <strong style="color:var(--text);">${email}</strong> the moment the analysis is ready.`}
         </span>
       </div>
       <button onclick="document.getElementById('appInput').value='';document.getElementById('results').style.display='none';"
         style="background:var(--accent);color:white;border:none;cursor:pointer;
         padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
-        Search Another App
+        ${L === 'ar' ? 'البحث عن تطبيق آخر' : 'Search Another App'}
       </button>
     </div>`;
-  if (window._winnyShowBubble)
-    window._winnyShowBubble("You already requested this one! I'll let you know when it's ready 📬", 5000);
+
+  if (window._winnyShowBubble) {
+    const bubbleMsg = L === 'ar' 
+      ? "لقد طلبت هذا التطبيق بالفعل! سأخبرك عندما يكون جاهزاً 📬" 
+      : "You already requested this one! I'll let you know when it's ready 📬";
+    window._winnyShowBubble(bubbleMsg, 5000);
+  }
 }
+
+
+
 
 // Step 1 — user clicks "Request Analysis" → show the form
 function showRequestForm(searchedName) {
