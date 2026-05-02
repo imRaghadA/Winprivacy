@@ -309,6 +309,40 @@ async function showAlternatives(category, excludeRaw, container) {
 // 11. APP REQUEST FLOW
 // ════════════════════════════════════════
 
+// Already requested — show pending message
+function showRequestPending(appName, email) {
+  document.getElementById('resultsInner').innerHTML = `
+    <div class="result-card" style="text-align:center;padding:56px 32px;">
+      <div style="font-size:56px;margin-bottom:20px;">⏳</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;margin-bottom:12px;">
+        Already Requested!
+      </div>
+      <div style="color:var(--muted);font-size:15px;line-height:1.7;max-width:440px;margin:0 auto 28px;">
+        You've already submitted a request for
+        <strong style="color:var(--text);">${appName}</strong>
+        using <strong style="color:var(--accent2);">${email}</strong>.
+        Your request is currently pending.
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:10px;
+        background:rgba(79,143,255,0.08);border:0.5px solid rgba(79,143,255,0.25);
+        border-radius:14px;padding:16px 24px;margin-bottom:32px;max-width:440px;">
+        <span style="font-size:22px;">🛡️</span>
+        <span style="font-size:13px;color:var(--muted);text-align:left;line-height:1.6;">
+          Don't worry — we are going to process your request as soon as possible.
+          We'll send you an email at <strong style="color:var(--text);">${email}</strong>
+          the moment the analysis is ready.
+        </span>
+      </div>
+      <button onclick="document.getElementById('appInput').value='';document.getElementById('results').style.display='none';"
+        style="background:var(--accent);color:white;border:none;cursor:pointer;
+        padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
+        Search Another App
+      </button>
+    </div>`;
+  if (window._winnyShowBubble)
+    window._winnyShowBubble("You already requested this one! I'll let you know when it's ready 📬", 5000);
+}
+
 // Step 1 — user clicks "Request Analysis" → show the form
 function showRequestForm(searchedName) {
   const wrap = document.getElementById('resultsInner');
@@ -388,29 +422,32 @@ async function submitRequest(searchedName) {
   const storeId = appName.toLowerCase().replace(/\s+/g, '-') + '-requested';
 
   try {
-    // 1. Upsert app request — RPC handles insert OR increment
+    // 1. Check if this email already requested this app
+    const checkUrl = `${SUPABASE_URL}/rest/v1/user_requests?microsoft_store_id=eq.${encodeURIComponent(storeId)}&requester_email=eq.${encodeURIComponent(email)}&limit=1&select=id`;
+    const checkRes  = await fetch(checkUrl, { headers: HEADERS });
+    const existing  = await checkRes.json();
+
+    if (existing && existing.length > 0) {
+      // Already requested — show pending message instead
+      showRequestPending(appName, email);
+      return;
+    }
+
+    // 2. Upsert app into apps_requested (insert or increment count)
     await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_app_request`, {
       method: 'POST',
       headers: HEADERS,
       body: JSON.stringify({ p_store_id: storeId, p_app_name: appName })
     });
-    // Note: we don't throw on RPC failure — fallback insert below handles it
 
-    // 2. Fallback: direct upsert in case RPC isn't available yet
-    await fetch(`${SUPABASE_URL}/rest/v1/apps_requested`, {
-      method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
-      body: JSON.stringify({ microsoft_store_id: storeId, app_name: appName, request_count: 1 })
-    });
-
-    // 3. Insert user request — unique constraint prevents duplicates silently
+    // 3. Insert into user_requests
     await fetch(`${SUPABASE_URL}/rest/v1/user_requests`, {
       method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+      headers: { ...HEADERS, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ microsoft_store_id: storeId, requester_email: email })
     });
 
-    // 4. Always show success — data is saved regardless
+    // 4. Show success
     showRequestSuccess(appName, email);
 
   } catch (e) {
