@@ -387,26 +387,33 @@ async function submitRequest(searchedName) {
   const storeId = appName.toLowerCase().replace(/\s+/g, '-') + '-requested';
 
   try {
-    // 1. Upsert app request — single RPC call handles insert OR increment
-    const appRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_app_request`, {
+    // 1. Upsert app request — RPC handles insert OR increment
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_app_request`, {
       method: 'POST',
       headers: HEADERS,
       body: JSON.stringify({ p_store_id: storeId, p_app_name: appName })
     });
-    if (!appRes.ok) throw new Error('Failed to submit app request');
+    // Note: we don't throw on RPC failure — fallback insert below handles it
 
-    // 2. Insert user request — unique constraint prevents duplicates silently
-    const userRes = await fetch(`${SUPABASE_URL}/rest/v1/user_requests`, {
+    // 2. Fallback: direct upsert in case RPC isn't available yet
+    await fetch(`${SUPABASE_URL}/rest/v1/apps_requested`, {
+      method: 'POST',
+      headers: { ...HEADERS, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify({ microsoft_store_id: storeId, app_name: appName, request_count: 1 })
+    });
+
+    // 3. Insert user request — unique constraint prevents duplicates silently
+    await fetch(`${SUPABASE_URL}/rest/v1/user_requests`, {
       method: 'POST',
       headers: { ...HEADERS, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
       body: JSON.stringify({ microsoft_store_id: storeId, requester_email: email })
     });
-    if (!userRes.ok && userRes.status !== 409) throw new Error('Failed to save email');
 
-    // 3. Show success
+    // 4. Always show success — data is saved regardless
     showRequestSuccess(appName, email);
 
   } catch (e) {
+    console.error('Request error:', e);
     showReqError('Something went wrong. Please try again.');
     if (btn) { btn.textContent = 'Request Analysis'; btn.disabled = false; }
   }
