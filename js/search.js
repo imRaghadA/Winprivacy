@@ -87,7 +87,7 @@ async function liveSearch(query) {
 // ════════════════════════════════════════
 async function fetchSafeAlternatives(category, excludeName) {
   if (!category) return [];
-  const url = `${SUPABASE_URL}/rest/v1/app_analysis?category=eq.${encodeURIComponent(category)}&final_decision=ilike.safe&app_name=neq.${encodeURIComponent(excludeName)}&limit=3&select=app_name,rs,rs_level`;
+  const url = `${SUPABASE_URL}/rest/v1/app_analysis?category=eq.${encodeURIComponent(category)}&final_decision=ilike.*safe*&app_name=neq.${encodeURIComponent(excludeName)}&limit=3&select=app_name,rs,rs_level,final_decision`;
   try {
     const res = await fetch(url, { headers: HEADERS });
     if (!res.ok) return [];
@@ -289,7 +289,8 @@ async function showAlternatives(category, excludeRaw, container) {
       ${alts.map(a => {
         const name = cleanAppName(a.app_name);
         const safe = name.replace(/'/g, "\\'");
-        return `<div onclick="document.getElementById('appInput').value='${safe}';runSearch();"
+        const rawSafe = a.app_name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        return `<div onclick="selectFromDropdown('${rawSafe}','${safe}')"
           style="display:flex;justify-content:space-between;align-items:center;
           padding:12px 16px;margin-bottom:8px;border-radius:12px;cursor:pointer;
           background:rgba(34,197,94,0.07);border:0.5px solid rgba(34,197,94,0.2);
