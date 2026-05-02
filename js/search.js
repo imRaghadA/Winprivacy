@@ -1,141 +1,506 @@
 // ── WinPrivacy Search Engine ──
-// Queries directly from Supabase app_analysis table
+// Phase 1: live search, sanitization, safe alternatives, app request form
 
 const SUPABASE_URL = 'https://mthksiaihxgyesvxxtbt.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10aGtzaWFpaHhneWVzdnh4dGJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mzg2OTEsImV4cCI6MjA5MjUxNDY5MX0.STu8JYCABANBUkJtKQYYAIg_TVQF5GV-GrsPB2fSI3w';
 
-async function fetchApp(name) {
-  const q = name.trim();
-  if (!q) return null;
+const HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json'
+};
 
-  // Search by app_name using case-insensitive pattern match
-  const url = `${SUPABASE_URL}/rest/v1/app_analysis?app_name=ilike.*${encodeURIComponent(q)}*&limit=1&select=*`;
-
-  const res = await fetch(url, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json'
-    }
-  });
-
-  if (!res.ok) return null;
-  const rows = await res.json();
-  if (!rows || rows.length === 0) return null;
-
-  // Map Supabase row → shape index.html expects
-  return rowToApp(rows[0]);
+// ════════════════════════════════════════
+// 1. INPUT SANITIZER
+// ════════════════════════════════════════
+function sanitize(input) {
+  return input
+    .replace(/[*%]/g, '')        // no Supabase wildcards
+    .replace(/[<>"'`;\\]/g, '')  // no HTML/JS injection chars
+    .trim()
+    .slice(0, 80);               // max length
 }
 
+function sanitizeEmail(email) {
+  return email.trim().toLowerCase().slice(0, 120);
+}
+
+// ════════════════════════════════════════
+// 2. CLEAN DISPLAY NAME FROM PACKAGE ID
+// e.g. "NHProd.AthanApp_1.0.3.0_x64__xxx" → "Athan App"
+// ════════════════════════════════════════
+function cleanAppName(rawName) {
+  const afterDot        = rawName.includes('.') ? rawName.split('.').slice(1).join('.') : rawName;
+  const beforeUnderscore = afterDot.split('_')[0];
+  return beforeUnderscore.replace(/([A-Z])/g, ' $1').trim();
+}
+
+// ════════════════════════════════════════
+// 3. FETCH SINGLE APP (on Enter / button)
+// ════════════════════════════════════════
+async function fetchApp(name) {
+  const q = sanitize(name);
+  if (!q) return null;
+  const url = `${SUPABASE_URL}/rest/v1/app_analysis?app_name=ilike.*${encodeURIComponent(q)}*&limit=1&select=*`;
+  try {
+    const res  = await fetch(url, { headers: HEADERS });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return null;
+    return rowToApp(rows[0]);
+  } catch (e) {
+    console.error('fetchApp error:', e);
+    return null;
+  }
+}
+
+// ════════════════════════════════════════
+// 4. FETCH BY EXACT PACKAGE NAME
+// ════════════════════════════════════════
+async function fetchAppByRaw(rawName) {
+  const url = `${SUPABASE_URL}/rest/v1/app_analysis?app_name=eq.${encodeURIComponent(rawName)}&limit=1&select=*`;
+  try {
+    const res  = await fetch(url, { headers: HEADERS });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return null;
+    return rowToApp(rows[0]);
+  } catch { return null; }
+}
+
+// ════════════════════════════════════════
+// 5. LIVE SEARCH (dropdown suggestions)
+// ════════════════════════════════════════
+async function liveSearch(query) {
+  const q = sanitize(query);
+  if (!q || q.length < 2) return [];
+  const url = `${SUPABASE_URL}/rest/v1/app_analysis?app_name=ilike.*${encodeURIComponent(q)}*&limit=6&select=app_name,final_decision`;
+  try {
+    const res = await fetch(url, { headers: HEADERS });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch { return []; }
+}
+
+// ════════════════════════════════════════
+// 6. FETCH SAFE ALTERNATIVES (same category)
+// ════════════════════════════════════════
+async function fetchSafeAlternatives(category, excludeName) {
+  if (!category) return [];
+  const url = `${SUPABASE_URL}/rest/v1/app_analysis?category=eq.${encodeURIComponent(category)}&final_decision=ilike.safe&app_name=neq.${encodeURIComponent(excludeName)}&limit=3&select=app_name,rs,rs_level`;
+  try {
+    const res = await fetch(url, { headers: HEADERS });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch { return []; }
+}
+
+// ════════════════════════════════════════
+// 7. ROW → APP SHAPE
+// ════════════════════════════════════════
 function rowToApp(row) {
-  // Map final_decision → verdict key
-  const verdictMap = {
-    'safe':      'safe',
-    'Safe':      'safe',
-    'normal':    'normal',
-    'Normal':    'normal',
-    'Normal+':   'normal',
-    'normal+':   'normal',
-    'anomaly':   'anomaly',
-    'Anomaly':   'anomaly',
-    'high risk': 'highrisk',
-    'High Risk': 'highrisk',
-    'High risk': 'highrisk',
-  };
+  const fd = (row.final_decision || '').toLowerCase().trim();
+  const verdict =
+    fd === 'high risk' ? 'highrisk' :
+    fd === 'normal+'   ? 'anomaly'  :
+    fd === 'safe'      ? 'safe'     :
+    fd === 'normal'    ? 'normal'   : 'normal';
 
-  // Map rs_level → rsLevelKey
   const levelMap = {
-    'low':          'Low',
-    'Low':          'Low',
-    'safe':         'Safe/Very Low',
-    'Safe':         'Safe/Very Low',
-    'very low':     'Safe/Very Low',
-    'Very Low':     'Safe/Very Low',
-    'medium':       'Medium',
-    'Medium':       'Medium',
-    'high':         'High',
-    'High':         'High',
-    'very high':    'Very High',
-    'Very High':    'Very High',
+    'low': 'Low', 'medium': 'Medium', 'high': 'High',
+    'very high': 'Very High', 'safe': 'Safe/Very Low',
   };
+  const rsLevelKey = levelMap[(row.rs_level || '').toLowerCase()] || 'Medium';
 
-  const verdict    = verdictMap[row.final_decision] || 'normal';
-  const rsLevelKey = levelMap[row.rs_level] || 'Medium';
-
-  // Build permission list from effective_permissions string
-  // e.g. "microphone, webcam, broadFileSystemAccess, internetClient"
-  const permIcons = {
-    microphone:                   { icon: '🎙️', risk: 'high'   },
-    webcam:                       { icon: '📷', risk: 'high'   },
-    privatenetworkclientserver:   { icon: '🔒', risk: 'high'   },
-    sharedusercertificates:       { icon: '🔑', risk: 'high'   },
-    documentslibrary:             { icon: '📄', risk: 'high'   },
-    enterpriseauthentication:     { icon: '🏢', risk: 'high'   },
-    videoslibrary:                { icon: '🎬', risk: 'high'   },
-    musiclibrary:                 { icon: '🎵', risk: 'medium' },
-    removablestorage:             { icon: '💾', risk: 'high'   },
-    broadfilesystemaccess:        { icon: '📁', risk: 'high'   },
-    internetclient:               { icon: '🌐', risk: 'low'    },
-    internetclientserver:         { icon: '🔗', risk: 'medium' },
-    runfulltrust:                 { icon: '⚙️', risk: 'medium' },
-    systemmanagement:             { icon: '🖥️', risk: 'medium' },
-    location:                     { icon: '📍', risk: 'medium' },
-    appointments:                 { icon: '📅', risk: 'medium' },
-    usernotificationlistener:     { icon: '🔔', risk: 'high'   },
-    backgroundmediaplayback:      { icon: '🎵', risk: 'medium' },
-    contacts:                     { icon: '👤', risk: 'medium' },
-    phonecall:                    { icon: '📞', risk: 'high'   },
-    camera:                       { icon: '📷', risk: 'high'   },
+  const permMeta = {
+    microphone:                 { icon: '🎙️', risk: 'high'   },
+    webcam:                     { icon: '📷', risk: 'high'   },
+    privatenetworkclientserver: { icon: '🔒', risk: 'high'   },
+    sharedusercertificates:     { icon: '🔑', risk: 'high'   },
+    documentslibrary:           { icon: '📄', risk: 'high'   },
+    enterpriseauthentication:   { icon: '🏢', risk: 'high'   },
+    videoslibrary:              { icon: '🎬', risk: 'high'   },
+    musiclibrary:               { icon: '🎵', risk: 'medium' },
+    removablestorage:           { icon: '💾', risk: 'high'   },
+    broadfilesystemaccess:      { icon: '📁', risk: 'high'   },
+    internetclient:             { icon: '🌐', risk: 'low'    },
+    internetclientserver:       { icon: '🔗', risk: 'medium' },
+    runfulltrust:               { icon: '⚙️', risk: 'medium' },
+    systemmanagement:           { icon: '🖥️', risk: 'medium' },
+    location:                   { icon: '📍', risk: 'medium' },
+    appointments:               { icon: '📅', risk: 'medium' },
+    usernotificationlistener:   { icon: '🔔', risk: 'high'   },
+    backgroundmediaplayback:    { icon: '🎵', risk: 'medium' },
   };
+  const riskWidth = { high: 88, medium: 55, low: 25 };
 
-  const riskLevels = { high: 85, medium: 55, low: 25 };
+  const seen = new Set();
+  const permissions = (row.effective_permissions || '')
+    .split(',').map(p => p.trim()).filter(Boolean)
+    .filter(p => {
+      const k = p.toLowerCase().replace(/[^a-z]/g, '');
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    })
+    .map(p => {
+      const key  = p.toLowerCase().replace(/[^a-z]/g, '');
+      const meta = permMeta[key] || { icon: '🔧', risk: 'medium' };
+      const name = p.replace(/([A-Z])/g, ' $1').trim();
+      return { name: { en: name, ar: name }, icon: meta.icon, risk: meta.risk, level: riskWidth[meta.risk] };
+    });
 
-  const permissions = row.effective_permissions
-    ? row.effective_permissions
-        .split(',')
-        .map(p => p.trim())
-        .filter(Boolean)
-        .map(p => {
-          const key = p.toLowerCase().replace(/[^a-z]/g, '');
-          const meta = permIcons[key] || { icon: '🔧', risk: 'medium' };
-          // Format name: camelCase → Title Case words
-          const name = p.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
-          return {
-            name: { en: name, ar: name },
-            icon: meta.icon,
-            risk: meta.risk,
-            level: riskLevels[meta.risk]
-          };
-        })
-    : [];
+  const cleanName    = cleanAppName(row.app_name || '');
+  const riskReason   = row.risk_reason && row.risk_reason !== 'None (Typical)' ? row.risk_reason : '';
+  const customFlags  = row.custom_flags && row.custom_flags !== '—' ? row.custom_flags : '';
+  const anomCount    = row.anomalous_count || 0;
+  const permCount    = row.permission_count || 0;
 
-  // Build Winny comment from real data
-  const anomCount = row.anomalous_count || 0;
-  const permCount = row.permission_count || 0;
-  const riskReason = row.risk_reason || '';
-  const customFlags = row.custom_flags || '';
-
-  let commentEn = '';
-  if (verdict === 'highrisk') {
-    commentEn = `⚠️ <strong>${row.app_name}</strong> is flagged HIGH RISK with ${permCount} permissions, ${anomCount} anomalous. Risk reasons: ${riskReason}. ${customFlags ? 'Custom flags: ' + customFlags + '.' : ''} <strong class="hl">Do not install.</strong>`;
-  } else if (verdict === 'anomaly') {
-    commentEn = `<strong>${row.app_name}</strong> has ${permCount} permissions with ${anomCount} anomalous pattern(s) detected. ${riskReason ? 'Flagged: ' + riskReason + '.' : ''} Use with awareness.`;
-  } else if (verdict === 'normal') {
-    commentEn = `<strong>${row.app_name}</strong> behaves normally for its category with ${permCount} permissions. ${anomCount > 0 ? anomCount + ' slightly unusual permission(s) noted.' : 'No anomalies detected.'}`;
-  } else {
-    commentEn = `<strong>${row.app_name}</strong> is safe — ${permCount} permissions, all within expected range. No anomalies detected. ✅`;
+  let commentEn = row.winny_analysis || '';
+  if (!commentEn) {
+    if (verdict === 'highrisk')
+      commentEn = `⚠️ <strong>${cleanName}</strong> is flagged HIGH RISK — ${permCount} permissions, ${anomCount} anomalous. Risk triggers: ${riskReason}. ${customFlags ? 'Custom flags: ' + customFlags + '.' : ''} <strong class="hl">Do not install.</strong>`;
+    else if (verdict === 'anomaly')
+      commentEn = `<strong>${cleanName}</strong> has ${permCount} permissions with ${anomCount} anomalous pattern detected. ${riskReason ? 'Flagged: ' + riskReason + '.' : ''} Use with awareness.`;
+    else if (verdict === 'normal')
+      commentEn = `<strong>${cleanName}</strong> behaves normally for its category with ${permCount} permissions. No anomalies detected.`;
+    else
+      commentEn = `<strong>${cleanName}</strong> is safe — ${permCount} permissions, all within expected range. ✅`;
   }
 
   return {
-    name:       row.app_name,
-    publisher:  row.category || 'Unknown',
-    version:    '—',
-    cat:        { en: row.category || 'Windows App', ar: row.category || 'تطبيق ويندوز' },
-    date:       '2025',
-    rs:         parseFloat(row.rs) || 0,
-    rsLevelKey: rsLevelKey,
-    verdict:    verdict,
-    permissions: permissions,
-    comment:    { en: commentEn, ar: commentEn }
+    name: cleanName,
+    rawName: row.app_name,
+    publisher: (row.category || '').replace(/_/g, ' '),
+    version: '—',
+    cat: { en: (row.category || '').replace(/_/g, ' '), ar: (row.category || '').replace(/_/g, ' ') },
+    date: '2025', rs: parseFloat(row.rs) || 0,
+    rsLevelKey, verdict, permissions,
+    rawCategory: row.category,
+    comment: { en: commentEn, ar: commentEn }
   };
 }
+
+// ════════════════════════════════════════
+// 8. LIVE DROPDOWN UI
+// ════════════════════════════════════════
+let liveTimer = null;
+let dropdown  = null;
+
+function initLiveSearch() {
+  const input = document.getElementById('appInput');
+  if (!input) return;
+
+  dropdown = document.createElement('div');
+  dropdown.id = 'liveDropdown';
+  dropdown.style.cssText = `
+    position:absolute; top:100%; left:0; right:0; z-index:300;
+    background:var(--surface); border:1px solid var(--border2);
+    border-radius:0 0 16px 16px; overflow:hidden;
+    box-shadow:0 8px 28px rgba(0,0,0,0.22); display:none;
+  `;
+  input.parentElement.style.position = 'relative';
+  input.parentElement.appendChild(dropdown);
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    clearTimeout(liveTimer);
+    if (q.length < 2) { dropdown.style.display = 'none'; return; }
+    liveTimer = setTimeout(() => triggerLiveSearch(q), 300);
+  });
+
+  document.addEventListener('click', e => {
+    if (!input.parentElement.contains(e.target)) dropdown.style.display = 'none';
+  });
+}
+
+async function triggerLiveSearch(q) {
+  const results = await liveSearch(q);
+  if (!results.length) { dropdown.style.display = 'none'; return; }
+
+  const vColor = fd => {
+    const v = (fd || '').toLowerCase();
+    return v === 'high risk' ? '#ef4444' : v === 'safe' ? '#22c55e' : v === 'normal+' ? '#eab308' : '#3b82f6';
+  };
+
+  dropdown.innerHTML = results.map(r => {
+    const name  = cleanAppName(r.app_name);
+    const color = vColor(r.final_decision);
+    const raw   = r.app_name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const safe  = name.replace(/'/g, "\\'");
+    return `<div
+      onclick="selectFromDropdown('${raw}','${safe}')"
+      style="padding:12px 18px;cursor:pointer;display:flex;justify-content:space-between;
+      align-items:center;border-bottom:0.5px solid var(--border);transition:background .15s;"
+      onmouseover="this.style.background='var(--surface2)'"
+      onmouseout="this.style.background=''">
+      <span style="font-size:14px;font-weight:500;">${name}</span>
+      <span style="font-size:11px;font-weight:700;color:${color};">${r.final_decision}</span>
+    </div>`;
+  }).join('');
+  dropdown.style.display = 'block';
+}
+
+function selectFromDropdown(rawName, cleanName) {
+  document.getElementById('appInput').value = cleanName;
+  if (dropdown) dropdown.style.display = 'none';
+  runSearchByRaw(rawName);
+}
+
+// ════════════════════════════════════════
+// 9. RUN SEARCH BY RAW PACKAGE NAME
+// ════════════════════════════════════════
+async function runSearchByRaw(rawName) {
+  const wrap  = document.getElementById('results');
+  const inner = document.getElementById('resultsInner');
+  wrap.style.display = 'block';
+  inner.innerHTML = `<div class="loading"><div class="spinner"></div><span style="color:var(--muted);font-size:14px;">Scanning…</span></div>`;
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (window._winnyLaunch) window._winnyLaunch();
+
+  const d = await fetchAppByRaw(rawName);
+  if (d) {
+    inner.innerHTML = buildResult(d);
+    animateRs(d.rs);
+    setWinny('done', d.name, d.verdict);
+    if (d.verdict === 'highrisk') showAlternatives(d.rawCategory, d.rawName, inner);
+  } else {
+    inner.innerHTML = buildNotFound(rawName);
+    setWinny('notfound', rawName);
+  }
+}
+
+// ════════════════════════════════════════
+// 10. SAFE ALTERNATIVES CARD
+// ════════════════════════════════════════
+async function showAlternatives(category, excludeRaw, container) {
+  const alts = await fetchSafeAlternatives(category, excludeRaw);
+  if (!alts.length) return;
+
+  const html = `
+    <div style="background:var(--surface);border:0.5px solid rgba(34,197,94,0.35);
+      border-radius:22px;padding:28px;margin-top:16px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+        <span style="font-size:22px;">✅</span>
+        <div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:700;">Safer Alternatives</div>
+          <div style="font-size:13px;color:var(--muted);">Apps in the same category with a Safe rating</div>
+        </div>
+      </div>
+      ${alts.map(a => {
+        const name = cleanAppName(a.app_name);
+        const safe = name.replace(/'/g, "\\'");
+        return `<div onclick="document.getElementById('appInput').value='${safe}';runSearch();"
+          style="display:flex;justify-content:space-between;align-items:center;
+          padding:12px 16px;margin-bottom:8px;border-radius:12px;cursor:pointer;
+          background:rgba(34,197,94,0.07);border:0.5px solid rgba(34,197,94,0.2);
+          transition:all .2s;"
+          onmouseover="this.style.background='rgba(34,197,94,0.14)'"
+          onmouseout="this.style.background='rgba(34,197,94,0.07)'">
+          <span style="font-size:14px;font-weight:500;">${name}</span>
+          <span style="font-size:12px;color:#22c55e;font-weight:700;">RS ${parseFloat(a.rs).toFixed(2)} · Safe ✅</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+// ════════════════════════════════════════
+// 11. APP REQUEST FLOW
+// ════════════════════════════════════════
+
+// Step 1 — user clicks "Request Analysis" → show the form
+function showRequestForm(searchedName) {
+  const wrap = document.getElementById('resultsInner');
+  wrap.innerHTML = `
+    <div class="result-card" style="text-align:center;padding:48px 32px;">
+      <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+      <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:8px;">
+        App Not Found
+      </div>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:32px;max-width:420px;margin-inline:auto;">
+        <strong style="color:var(--text);">"${sanitize(searchedName)}"</strong>
+        isn't in our database yet. Request an analysis and we'll notify you by email when it's ready.
+      </div>
+
+      <div style="max-width:420px;margin:0 auto;text-align:left;">
+        <div style="margin-bottom:16px;">
+          <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">
+            App Name
+          </label>
+          <input id="reqAppName" value="${sanitize(searchedName)}" placeholder="e.g. Athan App"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border2);
+            border-radius:10px;padding:12px 16px;color:var(--text);font-family:inherit;font-size:14px;outline:none;">
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">
+            Your Email <span style="color:var(--danger);">*</span>
+          </label>
+          <input id="reqEmail" type="email" placeholder="you@example.com"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border2);
+            border-radius:10px;padding:12px 16px;color:var(--text);font-family:inherit;font-size:14px;outline:none;">
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+            We'll email you once the analysis is ready. No spam, ever.
+          </div>
+        </div>
+
+        <div id="reqError" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none;"></div>
+
+        <div style="display:flex;gap:12px;">
+          <button onclick="submitRequest('${sanitize(searchedName)}')"
+            style="flex:1;background:var(--accent);color:white;border:none;cursor:pointer;
+            padding:14px 24px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;
+            transition:background .2s;" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">
+            Request Analysis
+          </button>
+          <button onclick="document.getElementById('results').style.display='none'"
+            style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);
+            cursor:pointer;padding:14px 20px;border-radius:30px;font-family:inherit;font-size:14px;
+            transition:all .2s;">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// Step 2 — submit the request to Supabase
+async function submitRequest(searchedName) {
+  const appNameEl = document.getElementById('reqAppName');
+  const emailEl   = document.getElementById('reqEmail');
+  const errorEl   = document.getElementById('reqError');
+
+  const appName = sanitize(appNameEl.value);
+  const email   = sanitizeEmail(emailEl.value);
+
+  // Validate
+  if (!appName) { showReqError('Please enter the app name.'); return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showReqError('Please enter a valid email address.'); return;
+  }
+
+  errorEl.style.display = 'none';
+  const btn = document.querySelector('[onclick^="submitRequest"]');
+  if (btn) { btn.textContent = 'Submitting…'; btn.disabled = true; }
+
+  // Use app name as the store ID placeholder (Phase 2 will fetch real ID from MS Store)
+  const storeId = appName.toLowerCase().replace(/\s+/g, '-') + '-requested';
+
+  try {
+    // 1. Upsert into apps_requested (increment count if already exists)
+    const upsertRes = await fetch(`${SUPABASE_URL}/rest/v1/apps_requested`, {
+      method: 'POST',
+      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({
+        microsoft_store_id: storeId,
+        app_name: appName,
+        request_count: 1
+      })
+    });
+
+    // If app already existed, increment the count
+    if (upsertRes.status === 409 || upsertRes.ok) {
+      await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_request_count`, {
+        method: 'POST',
+        headers: HEADERS,
+        body: JSON.stringify({ store_id: storeId })
+      });
+    }
+
+    // 2. Insert into user_requests
+    await fetch(`${SUPABASE_URL}/rest/v1/user_requests`, {
+      method: 'POST',
+      headers: { ...HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        microsoft_store_id: storeId,
+        requester_email: email
+      })
+    });
+
+    // 3. Show success message
+    showRequestSuccess(appName, email);
+
+  } catch (e) {
+    showReqError('Something went wrong. Please try again.');
+    if (btn) { btn.textContent = 'Request Analysis'; btn.disabled = false; }
+  }
+}
+
+function showReqError(msg) {
+  const el = document.getElementById('reqError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+// Step 3 — success state
+function showRequestSuccess(appName, email) {
+  document.getElementById('resultsInner').innerHTML = `
+    <div class="result-card" style="text-align:center;padding:56px 32px;">
+      <div style="font-size:56px;margin-bottom:20px;">📬</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;margin-bottom:12px;">
+        Request Received!
+      </div>
+      <div style="color:var(--muted);font-size:15px;line-height:1.7;max-width:440px;margin:0 auto 32px;">
+        Your request for <strong style="color:var(--text);">${appName}</strong> has been submitted.
+        We'll send a notification to <strong style="color:var(--accent2);">${email}</strong>
+        as soon as the analysis is added to the database.
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(79,143,255,0.08);
+        border:0.5px solid rgba(79,143,255,0.25);border-radius:14px;padding:14px 24px;margin-bottom:32px;">
+        <span style="font-size:18px;">⏳</span>
+        <span style="font-size:13px;color:var(--muted);">
+          Most requested apps are prioritised. The more requests, the faster we process it!
+        </span>
+      </div>
+      <button onclick="document.getElementById('appInput').value='';document.getElementById('results').style.display='none';"
+        style="background:var(--accent);color:white;border:none;cursor:pointer;
+        padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
+        Search Another App
+      </button>
+    </div>`;
+  if (window._winnyShowBubble)
+    window._winnyShowBubble("Request sent! We'll notify you when it's ready 📬", 5000);
+}
+
+// ════════════════════════════════════════
+// 12. OVERRIDE buildNotFound to show request button
+// ════════════════════════════════════════
+function buildNotFound(name) {
+  const L        = typeof lang !== 'undefined' ? lang : 'en';
+  const display  = cleanAppName(name) || name;
+  return `<div class="result-card" style="text-align:center;padding:48px 32px;">
+    <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+    <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:10px;">
+      ${L === 'ar' ? 'التطبيق غير موجود في قاعدة البيانات' : 'App not found in database'}
+    </div>
+    <div style="color:var(--muted);font-size:14px;max-width:400px;margin:0 auto 28px;line-height:1.6;">
+      <strong style="color:var(--text);">"${sanitize(display)}"</strong>
+      ${L === 'ar' ? ' غير موجود في قاعدة بياناتنا بعد.' : " isn't in our database yet."}
+    </div>
+    <button onclick="showRequestForm('${sanitize(display).replace(/'/g,"\\'")}') "
+      style="background:var(--accent);color:white;border:none;cursor:pointer;
+      padding:13px 30px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;
+      transition:background .2s;margin-bottom:12px;display:block;margin-inline:auto;"
+      onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">
+      📩 ${L === 'ar' ? 'طلب تحليل لهذا التطبيق' : 'Request Analysis for this App'}
+    </button>
+    <div style="font-size:12px;color:var(--muted);">
+      ${L === 'ar' ? 'سنتواصل معك بمجرد إضافة التحليل' : "We'll notify you by email once the analysis is ready"}
+    </div>
+    <div class="winny-comment" style="text-align:left;margin-top:28px;">
+      <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
+        <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
+        <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
+        <path d="M15 17.5l2.5 2.5 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p>${L === 'ar'
+        ? 'لم أجده بعد! يمكنك طلب تحليله وسنُعلمك فور إضافته 📬'
+        : "Hmm, not in my database yet! Request an analysis and I'll let you know when it's ready 📬"
+      }</p>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════
+// 13. INIT
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', initLiveSearch);
