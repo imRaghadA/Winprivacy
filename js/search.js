@@ -361,60 +361,101 @@ function showRequestPending(appName, email) {
 
 
 // Step 1 — user clicks "Request Analysis" → show the form
+
+
+
 function showRequestForm(searchedName) {
+  const L = typeof lang !== 'undefined' ? lang : 'en';
+
   const wrap = document.getElementById('resultsInner');
   wrap.innerHTML = `
     <div class="result-card" style="text-align:center;padding:48px 32px;">
       <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+
       <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:8px;">
-        App Not Found
-      </div>
-      <div style="color:var(--muted);font-size:14px;margin-bottom:32px;max-width:420px;margin-inline:auto;">
-        <strong style="color:var(--text);">"${sanitize(searchedName)}"</strong>
-        isn't in our database yet. Request an analysis and we'll notify you by email when it's ready.
+        ${L === 'ar' ? 'التطبيق غير موجود' : 'App Not Found'}
       </div>
 
-      <div style="max-width:420px;margin:0 auto;text-align:left;">
+      <div style="color:var(--muted);font-size:14px;margin-bottom:32px;max-width:420px;margin-inline:auto;">
+        <strong style="color:var(--text);">"${sanitize(searchedName)}"</strong>
+        ${
+          L === 'ar'
+            ? 'غير موجود في قاعدة بياناتنا حالياً. يمكنك طلب تحليل للتطبيق وسنقوم بإشعارك عبر البريد الإلكتروني فور جاهزية التحليل.'
+            : `isn't in our database yet. Request an analysis and we'll notify you by email when it's ready.`
+        }
+      </div>
+
+      <div style="max-width:420px;margin:0 auto;text-align:${L === 'ar' ? 'right' : 'left'};">
         <div style="margin-bottom:16px;">
           <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">
-            App Name
+            ${L === 'ar' ? 'اسم التطبيق' : 'App Name'}
           </label>
-          <input id="reqAppName" value="${sanitize(searchedName)}" placeholder="e.g. Athan App"
+
+          <input id="reqAppName"
+            value="${sanitize(searchedName)}"
+            placeholder="${L === 'ar' ? 'مثال: Athan App' : 'e.g. Athan App'}"
             style="width:100%;background:var(--surface2);border:1px solid var(--border2);
             border-radius:10px;padding:12px 16px;color:var(--text);font-family:inherit;font-size:14px;outline:none;">
         </div>
 
         <div style="margin-bottom:24px;">
           <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">
-            Your Email <span style="color:var(--danger);">*</span>
+            ${L === 'ar' ? 'البريد الإلكتروني' : 'Your Email'} <span style="color:var(--danger);">*</span>
           </label>
-          <input id="reqEmail" type="email" placeholder="you@example.com"
+
+          <input id="reqEmail"
+            type="email"
+            placeholder="${L === 'ar' ? 'example@email.com' : 'you@example.com'}"
             style="width:100%;background:var(--surface2);border:1px solid var(--border2);
             border-radius:10px;padding:12px 16px;color:var(--text);font-family:inherit;font-size:14px;outline:none;">
+
           <div style="font-size:11px;color:var(--muted);margin-top:6px;">
-            We'll email you once the analysis is ready. No spam, ever.
+            ${
+              L === 'ar'
+                ? 'سنرسل لك بريداً إلكترونياً فور جاهزية التحليل. بدون رسائل مزعجة.'
+                : `We'll email you once the analysis is ready. No spam, ever.`
+            }
           </div>
         </div>
 
         <div id="reqError" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none;"></div>
 
-        <div style="display:flex;gap:12px;">
+        <div style="display:flex;gap:12px;flex-direction:${L === 'ar' ? 'row-reverse' : 'row'};">
+
           <button onclick="submitRequest('${sanitize(searchedName)}')"
             style="flex:1;background:var(--accent);color:white;border:none;cursor:pointer;
             padding:14px 24px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;
-            transition:background .2s;" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">
-            Request Analysis
+            transition:background .2s;"
+            onmouseover="this.style.background='var(--accent2)'"
+            onmouseout="this.style.background='var(--accent)'">
+
+            ${L === 'ar' ? 'طلب التحليل' : 'Request Analysis'}
           </button>
+
           <button onclick="document.getElementById('results').style.display='none'"
             style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);
             cursor:pointer;padding:14px 20px;border-radius:30px;font-family:inherit;font-size:14px;
             transition:all .2s;">
-            Cancel
+
+            ${L === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>
+
         </div>
       </div>
     </div>`;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Step 2 — submit the request to Supabase
 async function submitRequest(searchedName) {
