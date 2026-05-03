@@ -535,6 +535,7 @@ const S = {
     safe:     n => `<strong style="color:var(--safe)">All good!</strong> ${n} is safe — nothing unusual detected. ✅`,
     normal:   n => `<strong style="color:var(--accent2)">Looks normal.</strong> ${n} behaves like most apps in its category. 🔵`,
     warn:     n => `<strong style="color:var(--warn)">Anomaly detected!</strong> ${n} has unusual permission patterns. ⚠️`,
+    normalplus: n => `<strong style="color:#eab308">Elevated permissions.</strong> ${n} requests more permissions than most peers — but not critically so. 🟡`,
     danger:   n => `<strong style="color:var(--danger)">High Risk!</strong> ${n} shows dangerous behaviour. Think twice. 🚨`,
     notfound: n => `I couldn't find <strong>${n}</strong> yet. Submit it for review below!`,
     nfTitle:  'App not found in database',
@@ -546,10 +547,11 @@ const S = {
     rsLevelLbl: 'RS Level',
     reviewed: 'Last Reviewed',
     verdictLabel: {
-      safe:     'Safe',
-      normal:   'Normally Detected',
-      anomaly:  'Anomaly Detected',
-      highrisk: 'High Risk',
+      safe:       'Safe',
+      normal:     'Normally Detected',
+      normalplus: 'Normal+',
+      anomaly:    'Anomaly Detected',
+      highrisk:   'High Risk',
     },
     appStatus: 'Application Status',
     rsLevelLabel: {
@@ -565,6 +567,7 @@ const S = {
     safe:     n => `<strong style="color:var(--safe)">ممتاز!</strong> ${n} آمن — لا شيء غير عادي. ✅`,
     normal:   n => `<strong style="color:var(--accent2)">طبيعي.</strong> ${n} يتصرف مثل معظم تطبيقات فئته. 🔵`,
     warn:     n => `<strong style="color:var(--warn)">شذوذ مكتشف!</strong> لدى ${n} أنماط أذونات غير عادية. ⚠️`,
+    normalplus: n => `<strong style="color:#f97316">أذونات مرتفعة.</strong> ${n} يطلب أذونات أكثر من معظم التطبيقات المماثلة — لكن ليس بشكل حرج. 🟠`,
     danger:   n => `<strong style="color:var(--danger)">خطر مرتفع!</strong> ${n} يُظهر سلوكًا خطيرًا. كن حذرًا. 🚨`,
     notfound: n => `لم أجد <strong>${n}</strong> بعد. أرسله للمراجعة أدناه!`,
     nfTitle:  'التطبيق غير موجود في قاعدة البيانات',
@@ -576,10 +579,11 @@ const S = {
     rsLevelLbl: 'مستوى الدرجة',
     reviewed: 'آخر مراجعة',
     verdictLabel: {
-      safe:     'آمن',
-      normal:   'طبيعي',
-      anomaly:  'شذوذ مكتشف',
-      highrisk: 'خطر مرتفع',
+      safe:       'آمن',
+      normal:     'طبيعي',
+      normalplus: 'طبيعي+',
+      anomaly:    'شذوذ مكتشف',
+      highrisk:   'خطر مرتفع',
     },
     appStatus: 'حالة التطبيق',
     rsLevelLabel: {
@@ -613,7 +617,7 @@ async function runSearch() {
 
 /* ── helpers ── */
 function vc(v) {
-  return v==='safe' ? '#22c55e' : v==='normal' ? '#3b82f6' : v==='anomaly' ? '#eab308' : '#ef4444';
+  return v==='safe' ? '#22c55e' : v==='normal' ? '#3b82f6' : v==='normalplus' ? '#eab308' : v==='anomaly' ? '#f97316' : '#ef4444';
 }
 function vp(v) {
   return v==='safe' ? 'pill-safe' : v==='normal' ? 'pill-normal' : v==='anomaly' ? 'pill-warn' : 'pill-danger';
@@ -645,8 +649,8 @@ function buildResult(d) {
   const lvlLabel= S[L].rsLevelLabel[d.rsLevelKey]  || d.rsLevelKey;
   const lvlClr  = levelColor(d.rsLevelKey);
   const lvlBg   = levelBg(d.rsLevelKey);
-  const statusGlow   = d.verdict==='safe' ? 'rgba(34,197,94,0.18)' : d.verdict==='normal' ? 'rgba(59,130,246,0.18)' : d.verdict==='anomaly' ? 'rgba(234,179,8,0.18)' : 'rgba(239,68,68,0.18)';
-  const statusBorder = d.verdict==='safe' ? 'rgba(34,197,94,0.4)'  : d.verdict==='normal' ? 'rgba(59,130,246,0.4)'  : d.verdict==='anomaly' ? 'rgba(234,179,8,0.4)'  : 'rgba(239,68,68,0.4)';
+  const statusGlow   = d.verdict==='safe' ? 'rgba(34,197,94,0.18)' : d.verdict==='normal' ? 'rgba(59,130,246,0.18)' : d.verdict==='normalplus' ? 'rgba(234,179,8,0.18)' : d.verdict==='anomaly' ? 'rgba(249,115,22,0.18)' : 'rgba(239,68,68,0.18)';
+  const statusBorder = d.verdict==='safe' ? 'rgba(34,197,94,0.4)'  : d.verdict==='normal' ? 'rgba(59,130,246,0.4)'  : d.verdict==='normalplus' ? 'rgba(234,179,8,0.4)'   : d.verdict==='anomaly' ? 'rgba(249,115,22,0.4)'  : 'rgba(239,68,68,0.4)';
 
   return `<div class="result-card">
     <div class="result-header">
@@ -740,7 +744,7 @@ function setWinny(state, name, verdict) {
     showFace('neutral');
     if (window._winnyWave) window._winnyWave(800);
   } else if (state === 'done') {
-    const k = verdict==='highrisk' ? 'danger' : verdict==='anomaly' ? 'warn' : verdict==='normal' ? 'normal' : 'safe';
+    const k = verdict==='highrisk' ? 'danger' : verdict==='anomaly' ? 'warn' : verdict==='normalplus' ? 'normalplus' : verdict==='normal' ? 'normal' : 'safe';
     msg = t(k)(name);
     if (verdict === 'safe') {
       showFace('happy');
