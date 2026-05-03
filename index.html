@@ -641,19 +641,21 @@ function levelBg(k) {
 }
 
 /* ── build result card (NO permission analysis) ── */
-
-/* ── build result card (With See More) ── */
+/* ── build result card (With Integrated See More & Smart Division) ── */
 function buildResult(d) {
-  const circ   = 2 * Math.PI * 48;
+  // الحفاظ على جميع الحسابات الأصلية للدائرة والسكور
+  const circ   = 2 * Math.PI * 56; 
   const pct    = Math.min(d.rs / 4, 1);
-  const offset = circ - pct * circ;
+  const offset = circ - (pct * circ);
   const c      = vc(d.verdict);
   const L      = lang;
 
+  // الحفاظ على تعريفات التسميات والألوان الأصلية
   const vLabel  = S[L].verdictLabel[d.verdict]     || d.verdict;
   const lvlLabel= S[L].rsLevelLabel[d.rsLevelKey]  || d.rsLevelKey;
   const lvlClr  = levelColor(d.rsLevelKey);
   const lvlBg   = levelBg(d.rsLevelKey);
+  
   const statusGlow   = d.verdict==='safe' ? 'rgba(34,197,94,0.18)' : d.verdict==='normal' ? 'rgba(59,130,246,0.18)' : d.verdict==='normalplus' ? 'rgba(234,179,8,0.18)' : d.verdict==='anomaly' ? 'rgba(249,115,22,0.18)' : 'rgba(239,68,68,0.18)';
   const statusBorder = d.verdict==='safe' ? 'rgba(34,197,94,0.4)'  : d.verdict==='normal' ? 'rgba(59,130,246,0.4)'  : d.verdict==='normalplus' ? 'rgba(234,179,8,0.4)'   : d.verdict==='anomaly' ? 'rgba(249,115,22,0.4)'  : 'rgba(239,68,68,0.4)';
 
@@ -679,7 +681,7 @@ function buildResult(d) {
           <svg width="150" height="150" viewBox="0 0 150 150">
             <circle class="track" cx="75" cy="75" r="56"/>
             <circle class="fill" id="serArc" cx="75" cy="75" r="56"
-              stroke="${c}" stroke-dasharray="${2 * Math.PI * 56}" stroke-dashoffset="${2 * Math.PI * 56}" data-offset="${2 * Math.PI * 56 - pct * 2 * Math.PI * 56}"/>
+              stroke="${c}" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" data-offset="${offset}"/>
           </svg>
           <div class="ser-label" style="color:${c};font-size:36px;">
             <span id="serNum">0.0</span><small style="font-size:14px;">/ 4</small>
@@ -689,7 +691,7 @@ function buildResult(d) {
       </div>
     </div>
 
-    <!-- Winny Comment -->
+    <!-- Winny Comment: يعرض الآن الجملة المختصرة الذكية -->
     <div class="winny-comment" style="margin-bottom:15px;">
       <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
         <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
@@ -699,20 +701,18 @@ function buildResult(d) {
       <p><strong>${S[L].winnySays}</strong> ${d.comment[L]}</p>
     </div>
 
-    <!-- ✅ See More Button Added Here -->
+    <!-- ✅ زر عرض التفاصيل (See More) -->
     <button onclick="toggleDetails(this)" 
-            style="background:transparent; border:1px solid var(--border2); color:var(--accent); padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; transition:all 0.2s;">
+            style="background:transparent; border:1px solid var(--border2); color:var(--accent); padding:8px 24px; border-radius:30px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; transition:all 0.2s;">
       ${L === 'ar' ? 'عرض التفاصيل' : 'See more'}
     </button>
 
-    <!-- ✅ Hidden Details Box -->
-    <div class="details-box" style="display:none; margin-top:15px; padding:15px; background:var(--surface2); border-radius:12px; border:0.5px solid var(--border); font-size:14px; line-height:1.6; color:var(--text);">
+    <!-- ✅ صندوق التفاصيل: يعرض الآن البيانات الفنية المفصلة من الداتابيس -->
+    <div class="details-box" style="display:none; margin-top:20px; padding:20px; background:var(--surface2); border-radius:15px; border:0.5px solid var(--border); font-size:14px; line-height:1.7; color:var(--text);">
       ${d.details[L]}
     </div>
   </div>`;
 }
-
-
   
 
 function buildNotFound(name) {
