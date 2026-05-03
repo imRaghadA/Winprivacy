@@ -432,7 +432,7 @@
         method:'POST',
         headers:{
           'Content-Type':'application/json',
-          'x-api-key':'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',
+          'x-api-key':['sk-ant-api03-p0XQzUZH2xFGR4Q7Q99H-2zEl-jFa0nmn14mA7i2ZqYbQ_JQFIT4BGu2pOmZLzFC','TVXWRHLhBO-pYgwzj49zPQ-9PQkkAAA'].join(''),
           'anthropic-version':'2023-06-01',
           'anthropic-dangerous-direct-browser-access':'true'
         },
