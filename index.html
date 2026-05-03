@@ -682,20 +682,26 @@ function buildResult(d) {
 
 </div>
       </div>
-      <div class="ser-score" style="align-items:center;">
-        <div class="ser-ring" style="width:150px;height:150px;">
-          <svg width="150" height="150" viewBox="0 0 150 150">
-            <circle class="track" cx="75" cy="75" r="56"/>
-            <circle class="fill" id="serArc" cx="75" cy="75" r="56"
-              stroke="${c}" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" data-offset="${offset}"/>
-          </svg>
-          <div class="ser-label" style="color:${c};font-size:36px;">
-            <span id="serNum">0.0</span><small style="font-size:14px;">/ 4</small>
-          </div>
-        </div>
-        <div class="ser-title" style="text-align:center;margin-top:6px;">${S[L].rsScore}</div>
-      </div>
+      
+   
+<div class="ser-score" style="align-items:center;">
+  <div class="ser-ring" style="width:150px;height:150px;">
+    <svg width="150" height="150" viewBox="0 0 150 150">
+      <circle class="track" cx="75" cy="75" r="56"/>
+      <!-- قمنا بتغيير stroke="${c}" إلى stroke="${lvlClr}" -->
+      <circle class="fill" id="serArc" cx="75" cy="75" r="56"
+        stroke="${lvlClr}" 
+        stroke-dasharray="${circ}" 
+        stroke-dashoffset="${circ}" 
+        data-offset="${offset}"/>
+    </svg>
+    <!-- قمنا بتغيير color:${c} إلى color:${lvlClr} لتوحيد لون الرقم أيضاً -->
+    <div class="ser-label" style="color:${lvlClr}; font-size:36px;">
+      <span id="serNum">0.0</span><small style="font-size:14px;">/ 4</small>
     </div>
+  </div>
+  <div class="ser-title" style="text-align:center; margin-top:6px;">${S[L].rsScore}</div>
+</div>
 
     <!-- Winny Comment: يعرض الآن الجملة المختصرة الذكية -->
     <div class="winny-comment" style="margin-bottom:15px;">
