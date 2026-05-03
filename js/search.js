@@ -101,10 +101,11 @@ async function fetchSafeAlternatives(category, excludeName) {
 function rowToApp(row) {
   const fd = (row.final_decision || '').toLowerCase().trim();
   const verdict =
-    fd === 'high risk' ? 'highrisk' :
-    fd === 'normal+'   ? 'normal'  :
-    fd === 'safe'      ? 'safe'     :
-    fd === 'normal'    ? 'normal'   : 'normal';
+    fd === 'high risk'    ? 'highrisk' :
+    fd === 'anomaly det.' ? 'anomaly'  :
+    fd === 'normal+'      ? 'normalplus' :
+    fd === 'safe'         ? 'safe'     :
+    fd === 'normal'       ? 'normal'   : 'normal';
 
   const levelMap = {
     'low': 'Low', 'medium': 'Medium', 'high': 'High',
@@ -310,152 +311,94 @@ async function showAlternatives(category, excludeRaw, container) {
 // ════════════════════════════════════════
 
 // Already requested — show pending message
-
-
-
-
-
-
 function showRequestPending(appName, email) {
-  // تحديد اللغة الحالية بناءً على المتغير العام lang
-  const L = typeof lang !== 'undefined' ? lang : 'en';
-
   document.getElementById('resultsInner').innerHTML = `
     <div class="result-card" style="text-align:center;padding:56px 32px;">
       <div style="font-size:56px;margin-bottom:20px;">⏳</div>
       <div style="font-family:var(--font-display);font-size:24px;font-weight:800;margin-bottom:12px;">
-        ${L === 'ar' ? 'تم إرسال الطلب مسبقاً!' : 'Already Requested!'}
+        Already Requested!
       </div>
       <div style="color:var(--muted);font-size:15px;line-height:1.7;max-width:440px;margin:0 auto 28px;">
-        ${L === 'ar' ? 'لقد قمت بالفعل بإرسال طلب لفحص' : "You've already submitted a request for"}
+        You've already submitted a request for
         <strong style="color:var(--text);">${appName}</strong>
-        ${L === 'ar' ? 'باستخدام' : 'using'} <strong style="color:var(--accent2);">${email}</strong>.
-        ${L === 'ar' ? 'طلبك حالياً قيد المراجعة.' : 'Your request is currently pending.'}
+        using <strong style="color:var(--accent2);">${email}</strong>.
+        Your request is currently pending.
       </div>
       <div style="display:inline-flex;align-items:center;gap:10px;
         background:rgba(79,143,255,0.08);border:0.5px solid rgba(79,143,255,0.25);
         border-radius:14px;padding:16px 24px;margin-bottom:32px;max-width:440px;">
         <span style="font-size:22px;">🛡️</span>
-        <span style="font-size:13px;color:var(--muted);text-align:${L === 'ar' ? 'right' : 'left'};line-height:1.6;">
-          ${L === 'ar' 
-            ? `لا تقلق — سنقوم بمعالجة طلبك في أقرب وقت ممكن. سنرسل لك بريداً إلكترونياً على <strong style="color:var(--text);">${email}</strong> فور اكتمال عملية التحليل.` 
-            : `Don't worry — we are going to process your request as soon as possible. We'll send you an email at <strong style="color:var(--text);">${email}</strong> the moment the analysis is ready.`}
+        <span style="font-size:13px;color:var(--muted);text-align:left;line-height:1.6;">
+          Don't worry — we are going to process your request as soon as possible.
+          We'll send you an email at <strong style="color:var(--text);">${email}</strong>
+          the moment the analysis is ready.
         </span>
       </div>
       <button onclick="document.getElementById('appInput').value='';document.getElementById('results').style.display='none';"
         style="background:var(--accent);color:white;border:none;cursor:pointer;
         padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
-        ${L === 'ar' ? 'البحث عن تطبيق آخر' : 'Search Another App'}
+        Search Another App
       </button>
     </div>`;
-
-  if (window._winnyShowBubble) {
-    const bubbleMsg = L === 'ar' 
-      ? "لقد طلبت هذا التطبيق بالفعل! سأخبرك عندما يكون جاهزاً 📬" 
-      : "You already requested this one! I'll let you know when it's ready 📬";
-    window._winnyShowBubble(bubbleMsg, 5000);
-  }
+  if (window._winnyShowBubble)
+    window._winnyShowBubble("You already requested this one! I'll let you know when it's ready 📬", 5000);
 }
 
-
-
-
 // Step 1 — user clicks "Request Analysis" → show the form
-
-
-
 function showRequestForm(searchedName) {
-  const L = typeof lang !== 'undefined' ? lang : 'en';
-
   const wrap = document.getElementById('resultsInner');
   wrap.innerHTML = `
     <div class="result-card" style="text-align:center;padding:48px 32px;">
       <div style="font-size:48px;margin-bottom:16px;">🔍</div>
-
       <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:8px;">
-        ${L === 'ar' ? 'التطبيق غير موجود' : 'App Not Found'}
+        App Not Found
       </div>
-
       <div style="color:var(--muted);font-size:14px;margin-bottom:32px;max-width:420px;margin-inline:auto;">
         <strong style="color:var(--text);">"${sanitize(searchedName)}"</strong>
-        ${
-          L === 'ar'
-            ? 'غير موجود في قاعدة بياناتنا حالياً. يمكنك طلب تحليل للتطبيق وسنقوم بإشعارك عبر البريد الإلكتروني فور جاهزية التحليل.'
-            : `isn't in our database yet. Request an analysis and we'll notify you by email when it's ready.`
-        }
+        isn't in our database yet. Request an analysis and we'll notify you by email when it's ready.
       </div>
 
-      <div style="max-width:420px;margin:0 auto;text-align:${L === 'ar' ? 'right' : 'left'};">
+      <div style="max-width:420px;margin:0 auto;text-align:left;">
         <div style="margin-bottom:16px;">
           <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">
-            ${L === 'ar' ? 'اسم التطبيق' : 'App Name'}
+            App Name
           </label>
-
-          <input id="reqAppName"
-            value="${sanitize(searchedName)}"
-            placeholder="${L === 'ar' ? 'مثال: Athan App' : 'e.g. Athan App'}"
+          <input id="reqAppName" value="${sanitize(searchedName)}" placeholder="e.g. Athan App"
             style="width:100%;background:var(--surface2);border:1px solid var(--border2);
             border-radius:10px;padding:12px 16px;color:var(--text);font-family:inherit;font-size:14px;outline:none;">
         </div>
 
         <div style="margin-bottom:24px;">
           <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">
-            ${L === 'ar' ? 'البريد الإلكتروني' : 'Your Email'} <span style="color:var(--danger);">*</span>
+            Your Email <span style="color:var(--danger);">*</span>
           </label>
-
-          <input id="reqEmail"
-            type="email"
-            placeholder="${L === 'ar' ? 'example@email.com' : 'you@example.com'}"
+          <input id="reqEmail" type="email" placeholder="you@example.com"
             style="width:100%;background:var(--surface2);border:1px solid var(--border2);
             border-radius:10px;padding:12px 16px;color:var(--text);font-family:inherit;font-size:14px;outline:none;">
-
           <div style="font-size:11px;color:var(--muted);margin-top:6px;">
-            ${
-              L === 'ar'
-                ? 'سنرسل لك بريداً إلكترونياً فور جاهزية التحليل. بدون رسائل مزعجة.'
-                : `We'll email you once the analysis is ready. No spam, ever.`
-            }
+            We'll email you once the analysis is ready. No spam, ever.
           </div>
         </div>
 
         <div id="reqError" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none;"></div>
 
-        <div style="display:flex;gap:12px;flex-direction:${L === 'ar' ? 'row-reverse' : 'row'};">
-
+        <div style="display:flex;gap:12px;">
           <button onclick="submitRequest('${sanitize(searchedName)}')"
             style="flex:1;background:var(--accent);color:white;border:none;cursor:pointer;
             padding:14px 24px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;
-            transition:background .2s;"
-            onmouseover="this.style.background='var(--accent2)'"
-            onmouseout="this.style.background='var(--accent)'">
-
-            ${L === 'ar' ? 'طلب التحليل' : 'Request Analysis'}
+            transition:background .2s;" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">
+            Request Analysis
           </button>
-
           <button onclick="document.getElementById('results').style.display='none'"
             style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);
             cursor:pointer;padding:14px 20px;border-radius:30px;font-family:inherit;font-size:14px;
             transition:all .2s;">
-
-            ${L === 'ar' ? 'إلغاء' : 'Cancel'}
+            Cancel
           </button>
-
         </div>
       </div>
     </div>`;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Step 2 — submit the request to Supabase
 async function submitRequest(searchedName) {
@@ -521,66 +464,34 @@ function showReqError(msg) {
 }
 
 // Step 3 — success state
-
-
-// Step 3 — success state
 function showRequestSuccess(appName, email) {
-  const L = typeof lang !== 'undefined' ? lang : 'en';
-
   document.getElementById('resultsInner').innerHTML = `
     <div class="result-card" style="text-align:center;padding:56px 32px;">
       <div style="font-size:56px;margin-bottom:20px;">📬</div>
-
       <div style="font-family:var(--font-display);font-size:24px;font-weight:800;margin-bottom:12px;">
-        ${L === 'ar' ? 'تم استلام الطلب!' : 'Request Received!'}
+        Request Received!
       </div>
-
       <div style="color:var(--muted);font-size:15px;line-height:1.7;max-width:440px;margin:0 auto 32px;">
-        ${
-          L === 'ar'
-            ? `تم إرسال طلبك لتحليل <strong style="color:var(--text);">${appName}</strong>.
-               سنقوم بإرسال إشعار إلى
-               <strong style="color:var(--accent2);">${email}</strong>
-               بمجرد إضافة التحليل إلى قاعدة البيانات.`
-            : `Your request for <strong style="color:var(--text);">${appName}</strong> has been submitted.
-               We'll send a notification to <strong style="color:var(--accent2);">${email}</strong>
-               as soon as the analysis is added to the database.`
-        }
+        Your request for <strong style="color:var(--text);">${appName}</strong> has been submitted.
+        We'll send a notification to <strong style="color:var(--accent2);">${email}</strong>
+        as soon as the analysis is added to the database.
       </div>
-
       <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(79,143,255,0.08);
         border:0.5px solid rgba(79,143,255,0.25);border-radius:14px;padding:14px 24px;margin-bottom:32px;">
-
         <span style="font-size:18px;">⏳</span>
-
         <span style="font-size:13px;color:var(--muted);">
-          ${
-            L === 'ar'
-              ? 'التطبيقات الأكثر طلباً يتم إعطاؤها أولوية أعلى. كلما زادت الطلبات، زادت سرعة معالجة التطبيق!'
-              : 'Most requested apps are prioritised. The more requests, the faster we process it!'
-          }
+          Most requested apps are prioritised. The more requests, the faster we process it!
         </span>
       </div>
-
-      <button onclick="document.getElementById('appInput').value=\'\';document.getElementById('results').style.display=\'none\';"
+      <button onclick="document.getElementById('appInput').value='';document.getElementById('results').style.display='none';"
         style="background:var(--accent);color:white;border:none;cursor:pointer;
         padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
-
-        ${L === 'ar' ? 'البحث عن تطبيق آخر' : 'Search Another App'}
+        Search Another App
       </button>
     </div>`;
-
-  if (window._winnyShowBubble) {
-    window._winnyShowBubble(
-      L === 'ar'
-        ? "تم إرسال الطلب! سنقوم بإشعارك فور جاهزية التحليل 📬"
-        : "Request sent! We'll notify you when it's ready 📬",
-      5000
-    );
-  }
+  if (window._winnyShowBubble)
+    window._winnyShowBubble("Request sent! We'll notify you when it's ready 📬", 5000);
 }
-
-
 
 // ════════════════════════════════════════
 // 12. OVERRIDE buildNotFound to show request button
