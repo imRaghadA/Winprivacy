@@ -665,16 +665,22 @@ function buildResult(d) {
         <div class="result-appname">${d.name}</div>
         <div class="result-publisher">${d.publisher} · v${d.version} · ${d.cat[L]}</div>
 
-        <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
-          <div style="display:inline-flex;flex-direction:column;gap:4px;background:${statusGlow};border:1px solid ${statusBorder};border-radius:14px;padding:12px 20px;backdrop-filter:blur(8px);">
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);">${S[L].appStatus}</span>
-            <span style="font-size:17px;font-weight:800;color:${c};letter-spacing:0.2px;">${vLabel}</span>
-          </div>
-          <div style="display:inline-flex;flex-direction:column;gap:4px;background:${lvlBg};border:1px solid ${lvlClr}55;border-radius:14px;padding:12px 20px;backdrop-filter:blur(8px);">
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);">${S[L].rsLevelLbl}</span>
-            <span style="font-size:17px;font-weight:800;color:${lvlClr};letter-spacing:0.2px;">${lvlLabel}</span>
-          </div>
-        </div>
+      
+<div style="margin-top:18px; display:flex; flex-direction:column; gap:12px;">
+  
+  <!-- RS Level: المربع العلوي بالألوان الأصلية -->
+  <div style="display:inline-flex; align-self: flex-start; flex-direction:column; gap:4px; background:${lvlBg}; border:1px solid ${lvlClr}55; border-radius:14px; padding:12px 20px; backdrop-filter:blur(8px);">
+    <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);">${S[L].rsLevelLbl}</span>
+    <span style="font-size:17px; font-weight:800; color:${lvlClr}; letter-spacing:0.2px;">${lvlLabel}</span>
+  </div>
+
+  <!-- Application Status: المربع السفلي بلون أزرق متناسق -->
+  <div style="display:inline-flex; align-self: flex-start; flex-direction:column; gap:4px; background:rgba(79,143,255,0.08); border:1px solid rgba(79,143,255,0.25); border-radius:14px; padding:12px 20px; backdrop-filter:blur(8px);">
+    <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);">${S[L].appStatus}</span>
+    <span style="font-size:17px; font-weight:800; color:var(--accent); letter-spacing:0.2px;">${vLabel}</span>
+  </div>
+
+</div>
       </div>
       <div class="ser-score" style="align-items:center;">
         <div class="ser-ring" style="width:150px;height:150px;">
