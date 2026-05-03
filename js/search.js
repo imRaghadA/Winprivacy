@@ -1,8 +1,8 @@
 // ── WinPrivacy Search Engine ──
 // Phase 1: live search, sanitization, safe alternatives, app request form
 
-<script src="config.js"></script>
-<script src="js/search.js"></script>
+const SUPABASE_URL = 'https://mthksiaihxgyesvxxtbt.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10aGtzaWFpaHhneWVzdnh4dGJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mzg2OTEsImV4cCI6MjA5MjUxNDY5MX0.STu8JYCABANBUkJtKQYYAIg_TVQF5GV-GrsPB2fSI3w';
 
 const HEADERS = {
   'apikey': SUPABASE_KEY,
