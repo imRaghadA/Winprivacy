@@ -98,6 +98,7 @@ async function fetchSafeAlternatives(category, excludeName) {
 // ════════════════════════════════════════
 // 7. ROW → APP SHAPE
 // ════════════════════════════════════════
+
 function rowToApp(row) {
   const fd = (row.final_decision || '').toLowerCase().trim();
   const verdict =
@@ -107,6 +108,7 @@ function rowToApp(row) {
     fd === 'safe'         ? 'safe'     :
     fd === 'normal'       ? 'normal'   : 'normal';
 
+  // --- إعادة الأكواد المحذوفة (خريطة المستويات والأيقونات) ---
   const levelMap = {
     'low': 'Low', 'medium': 'Medium', 'high': 'High',
     'very high': 'Very High', 'safe': 'Safe/Very Low',
@@ -135,6 +137,7 @@ function rowToApp(row) {
   };
   const riskWidth = { high: 88, medium: 55, low: 25 };
 
+  // معالجة الأذونات (Permissions)
   const seen = new Set();
   const permissions = (row.effective_permissions || '')
     .split(',').map(p => p.trim()).filter(Boolean)
@@ -150,72 +153,40 @@ function rowToApp(row) {
       return { name: { en: name, ar: name }, icon: meta.icon, risk: meta.risk, level: riskWidth[meta.risk] };
     });
 
-  const cleanName    = cleanAppName(row.app_name || '');
-  const riskReason   = row.risk_reason && row.risk_reason !== 'None (Typical)' ? row.risk_reason : '';
-  const customFlags  = row.custom_flags && row.custom_flags !== '—' ? row.custom_flags : '';
-  const anomCount    = row.anomalous_count || 0;
-  const permCount    = row.permission_count || 0;
+  const cleanName = cleanAppName(row.app_name || '');
+  const fullAnalysis = row.winny_analysis || '';
+  let shortIntro = '';
+  let technicalDetails = '';
 
-  //let commentEn = row.winny_analysis || '';
-let commentEn = '';
-let detailsEn = '';
+  // --- منطق التقسيم الذكي للتحليل الجاهز ---
+  if (fullAnalysis && fullAnalysis.includes('Winny says:')) {
+    let cleanText = fullAnalysis.replace('Winny says:', '').trim();
+    
+    // التقسيم عند أول ظهور للعناوين الفرعية الفنية كما في ملف الـ CSV
+    const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:)/g;
+    const parts = cleanText.split(splitPattern);
+    
+    shortIntro = parts[0].trim(); // النص الأول هو الجملة المختصرة
+    
+    if (parts.length > 1) {
+        technicalDetails = parts.slice(1).join('<br><br>').trim();
+    }
+  }
 
-if (verdict === 'highrisk') {
-
-  commentEn = `
-    ⚠️ <strong>${cleanName}</strong> requests unusually sensitive permissions
-    compared to similar apps. Your privacy may be at risk.
-  `;
-
-  detailsEn = `
-    <strong>Detected permissions:</strong><br>
-    ${permissions.map(p => `• ${p.name.en}`).join('<br>')}
-
-    ${customFlags ? `
-      <br><br>
-      <strong>Technical flags:</strong><br>
-      ${customFlags.split(',').map(f => `• ${f.trim()}`).join('<br>')}
-    ` : ''}
-  `;
-
-}
-
-else if (verdict === 'anomaly') {
-
-  commentEn = `
-    ⚠️ <strong>${cleanName}</strong> shows unusual behavior compared to apps in the same category.
-  `;
-
-  detailsEn = `
-    <strong>Detected permissions:</strong><br>
-    ${permissions.map(p => `• ${p.name.en}`).join('<br>')}
-  `;
-
-}
-
-else if (verdict === 'normal') {
-
-  commentEn = `
-    ✅ <strong>${cleanName}</strong> behaves normally for its category.
-  `;
-
-  detailsEn = `
-    This app uses standard permissions commonly seen in similar applications.
-  `;
-
-}
-
-else {
-
-  commentEn = `
-    🛡️ <strong>${cleanName}</strong> appears safe and uses expected permissions only.
-  `;
-
-  detailsEn = `
-    No suspicious permissions or behaviors were detected.
-  `;
-
-}
+  // إعدادات احتياطية في حال عدم وجود تحليل جاهز
+  if (!shortIntro) {
+      shortIntro = verdict === 'safe' ? `🛡️ ${cleanName} appears safe and uses expected permissions only.` : `⚠️ ${cleanName} analysis is ready. See details below.`;
+  }
+  
+  if (!technicalDetails) {
+      technicalDetails = `
+        <strong>Technical Data:</strong><br>
+        • Total Permissions: ${row.permission_count || 0}<br>
+        • Risk Category: ${rsLevelKey}<br><br>
+        <strong>Detected Permissions:</strong><br>
+        ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>')}
+      `;
+  }
 
   return {
     name: cleanName,
@@ -223,20 +194,18 @@ else {
     publisher: (row.category || '').replace(/_/g, ' '),
     version: '—',
     cat: { en: (row.category || '').replace(/_/g, ' '), ar: (row.category || '').replace(/_/g, ' ') },
-    date: '2025', rs: parseFloat(row.rs) || 0,
-    rsLevelKey, verdict, permissions,
+    date: '2025', 
+    rs: parseFloat(row.rs) || 0,
+    rsLevelKey, 
+    verdict, 
+    permissions,
     rawCategory: row.category,
-    //edit
-
-    comment: { en: commentEn, ar: commentEn },
-
-details: {
-  en: detailsEn,
-  ar: detailsEn
-}
-    
+    comment: { en: shortIntro, ar: shortIntro }, 
+    details: { en: technicalDetails, ar: technicalDetails }
   };
 }
+
+
 
 // ════════════════════════════════════════
 // 8. LIVE DROPDOWN UI
