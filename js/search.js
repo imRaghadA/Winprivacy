@@ -405,6 +405,7 @@ function showRequestForm(searchedName) {
 
 // Step 2 — submit the request to Supabase
 async function submitRequest(searchedName) {
+  const L = typeof lang !== 'undefined' ? lang : 'en';
   const appNameEl = document.getElementById('reqAppName');
   const emailEl   = document.getElementById('reqEmail');
   const errorEl   = document.getElementById('reqError');
@@ -412,15 +413,32 @@ async function submitRequest(searchedName) {
   const appName = sanitize(appNameEl.value);
   const email   = sanitizeEmail(emailEl.value);
 
-  // Validate
-  if (!appName) { showReqError('Please enter the app name.'); return; }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showReqError('Please enter a valid email address.'); return;
-  }
 
+// Validate
+if (!appName) {
+  showReqError(
+    L === 'ar'
+      ? 'الرجاء إدخال اسم التطبيق.'
+      : 'Please enter the app name.'
+  );
+  return;
+}
+
+if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  showReqError(
+    L === 'ar'
+      ? 'الرجاء إدخال بريد إلكتروني صحيح.'
+      : 'Please enter a valid email address.'
+  );
+  return;
+}
+  
   errorEl.style.display = 'none';
   const btn = document.querySelector('[onclick^="submitRequest"]');
-  if (btn) { btn.textContent = 'Submitting…'; btn.disabled = true; }
+  if (btn) {
+  btn.textContent = L === 'ar' ? 'جاري الإرسال…' : 'Submitting…';
+  btn.disabled = true;
+}
 
   // Use app name as the store ID placeholder (Phase 2 will fetch real ID from MS Store)
   const storeId = appName.toLowerCase().replace(/\s+/g, '-') + '-requested';
@@ -456,8 +474,22 @@ async function submitRequest(searchedName) {
 
   } catch (e) {
     console.error('Request error:', e);
-    showReqError('Something went wrong. Please try again.');
-    if (btn) { btn.textContent = 'Request Analysis'; btn.disabled = false; }
+  
+
+    showReqError(
+       L === 'ar'
+       ? 'حدث خطأ ما. حاول مرة أخرى.'
+       : 'Something went wrong. Please try again.'
+     );
+    
+  
+
+
+    if (btn) {
+  btn.textContent = L === 'ar' ? 'طلب التحليل' : 'Request Analysis';
+  btn.disabled = false;
+    }
+    
   }
 }
 
