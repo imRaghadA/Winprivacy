@@ -428,9 +428,14 @@
   async function callClaude(messages) {
     showTyping();
     try {
-      const res = await fetch('/.netlify/functions/chat', {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':'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',
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
         body: JSON.stringify({ model:CLAUDE_MODEL, max_tokens:1000, system:sysPrompt(), messages })
       });
       if (!res.ok) throw new Error(res.status);
