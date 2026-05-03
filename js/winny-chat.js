@@ -428,14 +428,9 @@
   async function callClaude(messages) {
     showTyping();
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('https://winny-chat.rama-kutubkhana.workers.dev', {
         method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'x-api-key':['sk-ant-api03-p0XQzUZH2xFGR4Q7Q99H-2zEl-jFa0nmn14mA7i2ZqYbQ_JQFIT4BGu2pOmZLzFC','TVXWRHLhBO-pYgwzj49zPQ-9PQkkAAA'].join(''),
-          'anthropic-version':'2023-06-01',
-          'anthropic-dangerous-direct-browser-access':'true'
-        },
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ model:CLAUDE_MODEL, max_tokens:1000, system:sysPrompt(), messages })
       });
       if (!res.ok) throw new Error(res.status);
