@@ -219,8 +219,11 @@ async function triggerLiveSearch(q) {
   if (!results.length) { dropdown.style.display = 'none'; return; }
 
   const vColor = fd => {
-    const v = (fd || '').toLowerCase();
-    return v === 'high risk' ? '#ef4444' : v === 'safe' ? '#22c55e' : v === 'normal+' ? '#eab308' : '#3b82f6';
+    const v = (fd || '').toLowerCase().trim();
+    return v === 'high risk'    ? '#ef4444' :
+           v === 'anomaly det.' ? '#f97316' :
+           v === 'normal+'      ? '#eab308' :
+           v === 'safe'         ? '#22c55e' : '#3b82f6';
   };
 
   dropdown.innerHTML = results.map(r => {
