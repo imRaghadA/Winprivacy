@@ -159,19 +159,27 @@ function rowToApp(row) {
   let technicalDetails = '';
 
   // --- منطق التقسيم الذكي للتحليل الجاهز ---
+
+
+  // --- منطق التنسيق المنظم (كل نقطة في سطر) ---
   if (fullAnalysis && fullAnalysis.includes('Winny says:')) {
     let cleanText = fullAnalysis.replace('Winny says:', '').trim();
     
-    // التقسيم عند أول ظهور للعناوين الفرعية الفنية كما في ملف الـ CSV
+    // التقسيم عند العناوين الرئيسية
     const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:)/g;
     const parts = cleanText.split(splitPattern);
     
-    shortIntro = parts[0].trim(); // النص الأول هو الجملة المختصرة
+    shortIntro = parts[0].trim(); 
     
     if (parts.length > 1) {
-        technicalDetails = parts.slice(1).join('<br><br>').trim();
+        // نأخذ باقي الأجزاء ونقوم بتنسيقها سطر بسطر
+        technicalDetails = parts.slice(1).map(part => {
+            // استبدال النقطة "•" بـ سطر جديد + نقطة لضمان الترتيب
+            return part.trim().replace(/•/g, '<br>•');
+        }).join('<br><br>');
     }
   }
+  
 
   // إعدادات احتياطية في حال عدم وجود تحليل جاهز
   if (!shortIntro) {
