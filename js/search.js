@@ -521,34 +521,66 @@ function showReqError(msg) {
 }
 
 // Step 3 — success state
+
+
+// Step 3 — success state
 function showRequestSuccess(appName, email) {
+  const L = typeof lang !== 'undefined' ? lang : 'en';
+
   document.getElementById('resultsInner').innerHTML = `
     <div class="result-card" style="text-align:center;padding:56px 32px;">
       <div style="font-size:56px;margin-bottom:20px;">📬</div>
+
       <div style="font-family:var(--font-display);font-size:24px;font-weight:800;margin-bottom:12px;">
-        Request Received!
+        ${L === 'ar' ? 'تم استلام الطلب!' : 'Request Received!'}
       </div>
+
       <div style="color:var(--muted);font-size:15px;line-height:1.7;max-width:440px;margin:0 auto 32px;">
-        Your request for <strong style="color:var(--text);">${appName}</strong> has been submitted.
-        We'll send a notification to <strong style="color:var(--accent2);">${email}</strong>
-        as soon as the analysis is added to the database.
+        ${
+          L === 'ar'
+            ? `تم إرسال طلبك لتحليل <strong style="color:var(--text);">${appName}</strong>.
+               سنقوم بإرسال إشعار إلى
+               <strong style="color:var(--accent2);">${email}</strong>
+               بمجرد إضافة التحليل إلى قاعدة البيانات.`
+            : `Your request for <strong style="color:var(--text);">${appName}</strong> has been submitted.
+               We'll send a notification to <strong style="color:var(--accent2);">${email}</strong>
+               as soon as the analysis is added to the database.`
+        }
       </div>
+
       <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(79,143,255,0.08);
         border:0.5px solid rgba(79,143,255,0.25);border-radius:14px;padding:14px 24px;margin-bottom:32px;">
+
         <span style="font-size:18px;">⏳</span>
+
         <span style="font-size:13px;color:var(--muted);">
-          Most requested apps are prioritised. The more requests, the faster we process it!
+          ${
+            L === 'ar'
+              ? 'التطبيقات الأكثر طلباً يتم إعطاؤها أولوية أعلى. كلما زادت الطلبات، زادت سرعة معالجة التطبيق!'
+              : 'Most requested apps are prioritised. The more requests, the faster we process it!'
+          }
         </span>
       </div>
-      <button onclick="document.getElementById('appInput').value='';document.getElementById('results').style.display='none';"
+
+      <button onclick="document.getElementById('appInput').value=\'\';document.getElementById('results').style.display=\'none\';"
         style="background:var(--accent);color:white;border:none;cursor:pointer;
         padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
-        Search Another App
+
+        ${L === 'ar' ? 'البحث عن تطبيق آخر' : 'Search Another App'}
       </button>
     </div>`;
-  if (window._winnyShowBubble)
-    window._winnyShowBubble("Request sent! We'll notify you when it's ready 📬", 5000);
+
+  if (window._winnyShowBubble) {
+    window._winnyShowBubble(
+      L === 'ar'
+        ? "تم إرسال الطلب! سنقوم بإشعارك فور جاهزية التحليل 📬"
+        : "Request sent! We'll notify you when it's ready 📬",
+      5000
+    );
+  }
 }
+
+
 
 // ════════════════════════════════════════
 // 12. OVERRIDE buildNotFound to show request button
