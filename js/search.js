@@ -156,17 +156,66 @@ function rowToApp(row) {
   const anomCount    = row.anomalous_count || 0;
   const permCount    = row.permission_count || 0;
 
-  let commentEn = row.winny_analysis || '';
-  if (!commentEn) {
-    if (verdict === 'highrisk')
-      commentEn = `⚠️ <strong>${cleanName}</strong> is flagged HIGH RISK — ${permCount} permissions, ${anomCount} anomalous. Risk triggers: ${riskReason}. ${customFlags ? 'Custom flags: ' + customFlags + '.' : ''} <strong class="hl">Do not install.</strong>`;
-    else if (verdict === 'anomaly')
-      commentEn = `<strong>${cleanName}</strong> has ${permCount} permissions with ${anomCount} anomalous pattern detected. ${riskReason ? 'Flagged: ' + riskReason + '.' : ''} Use with awareness.`;
-    else if (verdict === 'normal')
-      commentEn = `<strong>${cleanName}</strong> behaves normally for its category with ${permCount} permissions. No anomalies detected.`;
-    else
-      commentEn = `<strong>${cleanName}</strong> is safe — ${permCount} permissions, all within expected range. ✅`;
-  }
+  //let commentEn = row.winny_analysis || '';
+let commentEn = '';
+let detailsEn = '';
+
+if (verdict === 'highrisk') {
+
+  commentEn = `
+    ⚠️ <strong>${cleanName}</strong> requests unusually sensitive permissions
+    compared to similar apps. Your privacy may be at risk.
+  `;
+
+  detailsEn = `
+    <strong>Detected permissions:</strong><br>
+    ${permissions.map(p => `• ${p.name.en}`).join('<br>')}
+
+    ${customFlags ? `
+      <br><br>
+      <strong>Technical flags:</strong><br>
+      ${customFlags.split(',').map(f => `• ${f.trim()}`).join('<br>')}
+    ` : ''}
+  `;
+
+}
+
+else if (verdict === 'anomaly') {
+
+  commentEn = `
+    ⚠️ <strong>${cleanName}</strong> shows unusual behavior compared to apps in the same category.
+  `;
+
+  detailsEn = `
+    <strong>Detected permissions:</strong><br>
+    ${permissions.map(p => `• ${p.name.en}`).join('<br>')}
+  `;
+
+}
+
+else if (verdict === 'normal') {
+
+  commentEn = `
+    ✅ <strong>${cleanName}</strong> behaves normally for its category.
+  `;
+
+  detailsEn = `
+    This app uses standard permissions commonly seen in similar applications.
+  `;
+
+}
+
+else {
+
+  commentEn = `
+    🛡️ <strong>${cleanName}</strong> appears safe and uses expected permissions only.
+  `;
+
+  detailsEn = `
+    No suspicious permissions or behaviors were detected.
+  `;
+
+}
 
   return {
     name: cleanName,
@@ -177,7 +226,15 @@ function rowToApp(row) {
     date: '2025', rs: parseFloat(row.rs) || 0,
     rsLevelKey, verdict, permissions,
     rawCategory: row.category,
-    comment: { en: commentEn, ar: commentEn }
+    //edit
+
+    comment: { en: commentEn, ar: commentEn },
+
+details: {
+  en: detailsEn,
+  ar: detailsEn
+}
+    
   };
 }
 
@@ -574,4 +631,25 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initLiveSearch);
 } else {
   initLiveSearch();
+}
+
+
+
+
+function toggleDetails(btn) {
+
+  const box = btn.nextElementSibling;
+
+  if (box.style.display === 'none') {
+
+    box.style.display = 'block';
+    btn.textContent = 'See less';
+
+  } else {
+
+    box.style.display = 'none';
+    btn.textContent = 'See more';
+
+  }
+
 }
