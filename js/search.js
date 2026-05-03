@@ -102,7 +102,7 @@ function rowToApp(row) {
   const fd = (row.final_decision || '').toLowerCase().trim();
   const verdict =
     fd === 'high risk' ? 'highrisk' :
-    fd === 'normal+'   ? 'anomaly'  :
+    fd === 'normal+'   ? 'normal'  :
     fd === 'safe'      ? 'safe'     :
     fd === 'normal'    ? 'normal'   : 'normal';
 
