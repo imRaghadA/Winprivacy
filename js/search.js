@@ -1,5 +1,6 @@
 // ── WinPrivacy Search Engine ──
 // Phase 1: live search, sanitization, safe alternatives, app request form
+// Phase 2: Microsoft Store live results added to dropdown
 
 const SUPABASE_URL = 'https://mthksiaihxgyesvxxtbt.supabase.co'; 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10aGtzaWFpaHhneWVzdnh4dGJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mzg2OTEsImV4cCI6MjA5MjUxNDY5MX0.STu8JYCABANBUkJtKQYYAIg_TVQF5GV-GrsPB2fSI3w';
@@ -69,7 +70,7 @@ async function fetchAppByRaw(rawName) {
 }
 
 // ════════════════════════════════════════
-// 5. LIVE SEARCH (dropdown suggestions)
+// 5. LIVE SEARCH — DB (dropdown suggestions)
 // ════════════════════════════════════════
 async function liveSearch(query) {
   const q = sanitize(query);
@@ -80,6 +81,38 @@ async function liveSearch(query) {
     if (!res.ok) return [];
     return await res.json();
   } catch { return []; }
+}
+
+// ════════════════════════════════════════
+// 5b. LIVE SEARCH — MICROSOFT STORE
+// Fetches real app names, icons, publisher and Product IDs
+// from the public MS Store catalog API.
+// ════════════════════════════════════════
+async function fetchMsStoreApps(query) {
+  const url = 'https://storeedgefd.dsx.mp.microsoft.com/v9.0/products' +
+    `?query=${encodeURIComponent(query)}&market=US&locale=en-US&deviceFamily=Windows.Desktop`;
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    // The catalog API nests results differently depending on query type
+    const cards =
+      data?.Payload?.Aggregations?.[0]?.Cards ||
+      data?.Payload?.Cards || [];
+
+    return cards.slice(0, 5).map(c => ({
+      name:      c.Title || c.ShortTitle || query,
+      storeId:   c.ProductId || '',
+      publisher: c.PublisherName || '',
+      icon:      c.Images?.find(i => i.ImagePurpose === 'Tile')?.Uri ||
+                 c.Images?.[0]?.Uri || '',
+    })).filter(r => r.storeId); // discard results with no Product ID
+
+  } catch (e) {
+    console.warn('MS Store API error:', e);
+    return [];
+  }
 }
 
 // ════════════════════════════════════════
@@ -108,7 +141,6 @@ function rowToApp(row) {
     fd === 'safe'         ? 'safe'     :
     fd === 'normal'       ? 'normal'   : 'normal';
 
-  // --- إعادة الأكواد المحذوفة (خريطة المستويات والأيقونات) ---
   const levelMap = {
     'low': 'Low', 'medium': 'Medium', 'high': 'High',
     'very high': 'Very High', 'safe': 'Safe/Very Low',
@@ -137,7 +169,6 @@ function rowToApp(row) {
   };
   const riskWidth = { high: 88, medium: 55, low: 25 };
 
-  // معالجة الأذونات (Permissions)
   const seen = new Set();
   const permissions = (row.effective_permissions || '')
     .split(',').map(p => p.trim()).filter(Boolean)
@@ -158,42 +189,32 @@ function rowToApp(row) {
   let shortIntro = '';
   let technicalDetails = '';
 
-  // --- منطق التقسيم الذكي للتحليل الجاهز ---
-
-
-  // --- منطق التنسيق المنظم (كل نقطة في سطر) ---
   if (fullAnalysis && fullAnalysis.includes('Winny says:')) {
     let cleanText = fullAnalysis.replace('Winny says:', '').trim();
-    
-    // التقسيم عند العناوين الرئيسية
     const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:)/g;
     const parts = cleanText.split(splitPattern);
-    
-    shortIntro = parts[0].trim(); 
-    
+    shortIntro = parts[0].trim();
     if (parts.length > 1) {
-        // نأخذ باقي الأجزاء ونقوم بتنسيقها سطر بسطر
-        technicalDetails = parts.slice(1).map(part => {
-            // استبدال النقطة "•" بـ سطر جديد + نقطة لضمان الترتيب
-            return part.trim().replace(/•/g, '<br>•');
-        }).join('<br><br>');
+      technicalDetails = parts.slice(1).map(part => {
+        return part.trim().replace(/•/g, '<br>•');
+      }).join('<br><br>');
     }
   }
-  
 
-  // إعدادات احتياطية في حال عدم وجود تحليل جاهز
   if (!shortIntro) {
-      shortIntro = verdict === 'safe' ? `🛡️ ${cleanName} appears safe and uses expected permissions only.` : `⚠️ ${cleanName} analysis is ready. See details below.`;
+    shortIntro = verdict === 'safe'
+      ? `🛡️ ${cleanName} appears safe and uses expected permissions only.`
+      : `⚠️ ${cleanName} analysis is ready. See details below.`;
   }
-  
+
   if (!technicalDetails) {
-      technicalDetails = `
-        <strong>Technical Data:</strong><br>
-        • Total Permissions: ${row.permission_count || 0}<br>
-        • Risk Category: ${rsLevelKey}<br><br>
-        <strong>Detected Permissions:</strong><br>
-        ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>')}
-      `;
+    technicalDetails = `
+      <strong>Technical Data:</strong><br>
+      • Total Permissions: ${row.permission_count || 0}<br>
+      • Risk Category: ${rsLevelKey}<br><br>
+      <strong>Detected Permissions:</strong><br>
+      ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>')}
+    `;
   }
 
   return {
@@ -202,17 +223,16 @@ function rowToApp(row) {
     publisher: (row.category || '').replace(/_/g, ' '),
     version: '—',
     cat: { en: (row.category || '').replace(/_/g, ' '), ar: (row.category || '').replace(/_/g, ' ') },
-    date: '2025', 
+    date: '2025',
     rs: parseFloat(row.rs) || 0,
-    rsLevelKey, 
-    verdict, 
+    rsLevelKey,
+    verdict,
     permissions,
     rawCategory: row.category,
-    comment: { en: shortIntro, ar: shortIntro }, 
+    comment: { en: shortIntro, ar: shortIntro },
     details: { en: technicalDetails, ar: technicalDetails }
   };
 }
-
 
 
 // ════════════════════════════════════════
@@ -248,9 +268,22 @@ function initLiveSearch() {
   });
 }
 
+// ════════════════════════════════════════
+// triggerLiveSearch — runs DB + MS Store in parallel,
+// renders both sections in one dropdown with no conflict.
+// ════════════════════════════════════════
 async function triggerLiveSearch(q) {
-  const results = await liveSearch(q);
-  if (!results.length) { dropdown.style.display = 'none'; return; }
+  // Fire both requests at the same time
+  const [dbResults, storeResults] = await Promise.all([
+    liveSearch(q),
+    fetchMsStoreApps(q),
+  ]);
+
+  // Nothing from either source — hide dropdown
+  if (!dbResults.length && !storeResults.length) {
+    dropdown.style.display = 'none';
+    return;
+  }
 
   const vColor = fd => {
     const v = (fd || '').toLowerCase().trim();
@@ -260,28 +293,127 @@ async function triggerLiveSearch(q) {
            v === 'safe'         ? '#22c55e' : '#3b82f6';
   };
 
-  dropdown.innerHTML = results.map(r => {
-    const name  = cleanAppName(r.app_name);
-    const color = vColor(r.final_decision);
-    const raw   = r.app_name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    const safe  = name.replace(/'/g, "\\'");
-    return `<div
-      onclick="selectFromDropdown('${raw}','${safe}')"
-      style="padding:12px 18px;cursor:pointer;display:flex;justify-content:space-between;
-      align-items:center;border-bottom:0.5px solid var(--border);transition:background .15s;"
-      onmouseover="this.style.background='var(--surface2)'"
-      onmouseout="this.style.background=''">
-      <span style="font-size:14px;font-weight:500;">${name}</span>
-      <span style="font-size:11px;font-weight:700;color:${color};">${r.final_decision}</span>
-    </div>`;
-  }).join('');
+  let html = '';
+
+  // ── Section 1: DB results (already analyzed) ────────────────
+  if (dbResults.length) {
+    html += `
+      <div style="padding:5px 18px 3px;font-size:10px;font-weight:700;
+                  letter-spacing:0.8px;color:var(--muted);text-transform:uppercase;">
+        ✅ Already Analyzed
+      </div>`;
+
+    html += dbResults.map(r => {
+      const name  = cleanAppName(r.app_name);
+      const color = vColor(r.final_decision);
+      const raw   = r.app_name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const safe  = name.replace(/'/g, "\\'");
+      return `
+        <div onclick="selectFromDropdown('${raw}','${safe}')"
+          style="padding:11px 18px;cursor:pointer;display:flex;justify-content:space-between;
+                 align-items:center;border-bottom:0.5px solid var(--border);transition:background .15s;"
+          onmouseover="this.style.background='var(--surface2)'"
+          onmouseout="this.style.background=''">
+          <span style="font-size:14px;font-weight:500;">${name}</span>
+          <span style="font-size:11px;font-weight:700;color:${color};">${r.final_decision}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Section 2: MS Store results (new apps to analyze) ───────
+  if (storeResults.length) {
+    html += `
+      <div style="padding:6px 18px 3px;font-size:10px;font-weight:700;
+                  letter-spacing:0.8px;color:var(--muted);text-transform:uppercase;
+                  ${dbResults.length ? 'border-top:0.5px solid var(--border);' : ''}">
+        🏪 Microsoft Store
+      </div>`;
+
+    html += storeResults.map(r => {
+      const safeId   = r.storeId.replace(/'/g, "\\'");
+      const safeName = r.name.replace(/'/g, "\\'");
+      const safePub  = r.publisher.replace(/'/g, "\\'");
+      return `
+        <div onclick="msStoreSelect('${safeId}','${safeName}')"
+          style="padding:10px 18px;cursor:pointer;display:flex;align-items:center;
+                 gap:12px;border-bottom:0.5px solid var(--border);transition:background .15s;"
+          onmouseover="this.style.background='var(--surface2)'"
+          onmouseout="this.style.background=''">
+          ${r.icon
+            ? `<img src="${r.icon}" width="30" height="30"
+                   style="border-radius:7px;object-fit:cover;flex-shrink:0;"
+                   onerror="this.style.display='none'">`
+            : `<div style="width:30px;height:30px;border-radius:7px;
+                           background:var(--surface2);flex-shrink:0;"></div>`
+          }
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:600;white-space:nowrap;
+                        overflow:hidden;text-overflow:ellipsis;">${r.name}</div>
+            <div style="font-size:11px;color:var(--muted);">${r.publisher}</div>
+          </div>
+          <span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;
+                       padding:4px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;">
+            Analyze →
+          </span>
+        </div>`;
+    }).join('');
+  }
+
+  dropdown.innerHTML = html;
   dropdown.style.display = 'block';
 }
 
+// ════════════════════════════════════════
+// Clicking a DB result (unchanged behaviour)
+// ════════════════════════════════════════
 function selectFromDropdown(rawName, cleanName) {
   document.getElementById('appInput').value = cleanName;
   if (dropdown) dropdown.style.display = 'none';
   runSearchByRaw(rawName);
+}
+
+// ════════════════════════════════════════
+// Clicking an MS Store result
+// Checks DB first → if found show result immediately
+// If not found → show Analyze Now card (with real storeId)
+// ════════════════════════════════════════
+async function msStoreSelect(storeId, appName) {
+  if (dropdown) dropdown.style.display = 'none';
+  document.getElementById('appInput').value = appName;
+
+  const wrap  = document.getElementById('results');
+  const inner = document.getElementById('resultsInner');
+  wrap.style.display = 'block';
+  inner.innerHTML = `<div class="loading"><div class="spinner"></div>
+    <span style="color:var(--muted);font-size:14px;">Checking database…</span></div>`;
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (window._winnyLaunch) window._winnyLaunch();
+
+  // 1. Try matching by microsoft_store_id column (exact, fastest)
+  let appData = null;
+  try {
+    const res  = await fetch(
+      `${SUPABASE_URL}/rest/v1/app_analysis?microsoft_store_id=eq.${encodeURIComponent(storeId)}&limit=1&select=*`,
+      { headers: HEADERS }
+    );
+    const rows = await res.json();
+    if (rows?.length) appData = rowToApp(rows[0]);
+  } catch {}
+
+  // 2. Fallback: fuzzy name match (existing fetchApp)
+  if (!appData) appData = await fetchApp(appName);
+
+  if (appData) {
+    // Already in DB — render result exactly like a normal search
+    inner.innerHTML = buildResult(appData);
+    animateRs(appData.rs);
+    setWinny('done', appData.name, appData.verdict);
+    if (appData.verdict === 'highrisk') showAlternatives(appData.rawCategory, appData.rawName, inner);
+  } else {
+    // Not in DB — show Analyze Now card (passes storeId so the button works)
+    inner.innerHTML = buildNotFound(appName, storeId);
+    setWinny('notfound', appName);
+  }
 }
 
 // ════════════════════════════════════════
@@ -347,7 +479,6 @@ async function showAlternatives(category, excludeRaw, container) {
 // 11. APP REQUEST FLOW
 // ════════════════════════════════════════
 
-// Already requested — show pending message
 function showRequestPending(appName, email) {
   document.getElementById('resultsInner').innerHTML = `
     <div class="result-card" style="text-align:center;padding:56px 32px;">
@@ -381,7 +512,6 @@ function showRequestPending(appName, email) {
     window._winnyShowBubble("You already requested this one! I'll let you know when it's ready 📬", 5000);
 }
 
-// Step 1 — user clicks "Request Analysis" → show the form
 function showRequestForm(searchedName) {
   const wrap = document.getElementById('resultsInner');
   wrap.innerHTML = `
@@ -437,7 +567,6 @@ function showRequestForm(searchedName) {
     </div>`;
 }
 
-// Step 2 — submit the request to Supabase
 async function submitRequest(searchedName) {
   const L = typeof lang !== 'undefined' ? lang : 'en';
   const appNameEl = document.getElementById('reqAppName');
@@ -447,83 +576,49 @@ async function submitRequest(searchedName) {
   const appName = sanitize(appNameEl.value);
   const email   = sanitizeEmail(emailEl.value);
 
+  if (!appName) {
+    showReqError(L === 'ar' ? 'الرجاء إدخال اسم التطبيق.' : 'Please enter the app name.');
+    return;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showReqError(L === 'ar' ? 'الرجاء إدخال بريد إلكتروني صحيح.' : 'Please enter a valid email address.');
+    return;
+  }
 
-// Validate
-if (!appName) {
-  showReqError(
-    L === 'ar'
-      ? 'الرجاء إدخال اسم التطبيق.'
-      : 'Please enter the app name.'
-  );
-  return;
-}
-
-if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  showReqError(
-    L === 'ar'
-      ? 'الرجاء إدخال بريد إلكتروني صحيح.'
-      : 'Please enter a valid email address.'
-  );
-  return;
-}
-  
   errorEl.style.display = 'none';
   const btn = document.querySelector('[onclick^="submitRequest"]');
-  if (btn) {
-  btn.textContent = L === 'ar' ? 'جاري الإرسال…' : 'Submitting…';
-  btn.disabled = true;
-}
+  if (btn) { btn.textContent = L === 'ar' ? 'جاري الإرسال…' : 'Submitting…'; btn.disabled = true; }
 
-  // Use app name as the store ID placeholder (Phase 2 will fetch real ID from MS Store)
   const storeId = appName.toLowerCase().replace(/\s+/g, '-') + '-requested';
 
   try {
-    // 1. Check if this email already requested this app
     const checkUrl = `${SUPABASE_URL}/rest/v1/user_requests?microsoft_store_id=eq.${encodeURIComponent(storeId)}&requester_email=eq.${encodeURIComponent(email)}&limit=1&select=id`;
     const checkRes  = await fetch(checkUrl, { headers: HEADERS });
     const existing  = await checkRes.json();
 
     if (existing && existing.length > 0) {
-      // Already requested — show pending message instead
       showRequestPending(appName, email);
       return;
     }
 
-    // 2. Upsert app into apps_requested (insert or increment count)
     await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_app_request`, {
       method: 'POST',
       headers: HEADERS,
       body: JSON.stringify({ p_store_id: storeId, p_app_name: appName })
     });
 
-    // 3. Insert into user_requests
     await fetch(`${SUPABASE_URL}/rest/v1/user_requests`, {
       method: 'POST',
       headers: { ...HEADERS, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ microsoft_store_id: storeId, requester_email: email })
     });
 
-    // 4. Show success
     showRequestSuccess(appName, email);
 
   } catch (e) {
     console.error('Request error:', e);
-  
-
-    showReqError(
-       L === 'ar'
-       ? 'حدث خطأ ما. حاول مرة أخرى.'
-       : 'Something went wrong. Please try again.'
-     );
-    
-  
-
-
-    if (btn) {
-  btn.textContent = L === 'ar' ? 'طلب التحليل' : 'Request Analysis';
-  btn.disabled = false;
-    }
-    
+    showReqError(L === 'ar' ? 'حدث خطأ ما. حاول مرة أخرى.' : 'Something went wrong. Please try again.');
+    if (btn) { btn.textContent = L === 'ar' ? 'طلب التحليل' : 'Request Analysis'; btn.disabled = false; }
   }
 }
 
@@ -532,7 +627,6 @@ function showReqError(msg) {
   if (el) { el.textContent = msg; el.style.display = 'block'; }
 }
 
-// Step 3 — success state
 function showRequestSuccess(appName, email) {
   document.getElementById('resultsInner').innerHTML = `
     <div class="result-card" style="text-align:center;padding:56px 32px;">
@@ -563,11 +657,17 @@ function showRequestSuccess(appName, email) {
 }
 
 // ════════════════════════════════════════
-// 12. OVERRIDE buildNotFound to show request button
+// 12. buildNotFound
+// Now accepts optional storeId — when present (i.e. user came
+// from an MS Store result) shows "Analyze Now" button above
+// the email request button.
 // ════════════════════════════════════════
-function buildNotFound(name) {
-  const L        = typeof lang !== 'undefined' ? lang : 'en';
-  const display  = cleanAppName(name) || name;
+function buildNotFound(name, storeId = null) {
+  const L       = typeof lang !== 'undefined' ? lang : 'en';
+  const display = cleanAppName(name) || name;
+  const safeName  = sanitize(display).replace(/'/g, "\\'");
+  const safeId    = storeId ? storeId.replace(/'/g, "\\'") : '';
+
   return `<div class="result-card" style="text-align:center;padding:48px 32px;">
     <div style="font-size:48px;margin-bottom:16px;">🔍</div>
     <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:10px;">
@@ -577,13 +677,29 @@ function buildNotFound(name) {
       <strong style="color:var(--text);">"${sanitize(display)}"</strong>
       ${L === 'ar' ? ' غير موجود في قاعدة بياناتنا بعد.' : " isn't in our database yet."}
     </div>
-    <button onclick="showRequestForm('${sanitize(display).replace(/'/g,"\\'")}') "
+
+    ${storeId ? `
+    <button onclick="analyzeNow('${safeId}','${safeName}')"
       style="background:var(--accent);color:white;border:none;cursor:pointer;
+      padding:13px 30px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:700;
+      transition:background .2s;margin-bottom:10px;display:block;margin-inline:auto;min-width:220px;"
+      onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">
+      🚀 ${L === 'ar' ? 'تحليل الآن' : 'Analyze Now'}
+    </button>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:18px;">
+      ${L === 'ar' ? 'أو' : 'or'}
+    </div>` : ''}
+
+    <button onclick="showRequestForm('${safeName}')"
+      style="background:${storeId ? 'transparent' : 'var(--accent)'};
+      color:${storeId ? 'var(--muted)' : 'white'};
+      border:${storeId ? '1px solid var(--border2)' : 'none'};cursor:pointer;
       padding:13px 30px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;
       transition:background .2s;margin-bottom:12px;display:block;margin-inline:auto;"
-      onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">
-      📩 ${L === 'ar' ? 'طلب تحليل لهذا التطبيق' : 'Request Analysis for this App'}
+      onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+      📩 ${L === 'ar' ? 'طلب تحليل لهذا التطبيق' : 'Request Analysis by Email'}
     </button>
+
     <div style="font-size:12px;color:var(--muted);">
       ${L === 'ar' ? 'سنتواصل معك بمجرد إضافة التحليل' : "We'll notify you by email once the analysis is ready"}
     </div>
@@ -593,9 +709,13 @@ function buildNotFound(name) {
         <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
         <path d="M15 17.5l2.5 2.5 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <p>${L === 'ar'
-        ? 'لم أجده بعد! يمكنك طلب تحليله وسنُعلمك فور إضافته 📬'
-        : "Hmm, not in my database yet! Request an analysis and I'll let you know when it's ready 📬"
+      <p>${storeId
+        ? (L === 'ar'
+            ? 'اضغط "تحليل الآن" وسأقوم بفحصه كاملاً وأعطيك النتيجة هنا مباشرة! 🔬'
+            : 'Hit <strong>Analyze Now</strong> and I\'ll run the full scan — permissions, APIs, risk score — right here! 🔬')
+        : (L === 'ar'
+            ? 'لم أجده بعد! يمكنك طلب تحليله وسنُعلمك فور إضافته 📬'
+            : "Hmm, not in my database yet! Request an analysis and I'll let you know when it's ready 📬")
       }</p>
     </div>
   </div>`;
@@ -604,29 +724,19 @@ function buildNotFound(name) {
 // ════════════════════════════════════════
 // 13. INIT
 // ════════════════════════════════════════
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initLiveSearch);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLiveSearch);
 } else {
   initLiveSearch();
 }
 
-
-
-
 function toggleDetails(btn) {
-
   const box = btn.nextElementSibling;
-
   if (box.style.display === 'none') {
-
     box.style.display = 'block';
     btn.textContent = 'See less';
-
   } else {
-
     box.style.display = 'none';
     btn.textContent = 'See more';
-
   }
-
 }
