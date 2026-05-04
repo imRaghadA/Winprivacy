@@ -670,11 +670,7 @@ const MOCK_DB = {
   },
 };
 
-async function fetchApp(name) {
-  const key = name.trim().toLowerCase();
-  await new Promise(r => setTimeout(r, 900 + Math.random() * 600));
-  return MOCK_DB[key] || null;
-}
+/* fetchApp() is defined in js/search.js */
 
 function quickSearch(n) { document.getElementById('appInput').value = n; runSearch(); }
 
