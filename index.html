@@ -130,9 +130,9 @@ h1 {
 h1 em { font-style: normal; color: var(--accent); }
 .hero-sub { font-size: 17px; color: var(--muted); line-height: 1.7; max-width: 480px; margin-bottom: 36px; }
 .search-box {
-  display: flex; border-radius: var(--r-lg); overflow: visible;
+  display: flex; border-radius: var(--r-lg); overflow: hidden;
   background: var(--surface); border: 1px solid var(--border2);
-  transition: border-color .2s, box-shadow .2s; position: relative;
+  transition: border-color .2s, box-shadow .2s;
 }
 .search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,143,255,0.14); }
 body.light .search-box:focus-within { box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
@@ -300,6 +300,7 @@ footer a:hover { color: var(--accent); }
 .loading { display: flex; align-items: center; gap: 12px; padding: 48px; justify-content: center; }
 .spinner { width: 22px; height: 22px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 860px) {
@@ -537,8 +538,8 @@ const S = {
     scanning: n => `Scanning <strong>${n}</strong>… checking database and permissions 🔍`,
     safe:     n => `<strong style="color:var(--safe)">All good!</strong> ${n} is safe — nothing unusual detected. ✅`,
     normal:   n => `<strong style="color:var(--accent2)">Looks normal.</strong> ${n} behaves like most apps in its category. 🔵`,
-    warn:     n => `<strong style="color:var(--warn)">Anomaly detected!</strong> ${n} has unusual permission patterns. ⚠️`,
-    normalplus: n => `<strong style="color:#eab308">Elevated permissions.</strong> ${n} requests more permissions than most peers — but not critically so. 🟡`,
+    warn:     n => `<strong style="color:var(--warn)">Anomaly detected!</strong> \${n} has unusual permission patterns. ⚠️`,
+    normalplus: n => `<strong style="color:#eab308">Elevated permissions.</strong> \${n} requests more permissions than most peers — but not critically so. 🟡`,
     danger:   n => `<strong style="color:var(--danger)">High Risk!</strong> ${n} shows dangerous behaviour. Think twice. 🚨`,
     notfound: n => `I couldn't find <strong>${n}</strong> yet. Submit it for review below!`,
     nfTitle:  'App not found in database',
@@ -569,8 +570,8 @@ const S = {
     scanning: n => `جاري فحص <strong>${n}</strong>… التحقق من قاعدة البيانات 🔍`,
     safe:     n => `<strong style="color:var(--safe)">ممتاز!</strong> ${n} آمن — لا شيء غير عادي. ✅`,
     normal:   n => `<strong style="color:var(--accent2)">طبيعي.</strong> ${n} يتصرف مثل معظم تطبيقات فئته. 🔵`,
-    warn:     n => `<strong style="color:var(--warn)">شذوذ مكتشف!</strong> لدى ${n} أنماط أذونات غير عادية. ⚠️`,
-    normalplus: n => `<strong style="color:#f97316">أذونات مرتفعة.</strong> ${n} يطلب أذونات أكثر من معظم التطبيقات المماثلة — لكن ليس بشكل حرج. 🟠`,
+    warn:     n => `<strong style="color:var(--warn)">شذوذ مكتشف!</strong> لدى \${n} أنماط أذونات غير عادية. ⚠️`,
+    normalplus: n => `<strong style="color:#eab308">أذونات مرتفعة.</strong> \${n} يطلب أذونات أكثر من معظم التطبيقات المماثلة — لكن ليس بشكل حرج. 🟡`,
     danger:   n => `<strong style="color:var(--danger)">خطر مرتفع!</strong> ${n} يُظهر سلوكًا خطيرًا. كن حذرًا. 🚨`,
     notfound: n => `لم أجد <strong>${n}</strong> بعد. أرسله للمراجعة أدناه!`,
     nfTitle:  'التطبيق غير موجود في قاعدة البيانات',
@@ -600,7 +601,80 @@ const S = {
 };
 const t = k => S[lang][k];
 
-/* ── Supabase: see js/search.js ── */
+/* ═══════════════════════════════════════════════
+   MOCK DATABASE
+   RS  : Risk Score 0–4  (voted bins from FinalRiskScore_v4)
+   rsLevelKey: 'Safe/Very Low' | 'Low' | 'Medium' | 'High' | 'Very High'
+   verdict:    'safe' | 'normal' | 'anomaly' | 'highrisk'
+═══════════════════════════════════════════════ */
+const MOCK_DB = {
+  'ccleaner': {
+    name:'CCleaner', publisher:'Piriform / Avast', version:'6.23.1', date:'Apr 2025',
+    cat:{ en:'System Utility', ar:'أداة نظام' },
+    rs: 3.4, rsLevelKey: 'Very High',
+    verdict: 'highrisk',
+    comment:{
+      en:'CCleaner has a troubled history — the 2017 supply-chain attack injected malware into millions of installs. Current versions still request unusually broad permissions for a cleaner. <strong class="hl">Use with caution.</strong>',
+      ar:'لدى CCleaner تاريخ مثير للقلق — هجوم سلسلة التوريد عام 2017 حقن برمجيات خبيثة في ملايين التثبيتات. الإصدارات الحالية لا تزال تطلب صلاحيات واسعة بشكل غير عادي. <strong class="hl">استخدمه بحذر.</strong>'
+    }
+  },
+  'utorrent': {
+    name:'uTorrent', publisher:'BitTorrent Inc.', version:'3.6.0', date:'Mar 2025',
+    cat:{ en:'File Sharing', ar:'مشاركة الملفات' },
+    rs: 3.7, rsLevelKey: 'Very High',
+    verdict: 'highrisk',
+    comment:{
+      en:'uTorrent is one of the most permission-hungry apps on Windows. Its adware history and always-on network listener make it a privacy liability. <strong class="hl">Consider qBittorrent as a clean alternative.</strong>',
+      ar:'uTorrent أحد أكثر التطبيقات طلبًا للصلاحيات على ويندوز. تاريخه مع الإعلانات والمنافذ المفتوحة دائمًا يجعله خطرًا على الخصوصية. <strong class="hl">فكر في qBittorrent كبديل نظيف.</strong>'
+    }
+  },
+  'vlc': {
+    name:'VLC Media Player', publisher:'VideoLAN', version:'3.0.21', date:'Apr 2025',
+    cat:{ en:'Media Player', ar:'مشغل وسائط' },
+    rs: 0.2, rsLevelKey: 'Safe/Very Low',
+    verdict: 'safe',
+    comment:{
+      en:"VLC is one of the most privacy-respecting media players available. It's open-source, ships no telemetry, and its permissions match exactly what you'd expect. <strong class=\"hl\">Solid choice.</strong>",
+      ar:'VLC أحد أكثر مشغلات الوسائط احترامًا للخصوصية. مفتوح المصدر، لا يرسل بيانات إحصائية، وصلاحياته تطابق ما هو متوقع تمامًا. <strong class="hl">اختيار ممتاز.</strong>'
+    }
+  },
+  'vlc media player': {
+    name:'VLC Media Player', publisher:'VideoLAN', version:'3.0.21', date:'Apr 2025',
+    cat:{ en:'Media Player', ar:'مشغل وسائط' },
+    rs: 0.2, rsLevelKey: 'Safe/Very Low',
+    verdict: 'safe',
+    comment:{
+      en:"VLC is one of the most privacy-respecting media players available. It's open-source, ships no telemetry, and its permissions match exactly what you'd expect. <strong class=\"hl\">Solid choice.</strong>",
+      ar:'VLC أحد أكثر مشغلات الوسائط احترامًا للخصوصية. مفتوح المصدر، لا يرسل بيانات إحصائية، وصلاحياته تطابق ما هو متوقع تمامًا. <strong class="hl">اختيار ممتاز.</strong>'
+    }
+  },
+  'discord': {
+    name:'Discord', publisher:'Discord Inc.', version:'1.0.9178', date:'Apr 2025',
+    cat:{ en:'Communication', ar:'تواصل' },
+    rs: 2.3, rsLevelKey: 'High',
+    verdict: 'anomaly',
+    comment:{
+      en:"Discord's screen-capture and global keyboard hook are unusual for a chat app. They're justified by streaming features, but represent an anomalous permission footprint compared to similar apps. <strong class=\"hl\">Consider disabling screen share if not used.</strong>",
+      ar:'التقاط الشاشة وخطاف لوحة المفاتيح العالمي غير معتادين لتطبيق دردشة. لهما مبرر بميزات البث، لكنهما يمثلان بصمة أذونات شاذة مقارنةً بالتطبيقات المشابهة. <strong class="hl">فكر في تعطيل مشاركة الشاشة إن لم تستخدمها.</strong>'
+    }
+  },
+  'spotify': {
+    name:'Spotify', publisher:'Spotify AB', version:'1.2.40', date:'Mar 2025',
+    cat:{ en:'Music & Audio', ar:'موسيقى وصوت' },
+    rs: 1.1, rsLevelKey: 'Low',
+    verdict: 'normal',
+    comment:{
+      en:"Spotify's permissions are typical for a streaming music service. Hardware fingerprinting is the only slightly elevated element, used for DRM. <strong class=\"hl\">Normal for its category.</strong>",
+      ar:'صلاحيات Spotify نموذجية لخدمة بث موسيقي. بصمة الأجهزة هي العنصر الوحيد المرتفع قليلًا وتُستخدم لـ DRM. <strong class="hl">طبيعي لفئته.</strong>'
+    }
+  },
+};
+
+async function fetchApp(name) {
+  const key = name.trim().toLowerCase();
+  await new Promise(r => setTimeout(r, 900 + Math.random() * 600));
+  return MOCK_DB[key] || null;
+}
 
 function quickSearch(n) { document.getElementById('appInput').value = n; runSearch(); }
 
@@ -614,7 +688,7 @@ async function runSearch() {
   if (window._winnyLaunch) window._winnyLaunch();
   wrap.scrollIntoView({ behavior:'smooth', block:'start' });
   const d = await fetchApp(val);
-  if (d) { inner.innerHTML = buildResult(d); animateRs(d.rs); setWinny('done', val, d.verdict); }
+  if (d) { inner.innerHTML = buildResult(d); animateRs(d.rs); setWinny('done', val, d.verdict); if(window.updateChatContext) updateChatContext(d); }
   else   { inner.innerHTML = buildNotFound(val); setWinny('notfound', val); }
 }
 
@@ -641,23 +715,19 @@ function levelBg(k) {
 }
 
 /* ── build result card (NO permission analysis) ── */
-/* ── build result card (With Integrated See More & Smart Division) ── */
 function buildResult(d) {
-  // الحفاظ على جميع الحسابات الأصلية للدائرة والسكور
-  const circ   = 2 * Math.PI * 56; 
+  const circ   = 2 * Math.PI * 48;
   const pct    = Math.min(d.rs / 4, 1);
-  const offset = circ - (pct * circ);
+  const offset = circ - pct * circ;
   const c      = vc(d.verdict);
   const L      = lang;
 
-  // الحفاظ على تعريفات التسميات والألوان الأصلية
   const vLabel  = S[L].verdictLabel[d.verdict]     || d.verdict;
   const lvlLabel= S[L].rsLevelLabel[d.rsLevelKey]  || d.rsLevelKey;
   const lvlClr  = levelColor(d.rsLevelKey);
   const lvlBg   = levelBg(d.rsLevelKey);
-  
-  const statusGlow   = d.verdict==='safe' ? 'rgba(34,197,94,0.18)' : d.verdict==='normal' ? 'rgba(59,130,246,0.18)' : d.verdict==='normalplus' ? 'rgba(234,179,8,0.18)' : d.verdict==='anomaly' ? 'rgba(249,115,22,0.18)' : 'rgba(239,68,68,0.18)';
-  const statusBorder = d.verdict==='safe' ? 'rgba(34,197,94,0.4)'  : d.verdict==='normal' ? 'rgba(59,130,246,0.4)'  : d.verdict==='normalplus' ? 'rgba(234,179,8,0.4)'   : d.verdict==='anomaly' ? 'rgba(249,115,22,0.4)'  : 'rgba(239,68,68,0.4)';
+  const statusGlow   = d.verdict==='safe' ? 'rgba(34,197,94,0.18)' : d.verdict==='normal' ? 'rgba(59,130,246,0.18)' : d.verdict==='anomaly' ? 'rgba(234,179,8,0.18)' : 'rgba(239,68,68,0.18)';
+  const statusBorder = d.verdict==='safe' ? 'rgba(34,197,94,0.4)'  : d.verdict==='normal' ? 'rgba(59,130,246,0.4)'  : d.verdict==='anomaly' ? 'rgba(234,179,8,0.4)'  : 'rgba(239,68,68,0.4)';
 
   return `<div class="result-card">
     <div class="result-header">
@@ -665,46 +735,33 @@ function buildResult(d) {
         <div class="result-appname">${d.name}</div>
         <div class="result-publisher">${d.publisher} · v${d.version} · ${d.cat[L]}</div>
 
-      
-<div style="margin-top:18px; display:flex; flex-direction:column; gap:12px;">
-  
-  <!-- RS Level: المربع العلوي بالألوان الأصلية -->
-  <div style="display:inline-flex; align-self: flex-start; flex-direction:column; gap:4px; background:${lvlBg}; border:1px solid ${lvlClr}55; border-radius:14px; padding:12px 20px; backdrop-filter:blur(8px);">
-    <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);">${S[L].rsLevelLbl}</span>
-    <span style="font-size:17px; font-weight:800; color:${lvlClr}; letter-spacing:0.2px;">${lvlLabel}</span>
-  </div>
-
-  <!-- Application Status: المربع السفلي بلون أزرق متناسق -->
-  <div style="display:inline-flex; align-self: flex-start; flex-direction:column; gap:4px; background:rgba(79,143,255,0.08); border:1px solid rgba(79,143,255,0.25); border-radius:14px; padding:12px 20px; backdrop-filter:blur(8px);">
-    <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted);">${S[L].appStatus}</span>
-    <span style="font-size:17px; font-weight:800; color:var(--accent); letter-spacing:0.2px;">${vLabel}</span>
-  </div>
-
-</div>
+        <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
+          <div style="display:inline-flex;flex-direction:column;gap:4px;background:${statusGlow};border:1px solid ${statusBorder};border-radius:14px;padding:12px 20px;backdrop-filter:blur(8px);">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);">${S[L].appStatus}</span>
+            <span style="font-size:17px;font-weight:800;color:${c};letter-spacing:0.2px;">${vLabel}</span>
+          </div>
+          <div style="display:inline-flex;flex-direction:column;gap:4px;background:${lvlBg};border:1px solid ${lvlClr}55;border-radius:14px;padding:12px 20px;backdrop-filter:blur(8px);">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);">${S[L].rsLevelLbl}</span>
+            <span style="font-size:17px;font-weight:800;color:${lvlClr};letter-spacing:0.2px;">${lvlLabel}</span>
+          </div>
+        </div>
       </div>
-      
-   
-<div class="ser-score" style="align-items:center;">
-  <div class="ser-ring" style="width:150px;height:150px;">
-    <svg width="150" height="150" viewBox="0 0 150 150">
-      <circle class="track" cx="75" cy="75" r="56"/>
-      <!-- قمنا بتغيير stroke="${c}" إلى stroke="${lvlClr}" -->
-      <circle class="fill" id="serArc" cx="75" cy="75" r="56"
-        stroke="${lvlClr}" 
-        stroke-dasharray="${circ}" 
-        stroke-dashoffset="${circ}" 
-        data-offset="${offset}"/>
-    </svg>
-    <!-- قمنا بتغيير color:${c} إلى color:${lvlClr} لتوحيد لون الرقم أيضاً -->
-    <div class="ser-label" style="color:${lvlClr}; font-size:36px;">
-      <span id="serNum">0.0</span><small style="font-size:14px;">/ 4</small>
+      <div class="ser-score" style="align-items:center;">
+        <div class="ser-ring" style="width:150px;height:150px;">
+          <svg width="150" height="150" viewBox="0 0 150 150">
+            <circle class="track" cx="75" cy="75" r="56"/>
+            <circle class="fill" id="serArc" cx="75" cy="75" r="56"
+              stroke="${c}" stroke-dasharray="${2 * Math.PI * 56}" stroke-dashoffset="${2 * Math.PI * 56}" data-offset="${2 * Math.PI * 56 - pct * 2 * Math.PI * 56}"/>
+          </svg>
+          <div class="ser-label" style="color:${c};font-size:36px;">
+            <span id="serNum">0.0</span><small style="font-size:14px;">/ 4</small>
+          </div>
+        </div>
+        <div class="ser-title" style="text-align:center;margin-top:6px;">${S[L].rsScore}</div>
+      </div>
     </div>
-  </div>
-  <div class="ser-title" style="text-align:center; margin-top:6px;">${S[L].rsScore}</div>
-</div>
 
-    <!-- Winny Comment: يعرض الآن الجملة المختصرة الذكية -->
-    <div class="winny-comment" style="margin-bottom:15px;">
+    <div class="winny-comment">
       <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
         <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
         <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
@@ -712,20 +769,8 @@ function buildResult(d) {
       </svg>
       <p><strong>${S[L].winnySays}</strong> ${d.comment[L]}</p>
     </div>
-
-    <!-- ✅ زر عرض التفاصيل (See More) -->
-    <button onclick="toggleDetails(this)" 
-            style="background:transparent; border:1px solid var(--border2); color:var(--accent); padding:8px 24px; border-radius:30px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; transition:all 0.2s;">
-      ${L === 'ar' ? 'عرض التفاصيل' : 'See more'}
-    </button>
-
-    <!-- ✅ صندوق التفاصيل: يعرض الآن البيانات الفنية المفصلة من الداتابيس -->
-    <div class="details-box" style="display:none; margin-top:20px; padding:20px; background:var(--surface2); border-radius:15px; border:0.5px solid var(--border); font-size:14px; line-height:1.7; color:var(--text);">
-      ${d.details[L]}
-    </div>
   </div>`;
 }
-  
 
 function buildNotFound(name) {
   const L = lang;
@@ -1325,7 +1370,6 @@ function toggleLang() {
 }
 </script>
 <script src="js/search.js"></script>
-<script src="js/app.js"></script>   ← add this line
 <script src="js/winny-chat.js"></script>
 </body>
 </html>
