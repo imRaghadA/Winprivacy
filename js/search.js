@@ -30,7 +30,8 @@ function sanitizeEmail(email) {
 // e.g. "NHProd.AthanApp_1.0.3.0_x64__xxx" → "Athan App"
 // ════════════════════════════════════════
 function cleanAppName(rawName) {
-  const afterDot        = rawName.includes('.') ? rawName.split('.').slice(1).join('.') : rawName;
+  if (!rawName) return rawName;
+  const afterDot         = rawName.includes('.') ? rawName.split('.').slice(1).join('.') : rawName;
   const beforeUnderscore = afterDot.split('_')[0];
   return beforeUnderscore.replace(/([A-Z])/g, ' $1').trim();
 }
@@ -87,7 +88,7 @@ async function liveSearch(query) {
 // ════════════════════════════════════════
 async function fetchSafeAlternatives(category, excludeName) {
   if (!category) return [];
-  const url = `${SUPABASE_URL}/rest/v1/app_analysis?category=eq.${encodeURIComponent(category)}&final_decision=ilike.*safe*&app_name=neq.${encodeURIComponent(excludeName)}&limit=3&select=app_name,rs,rs_level,final_decision`;
+  const url = `${SUPABASE_URL}/rest/v1/app_analysis?category=eq.${encodeURIComponent(category)}&final_decision=eq.Safe&app_name=neq.${encodeURIComponent(excludeName)}&limit=3&select=app_name,rs,rs_level,final_decision`;
   try {
     const res = await fetch(url, { headers: HEADERS });
     if (!res.ok) return [];
@@ -97,21 +98,32 @@ async function fetchSafeAlternatives(category, excludeName) {
 
 // ════════════════════════════════════════
 // 7. ROW → APP SHAPE
+//
+// Aligned with WinPrivacyRS.py scorer output:
+//   final_decision values: "Safe" | "Moderate Risk" | "Anomaly Det." | "High Risk" | "Unscored"
+//   rs_level values:       "Very Low" | "Low" | "Medium" | "High" | "Very High" | "Unscored"
 // ════════════════════════════════════════
 
 function rowToApp(row) {
-  const fd = (row.final_decision || '').toLowerCase().trim();
-  const verdict =
-    fd === 'high risk'    ? 'highrisk' :
-    fd === 'anomaly det.' ? 'anomaly'  :
-    fd === 'normal+'      ? 'normalplus' :
-    fd === 'safe'         ? 'safe'     :
-    fd === 'normal'       ? 'normal'   : 'normal';
+  const fd = (row.final_decision || '').trim();
 
-  // --- إعادة الأكواد المحذوفة (خريطة المستويات والأيقونات) ---
+  // Map every decision string the Python scorer can produce
+  const verdict =
+    fd === 'High Risk'     ? 'highrisk'    :
+    fd === 'Anomaly Det.'  ? 'anomaly'     :
+    fd === 'Moderate Risk' ? 'normalplus'  :   // ← was missing
+    fd === 'Safe'          ? 'safe'        :
+    fd === 'Unscored'      ? 'normal'      :   // ← was missing
+                             'normal';
+
+  // Map every rs_level the Python scorer can produce
   const levelMap = {
-    'low': 'Low', 'medium': 'Medium', 'high': 'High',
-    'very high': 'Very High', 'safe': 'Safe/Very Low',
+    'very low' : 'Very Low',     // ← was missing
+    'low'      : 'Low',
+    'medium'   : 'Medium',
+    'high'     : 'High',
+    'very high': 'Very High',
+    'unscored' : 'Unscored',     // ← was missing
   };
   const rsLevelKey = levelMap[(row.rs_level || '').toLowerCase()] || 'Medium';
 
@@ -134,10 +146,17 @@ function rowToApp(row) {
     appointments:               { icon: '📅', risk: 'medium' },
     usernotificationlistener:   { icon: '🔔', risk: 'high'   },
     backgroundmediaplayback:    { icon: '🎵', risk: 'medium' },
+    backgroundmediarecording:   { icon: '🎙️', risk: 'high'   },
+    graphicscapture:            { icon: '🖥️', risk: 'high'   },
+    inputinjectionbrokered:     { icon: '⌨️', risk: 'high'   },
+    codegeneration:             { icon: '💻', risk: 'medium' },
+    contacts:                   { icon: '👤', risk: 'medium' },
+    pictureslibrary:            { icon: '🖼️', risk: 'low'    },
+    humaninterfacedevice:       { icon: '🕹️', risk: 'low'    },
   };
   const riskWidth = { high: 88, medium: 55, low: 25 };
 
-  // معالجة الأذونات (Permissions)
+  // Process permissions (deduplicated, lowercase-keyed)
   const seen = new Set();
   const permissions = (row.effective_permissions || '')
     .split(',').map(p => p.trim()).filter(Boolean)
@@ -153,63 +172,77 @@ function rowToApp(row) {
       return { name: { en: name, ar: name }, icon: meta.icon, risk: meta.risk, level: riskWidth[meta.risk] };
     });
 
-  const cleanName = cleanAppName(row.app_name || '');
+  const cleanName = cleanAppName(row.app_name || '') || row.app_name;
   const fullAnalysis = row.winny_analysis || '';
   let shortIntro = '';
   let technicalDetails = '';
 
-  // --- منطق التقسيم الذكي للتحليل الجاهز ---
-
-
-  // --- منطق التنسيق المنظم (كل نقطة في سطر) ---
+  // Split Winny analysis into intro + technical sections.
+  // Matches section headers produced by generate_winny_text() in WinPrivacyRS.py:
+  //   "Additional Permissions Identified:" (Moderate Risk)
+  //   "Anomalous Permissions Detected:"   (High Risk / Anomaly Det.)
+  //   "Technical Risk Flags:"
+  //   "Conclusion:"
   if (fullAnalysis && fullAnalysis.includes('Winny says:')) {
     let cleanText = fullAnalysis.replace('Winny says:', '').trim();
-    
-    // التقسيم عند العناوين الرئيسية
-    const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:)/g;
+
+    const splitPattern = /(?=Additional Permissions Identified:|Anomalous Permissions Detected:|Technical Risk Flags:|Conclusion:)/g;
     const parts = cleanText.split(splitPattern);
-    
-    shortIntro = parts[0].trim(); 
-    
+
+    shortIntro = parts[0].trim();
+
     if (parts.length > 1) {
-        // نأخذ باقي الأجزاء ونقوم بتنسيقها سطر بسطر
-        technicalDetails = parts.slice(1).map(part => {
-            // استبدال النقطة "•" بـ سطر جديد + نقطة لضمان الترتيب
-            return part.trim().replace(/•/g, '<br>•');
-        }).join('<br><br>');
+      technicalDetails = parts.slice(1).map(part =>
+        part.trim().replace(/•/g, '<br>•')
+      ).join('<br><br>');
     }
   }
-  
 
-  // إعدادات احتياطية في حال عدم وجود تحليل جاهز
+  // Fallbacks when no Winny text is present
   if (!shortIntro) {
-      shortIntro = verdict === 'safe' ? `🛡️ ${cleanName} appears safe and uses expected permissions only.` : `⚠️ ${cleanName} analysis is ready. See details below.`;
+    const fallbacks = {
+      highrisk   : `❌ ${cleanName} has been flagged as High Risk. Review permissions below.`,
+      anomaly    : `⚠️ ${cleanName} shows an unusual permission profile compared to similar apps.`,
+      normalplus : `🟡 ${cleanName} has some additional permissions beyond what's typical.`,
+      safe       : `✅ ${cleanName} appears safe and uses only expected permissions.`,
+      normal     : `ℹ️ ${cleanName} has a typical permission profile for its category.`,
+    };
+    shortIntro = fallbacks[verdict] || `ℹ️ ${cleanName} analysis is ready. See details below.`;
   }
-  
+
   if (!technicalDetails) {
-      technicalDetails = `
-        <strong>Technical Data:</strong><br>
-        • Total Permissions: ${row.permission_count || 0}<br>
-        • Risk Category: ${rsLevelKey}<br><br>
-        <strong>Detected Permissions:</strong><br>
-        ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>')}
-      `;
+    technicalDetails = `
+      <strong>Technical Data:</strong><br>
+      • Total Permissions: ${row.permission_count || 0}<br>
+      • Anomalous Permissions: ${row.anomalous_count || 0}<br>
+      • Risk Level: ${rsLevelKey}<br><br>
+      <strong>Detected Permissions:</strong><br>
+      ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>') || '• None detected'}
+    `;
   }
 
   return {
-    name: cleanName,
-    rawName: row.app_name,
-    publisher: (row.category || '').replace(/_/g, ' '),
-    version: '—',
-    cat: { en: (row.category || '').replace(/_/g, ' '), ar: (row.category || '').replace(/_/g, ' ') },
-    date: '2025', 
-    rs: parseFloat(row.rs) || 0,
-    rsLevelKey, 
-    verdict, 
+    name      : cleanName,
+    rawName   : row.app_name,
+    publisher : (row.category || '').replace(/_/g, ' '),
+    version   : '—',
+    cat       : {
+      en: (row.category || '').replace(/_/g, ' '),
+      ar: (row.category || '').replace(/_/g, ' ')
+    },
+    date         : '2025',
+    rs           : parseFloat(row.rs)   || 0,
+    rsp          : parseFloat(row.rsp)  || 0,
+    rsLevelKey,
+    verdict,
+    finalDecision: fd,              // raw string for display if needed
     permissions,
-    rawCategory: row.category,
-    comment: { en: shortIntro, ar: shortIntro }, 
-    details: { en: technicalDetails, ar: technicalDetails }
+    permissionCount  : parseInt(row.permission_count)  || 0,
+    anomalousCount   : parseInt(row.anomalous_count)   || 0,
+    customFlags      : row.custom_flags || '—',
+    rawCategory      : row.category,
+    comment : { en: shortIntro,       ar: shortIntro       },
+    details : { en: technicalDetails, ar: technicalDetails }
   };
 }
 
@@ -248,21 +281,24 @@ function initLiveSearch() {
   });
 }
 
+// Maps every final_decision value the scorer produces → badge color
+function verdictColor(fd) {
+  const v = (fd || '').trim();
+  return v === 'High Risk'     ? '#ef4444' :   // red
+         v === 'Anomaly Det.'  ? '#f97316' :   // orange
+         v === 'Moderate Risk' ? '#eab308' :   // yellow  ← was missing
+         v === 'Safe'          ? '#22c55e' :   // green
+         v === 'Unscored'      ? '#6b7280' :   // grey    ← was missing
+                                 '#3b82f6';    // blue (Normal / fallback)
+}
+
 async function triggerLiveSearch(q) {
   const results = await liveSearch(q);
   if (!results.length) { dropdown.style.display = 'none'; return; }
 
-  const vColor = fd => {
-    const v = (fd || '').toLowerCase().trim();
-    return v === 'high risk'    ? '#ef4444' :
-           v === 'anomaly det.' ? '#f97316' :
-           v === 'normal+'      ? '#eab308' :
-           v === 'safe'         ? '#22c55e' : '#3b82f6';
-  };
-
   dropdown.innerHTML = results.map(r => {
-    const name  = cleanAppName(r.app_name);
-    const color = vColor(r.final_decision);
+    const name  = cleanAppName(r.app_name) || r.app_name;
+    const color = verdictColor(r.final_decision);
     const raw   = r.app_name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     const safe  = name.replace(/'/g, "\\'");
     return `<div
@@ -300,7 +336,10 @@ async function runSearchByRaw(rawName) {
     inner.innerHTML = buildResult(d);
     animateRs(d.rs);
     setWinny('done', d.name, d.verdict);
-    if (d.verdict === 'highrisk') showAlternatives(d.rawCategory, d.rawName, inner);
+    // Show alternatives for both High Risk and Anomaly (both are concerning)
+    if (d.verdict === 'highrisk' || d.verdict === 'anomaly') {
+      showAlternatives(d.rawCategory, d.rawName, inner);
+    }
   } else {
     inner.innerHTML = buildNotFound(rawName);
     setWinny('notfound', rawName);
@@ -325,7 +364,7 @@ async function showAlternatives(category, excludeRaw, container) {
         </div>
       </div>
       ${alts.map(a => {
-        const name = cleanAppName(a.app_name);
+        const name = cleanAppName(a.app_name) || a.app_name;
         const safe = name.replace(/'/g, "\\'");
         const rawSafe = a.app_name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         return `<div onclick="selectFromDropdown('${rawSafe}','${safe}')"
@@ -447,32 +486,31 @@ async function submitRequest(searchedName) {
   const appName = sanitize(appNameEl.value);
   const email   = sanitizeEmail(emailEl.value);
 
+  // Validate
+  if (!appName) {
+    showReqError(
+      L === 'ar'
+        ? 'الرجاء إدخال اسم التطبيق.'
+        : 'Please enter the app name.'
+    );
+    return;
+  }
 
-// Validate
-if (!appName) {
-  showReqError(
-    L === 'ar'
-      ? 'الرجاء إدخال اسم التطبيق.'
-      : 'Please enter the app name.'
-  );
-  return;
-}
-
-if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  showReqError(
-    L === 'ar'
-      ? 'الرجاء إدخال بريد إلكتروني صحيح.'
-      : 'Please enter a valid email address.'
-  );
-  return;
-}
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showReqError(
+      L === 'ar'
+        ? 'الرجاء إدخال بريد إلكتروني صحيح.'
+        : 'Please enter a valid email address.'
+    );
+    return;
+  }
   
   errorEl.style.display = 'none';
   const btn = document.querySelector('[onclick^="submitRequest"]');
   if (btn) {
-  btn.textContent = L === 'ar' ? 'جاري الإرسال…' : 'Submitting…';
-  btn.disabled = true;
-}
+    btn.textContent = L === 'ar' ? 'جاري الإرسال…' : 'Submitting…';
+    btn.disabled = true;
+  }
 
   // Use app name as the store ID placeholder (Phase 2 will fetch real ID from MS Store)
   const storeId = appName.toLowerCase().replace(/\s+/g, '-') + '-requested';
@@ -484,7 +522,6 @@ if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     const existing  = await checkRes.json();
 
     if (existing && existing.length > 0) {
-      // Already requested — show pending message instead
       showRequestPending(appName, email);
       return;
     }
@@ -508,22 +545,15 @@ if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
 
   } catch (e) {
     console.error('Request error:', e);
-  
-
     showReqError(
-       L === 'ar'
-       ? 'حدث خطأ ما. حاول مرة أخرى.'
-       : 'Something went wrong. Please try again.'
-     );
-    
-  
-
-
+      L === 'ar'
+        ? 'حدث خطأ ما. حاول مرة أخرى.'
+        : 'Something went wrong. Please try again.'
+    );
     if (btn) {
-  btn.textContent = L === 'ar' ? 'طلب التحليل' : 'Request Analysis';
-  btn.disabled = false;
+      btn.textContent = L === 'ar' ? 'طلب التحليل' : 'Request Analysis';
+      btn.disabled = false;
     }
-    
   }
 }
 
@@ -566,8 +596,9 @@ function showRequestSuccess(appName, email) {
 // 12. OVERRIDE buildNotFound to show request button
 // ════════════════════════════════════════
 function buildNotFound(name) {
-  const L        = typeof lang !== 'undefined' ? lang : 'en';
-  const display  = cleanAppName(name) || name;
+  const L = typeof lang !== 'undefined' ? lang : 'en';
+  // cleanAppName is safe here — falls back to raw name if no dots/underscores
+  const display = cleanAppName(name) || name;
   return `<div class="result-card" style="text-align:center;padding:48px 32px;">
     <div style="font-size:48px;margin-bottom:16px;">🔍</div>
     <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:10px;">
@@ -611,22 +642,13 @@ if (document.readyState === "loading") {
 }
 
 
-
-
 function toggleDetails(btn) {
-
   const box = btn.nextElementSibling;
-
   if (box.style.display === 'none') {
-
     box.style.display = 'block';
     btn.textContent = 'See less';
-
   } else {
-
     box.style.display = 'none';
     btn.textContent = 'See more';
-
   }
-
 }
