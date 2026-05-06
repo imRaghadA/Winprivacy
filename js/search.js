@@ -855,9 +855,12 @@ async function pollJobStatus(jobId, appName) {
         const jobRows = jobRes.ok ? await jobRes.json() : [];
         const realStoreId = jobRows[0]?.microsoft_store_id || '';
 
+        // Wait 3 seconds first to ensure worker has finished saving
+        await new Promise(r => setTimeout(r, 3000));
+
         let d = null;
-        for (let attempt = 0; attempt < 5; attempt++) {
-          if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
+        for (let attempt = 0; attempt < 6; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 2000));
 
           // Try app_id first (most accurate for new apps)
           if (realStoreId && !realStoreId.endsWith('-queued')) {
