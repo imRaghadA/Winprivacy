@@ -178,30 +178,8 @@ async function fetchSafeAlternatives(category, excludeRaw) {
   } catch { return []; }
 }
 
-// ════════════════════════════════════════
-// MICROSOFT STORE SEARCH (direct — no backend needed)
-// ════════════════════════════════════════
-async function searchMSStore(query) {
-  try {
-    const res = await fetch(
-      `https://storeedgefd.dsx.mp.microsoft.com/v9.0/search?query=${encodeURIComponent(query)}&market=US&locale=en-US&deviceFamily=Windows.Desktop`,
-      { signal: AbortSignal.timeout(8000) }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    const items = [
-      ...(data?.Payload?.HighlightedList || []),
-      ...(data?.Payload?.SearchList || [])
-    ].slice(0, 6);
-    return items.map(item => ({
-      name:        item.Title         || '',
-      storeId:     item.ProductId     || '',
-      publisher:   item.PublisherName || '',
-      iconUrl:     item.Images?.[0]?.Uri || '',
-      description: (item.Description  || '').slice(0, 120)
-    }));
-  } catch { return []; }
-}
+// MS Store API removed — search is Supabase-only
+async function searchMSStore(query) { return []; }
 
 // ════════════════════════════════════════
 // LIVE DROPDOWN
@@ -239,20 +217,9 @@ function initLiveSearch() {
 }
 
 async function triggerLiveSearch(q) {
-  // Always search Supabase DB
   const dbResults = await searchSupabaseNames(q);
-
-  // Search MS Store directly (no backend needed)
-  let storeResults = [];
-  try {
-    storeResults = await Promise.race([
-      searchMSStore(q),
-      new Promise(resolve => setTimeout(() => resolve([]), 4000))
-    ]);
-  } catch { storeResults = []; }
-
-  currentStoreResults = storeResults;
-  renderDropdown(dbResults, storeResults, q);
+  currentStoreResults = [];
+  renderDropdown(dbResults, [], q);
 }
 
 async function searchSupabaseNames(q) {
@@ -333,68 +300,10 @@ function selectFromDropdown(rawName, cleanName) {
   runSearchByRaw(rawName);
 }
 
-function selectStoreApp(index, cleanName) {
-  const store = currentStoreResults.filter(s => {
-    const dbNames = [];
-    return true;
-  })[index] || currentStoreResults[index];
-  lastSelectedStore = store;
-  document.getElementById('appInput').value = cleanName;
-  if (dropdown) dropdown.style.display = 'none';
-  showAnalyzeNow(store);
-}
 
 // ════════════════════════════════════════
 // ANALYZE NOW CARD
 // ════════════════════════════════════════
-function showAnalyzeNow(storeApp) {
-  const wrap  = document.getElementById('results');
-  const inner = document.getElementById('resultsInner');
-  wrap.style.display = 'block';
-  wrap.scrollIntoView({ behavior:'smooth', block:'start' });
-
-  const icon = storeApp.iconUrl
-    ? `<img src="${storeApp.iconUrl}" style="width:64px;height:64px;border-radius:16px;object-fit:cover;">`
-    : `<div style="font-size:56px;">📦</div>`;
-
-  inner.innerHTML = `
-    <div class="result-card" style="text-align:center;padding:48px 32px;">
-      <div style="margin-bottom:16px;">${icon}</div>
-      <div style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:6px;">
-        ${storeApp.name}
-      </div>
-      <div style="color:var(--muted);font-size:13px;margin-bottom:6px;">${storeApp.publisher}</div>
-      <div style="color:var(--muted);font-size:13px;max-width:420px;margin:0 auto 28px;line-height:1.6;">
-        ${storeApp.description || ''}
-      </div>
-      <div style="display:inline-flex;align-items:center;gap:10px;
-        background:rgba(79,143,255,0.08);border:0.5px solid rgba(79,143,255,0.25);
-        border-radius:14px;padding:14px 24px;margin-bottom:28px;">
-        <span style="font-size:18px;">🔍</span>
-        <span style="font-size:13px;color:var(--muted);text-align:left;line-height:1.6;">
-          ${t(
-            'This app is not in our database yet. Click below to run a full privacy analysis.',
-            'هذا التطبيق غير موجود في قاعدة بياناتنا بعد. اضغط أدناه لإجراء تحليل خصوصية كامل.'
-          )}
-        </span>
-      </div>
-      <button onclick="startAnalysis('${storeApp.name.replace(/'/g,"\\'")}','${storeApp.storeId}','')"
-        style="background:var(--accent);color:white;border:none;cursor:pointer;
-        padding:14px 36px;border-radius:30px;font-family:inherit;font-size:15px;font-weight:700;
-        transition:all .2s;display:block;margin:0 auto 12px;"
-        onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">
-        ⚡ ${t('Analyze Now','تحليل الآن')}
-      </button>
-      <div style="font-size:12px;color:var(--muted);">
-        ${t('Estimated time: 2–5 minutes','الوقت المتوقع: 2–5 دقائق')}
-      </div>
-    </div>`;
-
-  if (window._winnyShowBubble)
-    window._winnyShowBubble(
-      t(`Found <strong>${storeApp.name}</strong> on the Store! Click Analyze Now to scan it 🔍`,
-        `وجدت <strong>${storeApp.name}</strong> في المتجر! اضغط تحليل الآن للفحص 🔍`), 5000);
-}
 
 
 // ════════════════════════════════════════
@@ -470,39 +379,49 @@ async function runSearchByRaw(rawName) {
 // NOT FOUND + REQUEST FORM
 // ════════════════════════════════════════
 function buildNotFound(name) {
-  const display = cleanAppName(name) || name;
+  const L       = typeof lang !== 'undefined' ? lang : 'en';
+  const display = cleanAppName(name) || sanitize(name);
+  const safeName = sanitize(display).replace(/'/g, "\\'");
+
   return `<div class="result-card" style="text-align:center;padding:48px 32px;">
     <div style="font-size:48px;margin-bottom:16px;">🔍</div>
     <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:10px;">
-      ${t('App not found in database','التطبيق غير موجود في قاعدة البيانات')}
+      ${L === 'ar' ? 'التطبيق غير موجود في قاعدة البيانات' : 'App not found in database'}
     </div>
-    <div style="color:var(--muted);font-size:14px;max-width:400px;margin:0 auto 28px;line-height:1.6;">
+    <div style="color:var(--muted);font-size:14px;max-width:420px;margin:0 auto 28px;line-height:1.6;">
       <strong style="color:var(--text);">"${sanitize(display)}"</strong>
-      ${t(" isn't in our database yet.",' غير موجود في قاعدة بياناتنا بعد.')}
+      ${L === 'ar' ? ' غير موجود في قاعدة بياناتنا بعد.' : " isn't in our database yet."}
     </div>
-    <button onclick="showRequestForm('${sanitize(display).replace(/'/g,"\\'")}') "
+
+    <button onclick="startAnalysisJob('${safeName}', '')"
       style="background:var(--accent);color:white;border:none;cursor:pointer;
-      padding:13px 30px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;
-      transition:background .2s;margin-bottom:12px;display:block;margin-inline:auto;"
-      onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">
-      📩 ${t('Request Analysis','طلب تحليل')}
+      padding:14px 36px;border-radius:30px;font-family:inherit;font-size:15px;font-weight:700;
+      display:block;margin:0 auto 12px;transition:background .2s;"
+      onmouseover="this.style.background='var(--accent2)'"
+      onmouseout="this.style.background='var(--accent)'">
+      ⚡ ${L === 'ar' ? 'تحليل الآن' : 'Analyze Now'}
     </button>
-    <div style="font-size:12px;color:var(--muted);">
-      ${t("We'll notify you by email once the analysis is ready","سنتواصل معك بمجرد إضافة التحليل")}
+
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">
+      ${L === 'ar'
+        ? 'سيتم تحليل التطبيق وعرض النتائج خلال دقائق'
+        : 'The app will be analyzed and results shown within minutes'}
     </div>
-    <div class="winny-comment" style="text-align:${L()==='ar'?'right':'left'};margin-top:28px;">
+
+    <div class="winny-comment" style="text-align:${L==='ar'?'right':'left'};">
       <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
         <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
         <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
         <path d="M15 17.5l2.5 2.5 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <p>${t(
-        "Hmm, not in my database yet! Request an analysis and I'll let you know when it's ready 📬",
-        'لم أجده بعد! يمكنك طلب تحليله وسنُعلمك فور إضافته 📬'
-      )}</p>
+      <p>${L === 'ar'
+        ? 'لم أجده بعد! اضغط <strong>تحليل الآن</strong> وسأعالجه وأعرض لك النتائج فور الانتهاء 🔍'
+        : "Not in my database yet! Click <strong>Analyze Now</strong> and I'll process it and show you the results 🔍"
+      }</p>
     </div>
   </div>`;
 }
+
 
 // ════════════════════════════════════════
 // REQUEST FORM
