@@ -159,6 +159,20 @@ async function fetchApp(name) {
   } catch { return null; }
 }
 
+async function fetchAppById(appId) {
+  if (!appId || appId.endsWith('-queued')) return null;
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/app_analysis?app_id=eq.${encodeURIComponent(appId)}&limit=1&select=*`;
+    const res  = await fetch(url, { headers: HEADERS });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows && rows.length > 0 ? rowToApp(rows[0]) : null;
+  } catch (e) {
+    console.error('fetchAppById error:', e);
+    return null;
+  }
+}
+
 async function fetchAppByRaw(rawName) {
   const url = `${SUPABASE_URL}/rest/v1/app_analysis?app_name=eq.${encodeURIComponent(rawName)}&limit=1&select=*`;
   try {
@@ -833,17 +847,26 @@ async function pollJobStatus(jobId, appName) {
       if ((job.status === 'done' || job.status === 'complete')) {
         clearInterval(timer);
 
-        // Try multiple search terms — worker may save under display_name
-        // e.g. user typed "Notepads App" but display_name is "Notepads App" too
-        // but package name could differ — try first word as fallback
+        // Fetch the real store ID from the job (worker updates it)
+        const jobRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/analysis_jobs?job_id=eq.${jobId}&select=microsoft_store_id`,
+          { headers: HEADERS }
+        );
+        const jobRows = jobRes.ok ? await jobRes.json() : [];
+        const realStoreId = jobRows[0]?.microsoft_store_id || '';
+
         let d = null;
-        const terms = [
-          appName,                          // full name: "Notepads App"
-          appName.split(' ')[0],            // first word: "Notepads"
-          appName.replace(/\s+/g, ''),      // no spaces: "NotepadsApp"
-        ];
         for (let attempt = 0; attempt < 5; attempt++) {
           if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
+
+          // Try app_id first (most accurate for new apps)
+          if (realStoreId && !realStoreId.endsWith('-queued')) {
+            d = await fetchAppById(realStoreId);
+            if (d) break;
+          }
+
+          // Fall back to name search
+          const terms = [appName, appName.split(' ')[0]];
           for (const term of terms) {
             d = await fetchApp(term);
             if (d) break;
