@@ -231,65 +231,23 @@ async function searchSupabaseNames(q) {
 }
 
 function renderDropdown(dbResults, storeResults, q) {
-  let html = '';
+  if (!dbResults || !dbResults.length) { dropdown.style.display = 'none'; return; }
 
-  // DB results — already analyzed
-  if (dbResults.length > 0) {
-    html += `<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">
-      ${t('In Database','في قاعدة البيانات')}
+  const html = dbResults.map(r => {
+    const name  = cleanAppName(r.app_name);
+    const color = fdColor(r.final_decision);
+    const raw   = r.app_name.replace(/\\/g,'\\\\').replace(/'/g,"\'");
+    const safe  = name.replace(/'/g,"\'");
+    return `<div onclick="selectFromDropdown('${raw}','${safe}')"
+      style="padding:11px 16px;cursor:pointer;display:flex;justify-content:space-between;
+      align-items:center;border-bottom:0.5px solid var(--border);transition:background .15s;"
+      onmouseover="this.style.background='var(--surface2)'"
+      onmouseout="this.style.background=''">
+      <span style="font-size:14px;font-weight:500;">${name}</span>
+      <span style="font-size:11px;font-weight:700;color:${color};">${r.final_decision}</span>
     </div>`;
-    html += dbResults.map(r => {
-      const name  = cleanAppName(r.app_name);
-      const color = fdColor(r.final_decision);
-      const raw   = r.app_name.replace(/'/g,"\\'");
-      const safe  = name.replace(/'/g,"\\'");
-      return `<div onclick="selectFromDropdown('${raw}','${safe}')"
-        style="padding:10px 16px;cursor:pointer;display:flex;justify-content:space-between;
-        align-items:center;border-bottom:0.5px solid var(--border);transition:background .15s;"
-        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:18px;">✅</span>
-          <span style="font-size:14px;font-weight:500;">${name}</span>
-        </div>
-        <span style="font-size:11px;font-weight:700;color:${color};">${r.final_decision}</span>
-      </div>`;
-    }).join('');
-  }
+  }).join('');
 
-  // MS Store results — not yet analyzed
-  const newStoreResults = storeResults.filter(s =>
-    !dbResults.some(d => cleanAppName(d.app_name).toLowerCase() === s.name.toLowerCase())
-  );
-
-  if (newStoreResults.length > 0) {
-    html += `<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">
-      ${t('From Microsoft Store — Not Analyzed Yet','من متجر مايكروسوفت — لم يُحلَّل بعد')}
-    </div>`;
-    html += newStoreResults.map((s, i) => {
-      const safeName = s.name.replace(/'/g,"\\'");
-      const icon = s.iconUrl
-        ? `<img src="${s.iconUrl}" style="width:24px;height:24px;border-radius:6px;object-fit:cover;" onerror="this.style.display='none'">`
-        : `<span style="font-size:18px;">📦</span>`;
-      return `<div onclick="selectStoreApp(${i},'${safeName}')"
-        style="padding:10px 16px;cursor:pointer;display:flex;justify-content:space-between;
-        align-items:center;border-bottom:0.5px solid var(--border);transition:background .15s;"
-        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-        <div style="display:flex;align-items:center;gap:10px;">
-          ${icon}
-          <div>
-            <div style="font-size:14px;font-weight:500;">${s.name}</div>
-            <div style="font-size:11px;color:var(--muted);">${s.publisher}</div>
-          </div>
-        </div>
-        <span style="font-size:11px;padding:3px 10px;border-radius:20px;
-          background:rgba(79,143,255,0.12);color:var(--accent);font-weight:600;">
-          ${t('Analyze','تحليل')}
-        </span>
-      </div>`;
-    }).join('');
-  }
-
-  if (!html) { dropdown.style.display = 'none'; return; }
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
 }
