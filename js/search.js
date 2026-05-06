@@ -832,7 +832,25 @@ async function pollJobStatus(jobId, appName) {
 
       if ((job.status === 'done' || job.status === 'complete')) {
         clearInterval(timer);
-        const d = await fetchApp(appName);
+
+        // Try multiple search terms — worker may save under display_name
+        // e.g. user typed "Notepads App" but display_name is "Notepads App" too
+        // but package name could differ — try first word as fallback
+        let d = null;
+        const terms = [
+          appName,                          // full name: "Notepads App"
+          appName.split(' ')[0],            // first word: "Notepads"
+          appName.replace(/\s+/g, ''),      // no spaces: "NotepadsApp"
+        ];
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
+          for (const term of terms) {
+            d = await fetchApp(term);
+            if (d) break;
+          }
+          if (d) break;
+        }
+
         const inner = document.getElementById('resultsInner');
         if (d) {
           inner.innerHTML = buildResult(d);
@@ -841,7 +859,22 @@ async function pollJobStatus(jobId, appName) {
           if (d.verdict === 'highrisk') showAlternatives(d.rawCategory, d.rawName, inner);
           if (window.updateChatContext) updateChatContext(d);
         } else {
-          inner.innerHTML = buildNotFound(appName);
+          // Found in jobs but not in app_analysis yet — show retry
+          const L = typeof lang !== 'undefined' ? lang : 'en';
+          inner.innerHTML = `<div class="result-card" style="text-align:center;padding:48px 32px;">
+            <div style="font-size:48px;margin-bottom:16px;">✅</div>
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:12px;">
+              ${L==='ar' ? 'اكتمل التحليل!' : 'Analysis Complete!'}
+            </div>
+            <div style="color:var(--muted);font-size:14px;margin-bottom:24px;">
+              ${L==='ar' ? 'تم تحليل التطبيق. ابحث عنه الآن.' : 'App analyzed successfully. Search for it now.'}
+            </div>
+            <button onclick="document.getElementById('appInput').value='${appName}';runSearch();"
+              style="background:var(--accent);color:white;border:none;cursor:pointer;
+              padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
+              🔍 ${L==='ar' ? 'عرض النتائج' : 'View Results'}
+            </button>
+          </div>`;
         }
 
       } else if ((job.status === 'failed' || job.status === 'error')) {
