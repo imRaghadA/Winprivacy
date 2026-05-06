@@ -801,10 +801,9 @@ function updateChatContext(appData) {
 // INIT
 // ════════════════════════════════════════
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { initLiveSearch(); initWinnyChat(); });
+  document.addEventListener('DOMContentLoaded', initLiveSearch);
 } else {
   initLiveSearch();
-  initWinnyChat();
 }
 
 // ════════════════════════════════════════
