@@ -9,7 +9,6 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── DARK THEME (default) ── */
 :root {
   --bg: #0a0d14;
   --surface: #11151f;
@@ -31,7 +30,6 @@
   --r-lg: 22px;
 }
 
-/* ── LIGHT THEME ── */
 body.light {
   --bg: #eef2ff;
   --surface: #ffffff;
@@ -49,226 +47,105 @@ body.light {
 }
 
 html { scroll-behavior: smooth; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  min-height: 100vh;
-  overflow-x: hidden;
-  transition: background .3s, color .3s;
-}
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; overflow-x: hidden; transition: background .3s, color .3s; }
 
-/* Arabic font */
 html[lang="ar"] body { font-family: var(--font-ar); }
-html[lang="ar"] h1,
-html[lang="ar"] .nav-logo span,
-html[lang="ar"] .section-title,
-html[lang="ar"] .section-label,
-html[lang="ar"] .how-card h4,
-html[lang="ar"] .result-appname,
-html[lang="ar"] .how-num,
-html[lang="ar"] .footer-logo { font-family: var(--font-ar) !important; letter-spacing: 0 !important; }
+html[lang="ar"] h1, html[lang="ar"] .nav-logo span, html[lang="ar"] .section-title,
+html[lang="ar"] .section-label, html[lang="ar"] .how-card h4, html[lang="ar"] .result-appname,
+html[lang="ar"] .how-num, html[lang="ar"] .footer-logo { font-family: var(--font-ar) !important; letter-spacing: 0 !important; }
 html[lang="ar"] h1 { line-height: 1.35; }
 
-/* ── NAV ── */
 nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 40px;
-  background: var(--nav-bg);
-  backdrop-filter: blur(16px);
-  border-bottom: 0.5px solid var(--border);
-  transition: background .3s;
+  padding: 14px 40px; background: var(--nav-bg); backdrop-filter: blur(16px);
+  border-bottom: 0.5px solid var(--border); transition: background .3s;
 }
 .nav-left { display: flex; align-items: center; gap: 32px; }
-.nav-logo {
-  display: flex; align-items: center; gap: 10px;
-  font-family: var(--font-display); font-size: 19px; font-weight: 800;
-  color: var(--text); text-decoration: none; letter-spacing: -0.5px;
-}
+.nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 19px; font-weight: 800; color: var(--text); text-decoration: none; letter-spacing: -0.5px; }
 .nav-links { display: flex; gap: 28px; list-style: none; }
 .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; text-decoration: none; transition: color .2s; }
 .nav-links a:hover { color: var(--text); }
 .nav-right { display: flex; align-items: center; gap: 8px; }
-.toggle-btn {
-  display: flex; align-items: center; gap: 6px;
-  background: var(--surface2); border: 0.5px solid var(--border2);
-  color: var(--text); cursor: pointer; padding: 7px 14px; border-radius: 30px;
-  font-size: 13px; font-weight: 500; transition: all .2s; font-family: inherit;
-  white-space: nowrap;
-}
+.toggle-btn { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 0.5px solid var(--border2); color: var(--text); cursor: pointer; padding: 7px 14px; border-radius: 30px; font-size: 13px; font-weight: 500; transition: all .2s; font-family: inherit; white-space: nowrap; }
 .toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
-.nav-cta {
-  background: var(--accent); color: #fff; border: none; cursor: pointer;
-  padding: 9px 20px; border-radius: 30px;
-  font-family: inherit; font-size: 13px; font-weight: 600;
-  transition: background .2s, transform .15s;
-}
+.nav-cta { background: var(--accent); color: #fff; border: none; cursor: pointer; padding: 9px 20px; border-radius: 30px; font-family: inherit; font-size: 13px; font-weight: 600; transition: background .2s, transform .15s; }
 .nav-cta:hover { background: var(--accent2); transform: scale(1.03); }
 
-/* ── HERO ── */
-.hero {
-  padding: 160px 40px 100px;
-  max-width: 1100px; margin: 0 auto;
-  display: grid; grid-template-columns: 1fr 420px; gap: 60px; align-items: center;
-}
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(79,143,255,0.1); border: 0.5px solid rgba(79,143,255,0.3);
-  color: var(--accent2); font-size: 12px; font-weight: 500; letter-spacing: 0.5px;
-  padding: 5px 14px; border-radius: 30px; margin-bottom: 24px;
-  text-transform: uppercase;
-}
+.hero { padding: 160px 40px 100px; max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 420px; gap: 60px; align-items: center; }
+.hero-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(79,143,255,0.1); border: 0.5px solid rgba(79,143,255,0.3); color: var(--accent2); font-size: 12px; font-weight: 500; letter-spacing: 0.5px; padding: 5px 14px; border-radius: 30px; margin-bottom: 24px; text-transform: uppercase; }
 html[lang="ar"] .hero-badge { text-transform: none; letter-spacing: 0; font-size: 13px; }
 body.light .hero-badge { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.2); }
 .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
-h1 {
-  font-family: var(--font-display); font-size: clamp(36px,5vw,56px); font-weight: 800;
-  line-height: 1.08; letter-spacing: -1.5px; margin-bottom: 20px; color: var(--text);
-}
+h1 { font-family: var(--font-display); font-size: clamp(36px,5vw,56px); font-weight: 800; line-height: 1.08; letter-spacing: -1.5px; margin-bottom: 20px; color: var(--text); }
 h1 em { font-style: normal; color: var(--accent); }
 .hero-sub { font-size: 17px; color: var(--muted); line-height: 1.7; max-width: 480px; margin-bottom: 36px; }
-.search-box {
-  display: flex; border-radius: var(--r-lg); overflow: visible;
-  background: var(--surface); border: 1px solid var(--border2);
-  transition: border-color .2s, box-shadow .2s; position: relative;
-}
+.search-box { display: flex; border-radius: var(--r-lg); overflow: visible; background: var(--surface); border: 1px solid var(--border2); transition: border-color .2s, box-shadow .2s; position: relative; }
 .search-box input { border-radius: var(--r-lg) 0 0 var(--r-lg); }
 .search-box button { border-radius: 0 var(--r-lg) var(--r-lg) 0; }
 .search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,143,255,0.14); }
 body.light .search-box:focus-within { box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-.search-box input {
-  flex: 1; background: transparent; border: none; outline: none;
-  padding: 16px 20px; color: var(--text); font-family: inherit; font-size: 15px;
-}
+.search-box input { flex: 1; background: transparent; border: none; outline: none; padding: 16px 20px; color: var(--text); font-family: inherit; font-size: 15px; }
 html[lang="ar"] .search-box input { text-align: right; }
 .search-box input::placeholder { color: var(--muted); }
-.search-box button {
-  background: var(--accent); border: none; cursor: pointer;
-  padding: 14px 24px; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700;
-  transition: background .2s; display: flex; align-items: center; gap: 8px; white-space: nowrap;
-  border-radius: 0 var(--r-lg) var(--r-lg) 0;
-}
+.search-box button { background: var(--accent); border: none; cursor: pointer; padding: 14px 24px; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; transition: background .2s; display: flex; align-items: center; gap: 8px; white-space: nowrap; border-radius: 0 var(--r-lg) var(--r-lg) 0; }
 .search-box button:hover { background: var(--accent2); }
 .hero-hint { margin-top: 14px; font-size: 12px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
-.hero-hint span {
-  background: var(--surface); border: 0.5px solid var(--border);
-  padding: 4px 12px; border-radius: 20px; cursor: pointer; transition: all .2s;
-}
+.hero-hint span { background: var(--surface); border: 0.5px solid var(--border); padding: 4px 12px; border-radius: 20px; cursor: pointer; transition: all .2s; }
 .hero-hint span:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── WINNY FLOAT ── */
-/* Default: anchored to the RIGHT (LTR).
-   When Arabic is active the JS engine switches to LEFT via inline style.
-   CSS rule below sets the initial anchor. */
-#winnyFloat {
-  position: fixed;
-  bottom: 220px;
-  right: 32px;
-  left: auto;
-  z-index: 999;
-  display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
-  pointer-events: none;
-}
+#winnyFloat { position: fixed; bottom: 220px; right: 32px; left: auto; z-index: 999; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; }
 #winnyFloat svg { pointer-events: all; }
-#winnySvg {
-  cursor: grab;
-  filter: drop-shadow(0 8px 24px rgba(79,143,255,0.25));
-  transform-origin: center bottom;
-  will-change: transform;
-}
+#winnySvg { cursor: grab; filter: drop-shadow(0 8px 24px rgba(79,143,255,0.25)); transform-origin: center bottom; will-change: transform; }
 #winnySvg:hover { filter: drop-shadow(0 8px 32px rgba(79,143,255,0.5)); }
 #winnySvg:active { cursor: grabbing; }
 
-/* Bubble: tail on the RIGHT by default; JS flips alignment for Arabic */
-.winny-bubble {
-  background: var(--surface2); border: 0.5px solid var(--border2);
-  border-radius: 16px 16px 4px 16px;
-  padding: 14px 18px; font-size: 13px; color: var(--text); line-height: 1.6;
-  max-width: 260px; position: relative;
-  pointer-events: all;
-  opacity: 0; transform: translateY(6px) scale(0.95);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  align-self: flex-end;
-}
+.winny-bubble { background: var(--surface2); border: 0.5px solid var(--border2); border-radius: 16px 16px 4px 16px; padding: 14px 18px; font-size: 13px; color: var(--text); line-height: 1.6; max-width: 260px; position: relative; pointer-events: all; opacity: 0; transform: translateY(6px) scale(0.95); transition: opacity 0.3s ease, transform 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.25); align-self: flex-end; }
 .winny-bubble.visible { opacity: 1; transform: translateY(0) scale(1); }
-.winny-bubble::after {
-  content: ''; position: absolute; bottom: -9px; right: 22px; left: auto;
-  border: 5px solid transparent; border-top-color: var(--border2);
-}
-/* Arabic tail override applied by JS (toggleLang) */
-.winny-bubble.ar-mode {
-  border-radius: 16px 16px 16px 4px;
-  align-self: flex-start;
-}
+.winny-bubble::after { content: ''; position: absolute; bottom: -9px; right: 22px; left: auto; border: 5px solid transparent; border-top-color: var(--border2); }
+.winny-bubble.ar-mode { border-radius: 16px 16px 16px 4px; align-self: flex-start; }
 .winny-bubble.ar-mode::after { right: auto; left: 22px; }
 
-/* ── RESULTS ── */
 #results { max-width: 1100px; margin: 0 auto; padding: 0 40px 80px; display: none; }
-.result-card {
-  background: var(--surface); border: 0.5px solid var(--border2);
-  border-radius: var(--r-lg); padding: 32px; margin-bottom: 24px;
-}
+.result-card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--r-lg); padding: 32px; margin-bottom: 24px; }
 body.light .result-card { box-shadow: 0 2px 20px rgba(20,50,160,0.06); }
 .result-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 20px; }
 .result-appname { font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
 .result-publisher { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
-/* Score ring */
 .ser-score { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .ser-ring { position: relative; width: 130px; height: 130px; }
 .ser-ring svg { transform: rotate(-90deg); }
 .ser-ring .track { fill: none; stroke: var(--surface2); stroke-width: 10; }
-.ser-ring .fill  { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
-.ser-ring .ser-label {
-  position: absolute; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  font-family: var(--font-display); font-size: 30px; font-weight: 800;
-}
+.ser-ring .fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+.ser-ring .ser-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 30px; font-weight: 800; }
 .ser-ring .ser-label small { font-size: 12px; font-weight: 400; color: var(--muted); margin-top: -2px; }
 .ser-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
 html[lang="ar"] .ser-title { text-transform: none; letter-spacing: 0; font-size: 12px; }
 
-/* Verdict pills */
-.pill {
-  display: inline-flex; align-items: center;
-  font-size: 13px; font-weight: 700; padding: 6px 16px; border-radius: 20px;
-  text-transform: uppercase; letter-spacing: 0.5px;
-}
+.pill { display: inline-flex; align-items: center; font-size: 13px; font-weight: 700; padding: 6px 16px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
 html[lang="ar"] .pill { text-transform: none; letter-spacing: 0; font-size: 12px; }
-.pill-safe   { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.45); }
-.pill-normal { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.45); }
-.pill-warn   { background: rgba(234,179,8,0.15);  color: #eab308; border: 1px solid rgba(234,179,8,0.50); }
-.pill-danger { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.45); }
+.pill-safe     { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.45); }
+/* CHANGED: pill-normal → pill-moderate */
+.pill-moderate { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.45); }
+.pill-warn     { background: rgba(234,179,8,0.15);  color: #eab308; border: 1px solid rgba(234,179,8,0.50); }
+.pill-danger   { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.45); }
 
-/* RS Level badge */
-.rs-level-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 14px; border-radius: 30px; font-size: 13px; font-weight: 700;
-  margin-top: 8px; letter-spacing: 0.1px;
-}
+.rs-level-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 30px; font-size: 13px; font-weight: 700; margin-top: 8px; letter-spacing: 0.1px; }
 
-/* Info grid */
 .info-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 14px; margin-bottom: 24px; }
 .info-item { background: var(--surface2); border-radius: var(--r); padding: 16px; border: 0.5px solid var(--border); }
 .info-item .d-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 html[lang="ar"] .info-item .d-label { text-transform: none; letter-spacing: 0; font-size: 12px; }
 .info-item .d-val { font-size: 15px; font-weight: 600; }
 
-/* Winny comment */
-.winny-comment {
-  display: flex; align-items: flex-start; gap: 14px;
-  background: rgba(79,143,255,0.06); border: 0.5px solid rgba(79,143,255,0.2);
-  border-radius: var(--r); padding: 16px; margin-top: 20px;
-}
+.winny-comment { display: flex; align-items: flex-start; gap: 14px; background: rgba(79,143,255,0.06); border: 0.5px solid rgba(79,143,255,0.2); border-radius: var(--r); padding: 16px; margin-top: 20px; }
 body.light .winny-comment { background: rgba(37,99,235,0.05); }
 .winny-comment p { font-size: 14px; line-height: 1.7; }
 .winny-comment p strong.hl { color: var(--accent2); }
 body.light .winny-comment p strong.hl { color: var(--accent); }
 
-/* ── HOW IT WORKS ── */
 .how-section { max-width: 1100px; margin: 0 auto; padding: 0 40px 100px; }
 .section-label { font-family: var(--font-display); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; color: var(--accent); margin-bottom: 10px; }
 .section-title { font-family: var(--font-display); font-size: 30px; font-weight: 800; letter-spacing: -0.6px; margin-bottom: 36px; color: var(--text); }
@@ -279,33 +156,15 @@ body.light .how-card { box-shadow: 0 2px 14px rgba(20,50,160,0.05); }
 .how-card h4 { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 10px; }
 .how-card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
 
-/* ── FOOTER ── */
-footer {
-  border-top: 0.5px solid var(--border); padding: 36px 40px;
-  max-width: 1100px; margin: 0 auto;
-  display: flex; justify-content: space-between; align-items: center;
-  color: var(--muted); font-size: 13px; flex-wrap: wrap; gap: 16px;
-}
+footer { border-top: 0.5px solid var(--border); padding: 36px 40px; max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; flex-wrap: wrap; gap: 16px; }
 .footer-logo { font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--text); margin-bottom: 4px; }
 footer a { color: var(--muted); text-decoration: none; transition: color .2s; }
 footer a:hover { color: var(--accent); }
 
-/* ── PERMISSIONS ── */
-.perms-section h3 { font-size: 12px; font-weight: 700; margin-bottom: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
-.perm-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.perm-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(79,143,255,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
-.perm-name { font-size: 14px; font-weight: 500; flex: 1; }
-.perm-risk { font-size: 11px; width: 66px; text-align: right; flex-shrink: 0; }
-.perm-bar-wrap { flex: 2; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; min-width: 60px; }
-.perm-bar { height: 100%; border-radius: 4px; width: 0%; transition: width 1s ease; }
-
-/* ── UTILS ── */
 .loading { display: flex; align-items: center; gap: 12px; padding: 48px; justify-content: center; }
 .spinner { width: 22px; height: 22px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
-@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
 
-/* ── RESPONSIVE ── */
 @media (max-width: 860px) {
   nav { padding: 12px 16px; }
   .nav-links { display: none; }
@@ -318,7 +177,6 @@ footer a:hover { color: var(--accent); }
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
   <div class="nav-left">
     <a href="#" class="nav-logo">
@@ -348,7 +206,6 @@ footer a:hover { color: var(--accent); }
   </div>
 </nav>
 
-<!-- HERO -->
 <section class="hero">
   <div>
     <div class="hero-badge">
@@ -356,10 +213,11 @@ footer a:hover { color: var(--accent); }
       <span data-en="Privacy Intelligence for Windows" data-ar="ذكاء الخصوصية لويندوز">Privacy Intelligence for Windows</span>
     </div>
     <h1 data-en='Know if an app is<br><em>safe to run.</em>' data-ar='اعرف إذا كان التطبيق<br><em>آمنًا للتشغيل.</em>'>Know if an app is<br><em>safe to run.</em></h1>
+    <!-- CHANGED: hero subtitle now says Risk Score (RS) instead of Safety, Exposure & Risk -->
     <p class="hero-sub"
-      data-en="WinPrivacy scans Windows applications against our database and gives you a transparent Score — <strong>Safety, Exposure &amp; Risk</strong> — so you're never in the dark."
-      data-ar="يفحص WinPrivacy تطبيقات ويندوز مقابل قاعدة بياناتنا ويمنحك درجة شفافة — <strong>الأمان، التعرض والخطر</strong> — حتى لا تكون في الظلام أبدًا.">
-      WinPrivacy scans Windows applications against our database and gives you a transparent Score — <strong>Safety, Exposure &amp; Risk</strong> — so you're never in the dark.
+      data-en="WinPrivacy scans Windows applications against our database and gives you a transparent <strong>Risk Score (RS)</strong> — so you're never in the dark."
+      data-ar="يفحص WinPrivacy تطبيقات ويندوز مقابل قاعدة بياناتنا ويمنحك <strong>درجة خطر (RS)</strong> شفافة — حتى لا تكون في الظلام أبدًا.">
+      WinPrivacy scans Windows applications against our database and gives you a transparent <strong>Risk Score (RS)</strong> — so you're never in the dark.
     </p>
     <div class="search-box">
       <input type="text" id="appInput"
@@ -386,48 +244,35 @@ footer a:hover { color: var(--accent); }
   <div style="height:220px"></div>
 </section>
 
-<!-- FLOATING WINNY -->
 <div id="winnyFloat">
   <div class="winny-bubble" id="winnyBubble">
     <span id="winnyText">Hey! I'm <strong>Winny</strong> 👋<br>Type any Windows app and I'll tell you how safe it is!</span>
   </div>
   <svg id="winnySvg" width="200" height="220" viewBox="0 0 200 220" fill="none">
-    <!-- body -->
     <rect x="60" y="130" width="80" height="70" rx="18" fill="#1a2540"/>
     <rect x="60" y="130" width="80" height="70" rx="18" fill="#4f8fff" fill-opacity="0.12"/>
     <path d="M100 145l-16 8v10c0 8.8 6 17 16 19 10-2 16-10.2 16-19v-10l-16-8z" fill="#4f8fff" fill-opacity="0.35"/>
     <path d="M96 163l3 3 6-6" stroke="#6eb8ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <!-- arms -->
     <rect id="winnyArmL" x="28" y="138" width="34" height="16" rx="8" fill="#1e2d4a"/>
     <rect id="winnyArmR" x="138" y="138" width="34" height="16" rx="8" fill="#1e2d4a"/>
     <circle cx="24" cy="146" r="8" fill="#4f8fff" fill-opacity="0.5"/>
     <circle cx="176" cy="146" r="8" fill="#4f8fff" fill-opacity="0.5"/>
-    <!-- head -->
     <rect x="52" y="30" width="96" height="104" rx="30" fill="#1a2845"/>
     <rect x="52" y="30" width="96" height="104" rx="30" fill="#4f8fff" fill-opacity="0.08" stroke="#4f8fff" stroke-width="0.8" stroke-opacity="0.3"/>
-    <!-- visor -->
     <rect x="62" y="42" width="76" height="74" rx="12" fill="#0d1a2e"/>
     <rect x="62" y="42" width="76" height="74" rx="12" fill="#4f8fff" fill-opacity="0.05" stroke="#4f8fff" stroke-width="0.5" stroke-opacity="0.4"/>
-
-    <!-- FACE: happy (default) -->
     <g id="face-happy">
-      <!-- left eye -->
       <circle cx="84" cy="65" r="11" fill="#4f8fff" fill-opacity="0.2"/>
       <circle cx="84" cy="65" r="7" fill="#6eb8ff"/>
       <circle cx="84" cy="65" r="4" fill="white"/>
       <circle cx="85.5" cy="63.5" r="1.5" fill="#0d1a2e"/>
-      <!-- right eye -->
       <circle cx="116" cy="65" r="11" fill="#4f8fff" fill-opacity="0.2"/>
       <circle cx="116" cy="65" r="7" fill="#6eb8ff"/>
       <circle cx="116" cy="65" r="4" fill="white"/>
       <circle cx="117.5" cy="63.5" r="1.5" fill="#0d1a2e"/>
-      <!-- gentle happy smile -->
       <path d="M86 82 Q100 94 114 82" stroke="#6eb8ff" stroke-width="2.8" stroke-linecap="round" fill="none"/>
     </g>
-
-    <!-- FACE: neutral -->
     <g id="face-neutral" display="none">
-      <!-- clean round eyes -->
       <circle cx="84" cy="65" r="8" fill="#1a3060"/>
       <circle cx="84" cy="65" r="5.5" fill="#6eb8ff"/>
       <circle cx="84" cy="65" r="3" fill="white"/>
@@ -436,13 +281,9 @@ footer a:hover { color: var(--accent); }
       <circle cx="116" cy="65" r="5.5" fill="#6eb8ff"/>
       <circle cx="116" cy="65" r="3" fill="white"/>
       <circle cx="117.5" cy="63.5" r="1.2" fill="#0d1a2e"/>
-      <!-- gentle flat-ish mouth -->
       <path d="M86 83 Q100 88 114 83" stroke="#6eb8ff" stroke-width="3" stroke-linecap="round" fill="none"/>
     </g>
-
-    <!-- FACE: sad -->
     <g id="face-sad" display="none">
-      <!-- sad eyes: filled circles looking down -->
       <circle cx="84" cy="65" r="8" fill="#1a3060"/>
       <circle cx="84" cy="65" r="5.5" fill="#6eb8ff"/>
       <circle cx="84" cy="65" r="3" fill="white"/>
@@ -451,21 +292,15 @@ footer a:hover { color: var(--accent); }
       <circle cx="116" cy="65" r="5.5" fill="#6eb8ff"/>
       <circle cx="116" cy="65" r="3" fill="white"/>
       <circle cx="116" cy="66.5" r="1.2" fill="#0d1a2e"/>
-      <!-- clear frown -->
       <path d="M80 92 Q100 80 120 92" stroke="#6eb8ff" stroke-width="3" stroke-linecap="round" fill="none"/>
-      <!-- tears -->
       <path d="M82 72 Q80 79 82 82" stroke="#6eb8ff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
       <path d="M118 72 Q120 79 118 82" stroke="#6eb8ff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
     </g>
-
-    <!-- ears -->
     <rect x="44" y="54" width="12" height="22" rx="6" fill="#1a2845" stroke="#4f8fff" stroke-width="0.5" stroke-opacity="0.3"/>
     <rect x="144" y="54" width="12" height="22" rx="6" fill="#1a2845" stroke="#4f8fff" stroke-width="0.5" stroke-opacity="0.3"/>
-    <!-- antenna -->
     <line x1="100" y1="30" x2="100" y2="10" stroke="#4f8fff" stroke-width="2" stroke-linecap="round"/>
     <circle cx="100" cy="8" r="5" fill="#4f8fff"/>
     <circle cx="100" cy="8" r="2.5" fill="white" fill-opacity="0.9"/>
-    <!-- cape (hidden by default) -->
     <g id="winnyCape" style="display:none">
       <path d="M72 138 Q100 130 128 138" fill="#ff4466" stroke="#cc2244" stroke-width="1"/>
       <path id="capeBody" d="M72 138 Q55 160 48 200 Q70 185 100 195 Q130 185 152 200 Q145 160 128 138 Q100 148 72 138Z" fill="#ff4466" opacity="0.9"/>
@@ -473,7 +308,6 @@ footer a:hover { color: var(--accent); }
       <path d="M115 145 Q110 170 112 195" stroke="#ff88aa" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/>
       <text x="100" y="178" text-anchor="middle" font-size="18" fill="white" opacity="0.9">★</text>
     </g>
-    <!-- feet -->
     <g id="winnyFeet">
       <rect x="72" y="196" width="22" height="20" rx="8" fill="#1a2845"/>
       <rect x="106" y="196" width="22" height="20" rx="8" fill="#1a2845"/>
@@ -483,13 +317,9 @@ footer a:hover { color: var(--accent); }
   </svg>
 </div>
 
-<!-- RESULTS -->
 <div id="results"><div id="resultsInner"></div></div>
-
-<!-- WINNY CHAT -->
 <div id="winnyChatSection"></div>
 
-<!-- HOW IT WORKS -->
 <section class="how-section" id="how">
   <div class="section-label" data-en="Process" data-ar="الطريقة">Process</div>
   <div class="section-title" data-en="How WinPrivacy works" data-ar="كيف يعمل WinPrivacy">How WinPrivacy works</div>
@@ -506,13 +336,13 @@ footer a:hover { color: var(--accent); }
     </div>
     <div class="how-card">
       <div class="how-num">03</div>
+      <!-- CHANGED: "Normal" → "Moderate Risk" in verdict list -->
       <h4 data-en="You make an informed call" data-ar="تتخذ قرارًا مدروسًا">You make an informed call</h4>
-      <p data-en="You get a clear verdict — Safe, Normal, Anomaly Detected, or High Risk — plus Winny's plain-language summary." data-ar="تحصل على حكم واضح — آمن، طبيعي، شذوذ مكتشف، أو خطر مرتفع — مع ملخص ويني بلغة بسيطة.">You get a clear verdict — Safe, Normal, Anomaly Detected, or High Risk — plus Winny's plain-language summary.</p>
+      <p data-en="You get a clear verdict — Safe, Moderate Risk, Anomaly Detected, or High Risk — plus Winny's plain-language summary." data-ar="تحصل على حكم واضح — آمن، خطر متوسط، شذوذ مكتشف، أو خطر مرتفع — مع ملخص ويني بلغة بسيطة.">You get a clear verdict — Safe, Moderate Risk, Anomaly Detected, or High Risk — plus Winny's plain-language summary.</p>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer>
   <div>
     <div class="footer-logo" data-en="WinPrivacy" data-ar="وين برايفسي">WinPrivacy</div>
@@ -527,35 +357,29 @@ footer a:hover { color: var(--accent); }
 </footer>
 
 <script>
-/* ═══════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════ */
-let lang  = 'en';
+let lang = 'en';
 let isDark = true;
 
-/* ═══════════════════════════════════════════════
-   STRINGS
-═══════════════════════════════════════════════ */
 const S = {
   en: {
-    scanning: n => `Scanning <strong>${n}</strong>… checking database and permissions 🔍`,
-    safe:     n => `<strong style="color:var(--safe)">All good!</strong> ${n} is safe — nothing unusual detected. ✅`,
-    normal:   n => `<strong style="color:var(--accent2)">Looks normal.</strong> ${n} behaves like most apps in its category. 🔵`,
-    warn:     n => `<strong style="color:var(--warn)">Anomaly detected!</strong> ${n} has unusual permission patterns. ⚠️`,
+    scanning:   n => `Scanning <strong>${n}</strong>… checking database and permissions 🔍`,
+    safe:       n => `<strong style="color:var(--safe)">All good!</strong> ${n} is safe — nothing unusual detected. ✅`,
+    moderate:   n => `<strong style="color:var(--accent2)">Moderate Risk.</strong> ${n} has a moderate risk profile for its category. 🔵`,
+    warn:       n => `<strong style="color:var(--warn)">Anomaly detected!</strong> ${n} has unusual permission patterns. ⚠️`,
     normalplus: n => `<strong style="color:#eab308">Elevated permissions.</strong> ${n} requests more permissions than most peers — but not critically so. 🟡`,
-    danger:   n => `<strong style="color:var(--danger)">High Risk!</strong> ${n} shows dangerous behaviour. Think twice. 🚨`,
-    notfound: n => `I couldn't find <strong>${n}</strong> yet. Submit it for review below!`,
-    nfTitle:  'App not found in database',
-    nfDesc:   n => `"<strong style="color:var(--text)">${n}</strong>" isn't in our database yet.`,
-    nfBtn:    '+ Submit this app for review',
-    nfWinny:  'Hmm, not found yet! Try <strong>CCleaner</strong>, <strong>Discord</strong>, or <strong>VLC</strong>.',
-    winnySays:'Winny says:',
-    rsScore:  'Risk Score',
-    rsLevelLbl: 'RS Level',
-    reviewed: 'Last Reviewed',
+    danger:     n => `<strong style="color:var(--danger)">High Risk!</strong> ${n} shows dangerous behaviour. Think twice. 🚨`,
+    notfound:   n => `I couldn't find <strong>${n}</strong> yet. Submit it for review below!`,
+    nfTitle:   'App not found in database',
+    nfDesc:    n => `"<strong style="color:var(--text)">${n}</strong>" isn't in our database yet.`,
+    nfBtn:     '+ Submit this app for review',
+    nfWinny:   'Hmm, not found yet! Try <strong>CCleaner</strong>, <strong>Discord</strong>, or <strong>VLC</strong>.',
+    winnySays: 'Winny says:',
+    rsScore:   'Risk Score',
+    rsLevelLbl:'RS Level',
+    reviewed:  'Last Reviewed',
     verdictLabel: {
       safe:       'Safe',
-      normal:     'Normally Detected',
+      moderate:   'Moderate Risk',
       normalplus: 'Normal+',
       anomaly:    'Anomaly Detected',
       highrisk:   'High Risk',
@@ -570,24 +394,24 @@ const S = {
     },
   },
   ar: {
-    scanning: n => `جاري فحص <strong>${n}</strong>… التحقق من قاعدة البيانات 🔍`,
-    safe:     n => `<strong style="color:var(--safe)">ممتاز!</strong> ${n} آمن — لا شيء غير عادي. ✅`,
-    normal:   n => `<strong style="color:var(--accent2)">طبيعي.</strong> ${n} يتصرف مثل معظم تطبيقات فئته. 🔵`,
-    warn:     n => `<strong style="color:var(--warn)">شذوذ مكتشف!</strong> لدى ${n} أنماط أذونات غير عادية. ⚠️`,
+    scanning:   n => `جاري فحص <strong>${n}</strong>… التحقق من قاعدة البيانات 🔍`,
+    safe:       n => `<strong style="color:var(--safe)">ممتاز!</strong> ${n} آمن — لا شيء غير عادي. ✅`,
+    moderate:   n => `<strong style="color:var(--accent2)">خطر متوسط.</strong> ${n} لديه ملف خطر متوسط لفئته. 🔵`,
+    warn:       n => `<strong style="color:var(--warn)">شذوذ مكتشف!</strong> لدى ${n} أنماط أذونات غير عادية. ⚠️`,
     normalplus: n => `<strong style="color:#eab308">أذونات مرتفعة.</strong> ${n} يطلب أذونات أكثر من معظم التطبيقات المماثلة — لكن ليس بشكل حرج. 🟡`,
-    danger:   n => `<strong style="color:var(--danger)">خطر مرتفع!</strong> ${n} يُظهر سلوكًا خطيرًا. كن حذرًا. 🚨`,
-    notfound: n => `لم أجد <strong>${n}</strong> بعد. أرسله للمراجعة أدناه!`,
-    nfTitle:  'التطبيق غير موجود في قاعدة البيانات',
-    nfDesc:   n => `"<strong style="color:var(--text)">${n}</strong>" غير موجود في قاعدة بياناتنا بعد.`,
-    nfBtn:    '+ إرسال هذا التطبيق للمراجعة',
-    nfWinny:  'لم أجده بعد! جرّب <strong>CCleaner</strong> أو <strong>Discord</strong> أو <strong>VLC</strong>.',
-    winnySays:'يقول ويني:',
-    rsScore:  'درجة الخطر',
-    rsLevelLbl: 'مستوى الدرجة',
-    reviewed: 'آخر مراجعة',
+    danger:     n => `<strong style="color:var(--danger)">خطر مرتفع!</strong> ${n} يُظهر سلوكًا خطيرًا. كن حذرًا. 🚨`,
+    notfound:   n => `لم أجد <strong>${n}</strong> بعد. أرسله للمراجعة أدناه!`,
+    nfTitle:   'التطبيق غير موجود في قاعدة البيانات',
+    nfDesc:    n => `"<strong style="color:var(--text)">${n}</strong>" غير موجود في قاعدة بياناتنا بعد.`,
+    nfBtn:     '+ إرسال هذا التطبيق للمراجعة',
+    nfWinny:   'لم أجده بعد! جرّب <strong>CCleaner</strong> أو <strong>Discord</strong> أو <strong>VLC</strong>.',
+    winnySays: 'يقول ويني:',
+    rsScore:   'درجة الخطر',
+    rsLevelLbl:'مستوى الدرجة',
+    reviewed:  'آخر مراجعة',
     verdictLabel: {
       safe:       'آمن',
-      normal:     'طبيعي',
+      moderate:   'خطر متوسط',
       normalplus: 'طبيعي+',
       anomaly:    'شذوذ مكتشف',
       highrisk:   'خطر مرتفع',
@@ -602,20 +426,14 @@ const S = {
     },
   },
 };
-const tStr = k => S[lang][k]; // renamed — search.js defines its own t(en,ar)
+const tStr = k => S[lang][k];
 
-/* ═══════════════════════════════════════════════
-   MOCK DATABASE
-   RS  : Risk Score 0–4  (voted bins from FinalRiskScore_v4)
-   rsLevelKey: 'Safe/Very Low' | 'Low' | 'Medium' | 'High' | 'Very High'
-   verdict:    'safe' | 'normal' | 'anomaly' | 'highrisk'
-═══════════════════════════════════════════════ */
+/* MOCK DB — verdict uses 'moderate' (was 'normal') */
 const MOCK_DB = {
   'ccleaner': {
     name:'CCleaner', publisher:'Piriform / Avast', version:'6.23.1', date:'Apr 2025',
     cat:{ en:'System Utility', ar:'أداة نظام' },
-    rs: 3.4, rsLevelKey: 'Very High',
-    verdict: 'highrisk',
+    rs: 3.4, rsLevelKey: 'Very High', verdict: 'highrisk',
     comment:{
       en:'CCleaner has a troubled history — the 2017 supply-chain attack injected malware into millions of installs. Current versions still request unusually broad permissions for a cleaner. <strong class="hl">Use with caution.</strong>',
       ar:'لدى CCleaner تاريخ مثير للقلق — هجوم سلسلة التوريد عام 2017 حقن برمجيات خبيثة في ملايين التثبيتات. الإصدارات الحالية لا تزال تطلب صلاحيات واسعة بشكل غير عادي. <strong class="hl">استخدمه بحذر.</strong>'
@@ -624,8 +442,7 @@ const MOCK_DB = {
   'utorrent': {
     name:'uTorrent', publisher:'BitTorrent Inc.', version:'3.6.0', date:'Mar 2025',
     cat:{ en:'File Sharing', ar:'مشاركة الملفات' },
-    rs: 3.7, rsLevelKey: 'Very High',
-    verdict: 'highrisk',
+    rs: 3.7, rsLevelKey: 'Very High', verdict: 'highrisk',
     comment:{
       en:'uTorrent is one of the most permission-hungry apps on Windows. Its adware history and always-on network listener make it a privacy liability. <strong class="hl">Consider qBittorrent as a clean alternative.</strong>',
       ar:'uTorrent أحد أكثر التطبيقات طلبًا للصلاحيات على ويندوز. تاريخه مع الإعلانات والمنافذ المفتوحة دائمًا يجعله خطرًا على الخصوصية. <strong class="hl">فكر في qBittorrent كبديل نظيف.</strong>'
@@ -634,8 +451,7 @@ const MOCK_DB = {
   'vlc': {
     name:'VLC Media Player', publisher:'VideoLAN', version:'3.0.21', date:'Apr 2025',
     cat:{ en:'Media Player', ar:'مشغل وسائط' },
-    rs: 0.2, rsLevelKey: 'Safe/Very Low',
-    verdict: 'safe',
+    rs: 0.2, rsLevelKey: 'Safe/Very Low', verdict: 'safe',
     comment:{
       en:"VLC is one of the most privacy-respecting media players available. It's open-source, ships no telemetry, and its permissions match exactly what you'd expect. <strong class=\"hl\">Solid choice.</strong>",
       ar:'VLC أحد أكثر مشغلات الوسائط احترامًا للخصوصية. مفتوح المصدر، لا يرسل بيانات إحصائية، وصلاحياته تطابق ما هو متوقع تمامًا. <strong class="hl">اختيار ممتاز.</strong>'
@@ -644,8 +460,7 @@ const MOCK_DB = {
   'vlc media player': {
     name:'VLC Media Player', publisher:'VideoLAN', version:'3.0.21', date:'Apr 2025',
     cat:{ en:'Media Player', ar:'مشغل وسائط' },
-    rs: 0.2, rsLevelKey: 'Safe/Very Low',
-    verdict: 'safe',
+    rs: 0.2, rsLevelKey: 'Safe/Very Low', verdict: 'safe',
     comment:{
       en:"VLC is one of the most privacy-respecting media players available. It's open-source, ships no telemetry, and its permissions match exactly what you'd expect. <strong class=\"hl\">Solid choice.</strong>",
       ar:'VLC أحد أكثر مشغلات الوسائط احترامًا للخصوصية. مفتوح المصدر، لا يرسل بيانات إحصائية، وصلاحياته تطابق ما هو متوقع تمامًا. <strong class="hl">اختيار ممتاز.</strong>'
@@ -654,45 +469,50 @@ const MOCK_DB = {
   'discord': {
     name:'Discord', publisher:'Discord Inc.', version:'1.0.9178', date:'Apr 2025',
     cat:{ en:'Communication', ar:'تواصل' },
-    rs: 2.3, rsLevelKey: 'High',
-    verdict: 'anomaly',
+    rs: 2.3, rsLevelKey: 'High', verdict: 'anomaly',
     comment:{
       en:"Discord's screen-capture and global keyboard hook are unusual for a chat app. They're justified by streaming features, but represent an anomalous permission footprint compared to similar apps. <strong class=\"hl\">Consider disabling screen share if not used.</strong>",
       ar:'التقاط الشاشة وخطاف لوحة المفاتيح العالمي غير معتادين لتطبيق دردشة. لهما مبرر بميزات البث، لكنهما يمثلان بصمة أذونات شاذة مقارنةً بالتطبيقات المشابهة. <strong class="hl">فكر في تعطيل مشاركة الشاشة إن لم تستخدمها.</strong>'
     }
   },
+  /* CHANGED: verdict 'normal' → 'moderate'; comment updated to match */
   'spotify': {
     name:'Spotify', publisher:'Spotify AB', version:'1.2.40', date:'Mar 2025',
     cat:{ en:'Music & Audio', ar:'موسيقى وصوت' },
-    rs: 1.1, rsLevelKey: 'Low',
-    verdict: 'normal',
+    rs: 1.1, rsLevelKey: 'Low', verdict: 'moderate',
     comment:{
-      en:"Spotify's permissions are typical for a streaming music service. Hardware fingerprinting is the only slightly elevated element, used for DRM. <strong class=\"hl\">Normal for its category.</strong>",
-      ar:'صلاحيات Spotify نموذجية لخدمة بث موسيقي. بصمة الأجهزة هي العنصر الوحيد المرتفع قليلًا وتُستخدم لـ DRM. <strong class="hl">طبيعي لفئته.</strong>'
+      en:"Spotify's permissions are typical for a streaming music service. Hardware fingerprinting is the only slightly elevated element, used for DRM. <strong class=\"hl\">Moderate risk for its category.</strong>",
+      ar:'صلاحيات Spotify نموذجية لخدمة بث موسيقي. بصمة الأجهزة هي العنصر الوحيد المرتفع قليلًا وتُستخدم لـ DRM. <strong class="hl">خطر متوسط لفئته.</strong>'
     }
   },
 };
-
-/* fetchApp defined in js/search.js */
 
 function quickSearch(n) { document.getElementById('appInput').value = n; runSearch(); }
 
 async function runSearch() {
   const val = document.getElementById('appInput').value.trim();
   if (!val) return;
-  // Delegate entirely to search.js which manages Supabase + results
-  if (typeof runSearchByRaw === 'function') {
-    runSearchByRaw(val);
-  }
+  if (typeof runSearchByRaw === 'function') runSearchByRaw(val);
 }
 
-/* ── helpers ── */
+/* CHANGED: 'normal' → 'moderate' in vc() color helper */
 function vc(v) {
-  return v==='safe' ? '#22c55e' : v==='normal' ? '#3b82f6' : v==='normalplus' ? '#eab308' : v==='anomaly' ? '#f97316' : '#ef4444';
+  return v==='safe' ? '#22c55e'
+       : v==='moderate' ? '#3b82f6'
+       : v==='normalplus' ? '#eab308'
+       : v==='anomaly' ? '#f97316'
+       : '#ef4444';
 }
+
+/* CHANGED: 'normal' → 'moderate', pill class → pill-moderate */
 function vp(v) {
-  return v==='safe' ? 'pill-safe' : v==='normal' ? 'pill-normal' : v==='anomaly' ? 'pill-warn' : 'pill-danger';
+  return v==='safe'       ? 'pill-safe'
+       : v==='moderate'   ? 'pill-moderate'
+       : v==='normalplus' ? 'pill-warn'
+       : v==='anomaly'    ? 'pill-warn'
+       : 'pill-danger';
 }
+
 function levelColor(k) {
   if (k==='Safe/Very Low') return '#22c55e';
   if (k==='Low')           return '#86efac';
@@ -708,27 +528,22 @@ function levelBg(k) {
   return 'rgba(239,68,68,0.14)';
 }
 
-/* ── build result card (NO permission analysis) ── */
 function buildResult(d) {
-  const circ   = 2 * Math.PI * 48;
-  const pct    = Math.min(d.rs / 4, 1);
-  const offset = circ - pct * circ;
-  const c      = vc(d.verdict);
-  const L      = lang;
+  const circ = 2 * Math.PI * 56;
+  const pct  = Math.min(d.rs / 4, 1);
+  const c    = vc(d.verdict);
+  const L    = lang;
 
-  const vLabel  = S[L].verdictLabel[d.verdict]     || d.verdict;
-  const lvlLabel= S[L].rsLevelLabel[d.rsLevelKey]  || d.rsLevelKey;
-  const lvlClr  = levelColor(d.rsLevelKey);
-  const lvlBg   = levelBg(d.rsLevelKey);
-  const statusGlow   = d.verdict==='safe' ? 'rgba(34,197,94,0.18)' : d.verdict==='normal' ? 'rgba(59,130,246,0.18)' : d.verdict==='anomaly' ? 'rgba(234,179,8,0.18)' : 'rgba(239,68,68,0.18)';
-  const statusBorder = d.verdict==='safe' ? 'rgba(34,197,94,0.4)'  : d.verdict==='normal' ? 'rgba(59,130,246,0.4)'  : d.verdict==='anomaly' ? 'rgba(234,179,8,0.4)'  : 'rgba(239,68,68,0.4)';
+  const vLabel   = S[L].verdictLabel[d.verdict]    || d.verdict;
+  const lvlLabel = S[L].rsLevelLabel[d.rsLevelKey] || d.rsLevelKey;
+  const lvlClr   = levelColor(d.rsLevelKey);
+  const lvlBg    = levelBg(d.rsLevelKey);
 
   return `<div class="result-card">
     <div class="result-header">
       <div style="flex:1;">
         <div class="result-appname">${d.name}</div>
         <div class="result-publisher">${d.publisher} · v${d.version} · ${d.cat[L]}</div>
-
         <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
           <div style="display:inline-flex;flex-direction:column;gap:4px;background:rgba(79,143,255,0.08);border:1px solid rgba(79,143,255,0.25);border-radius:14px;padding:12px 20px;backdrop-filter:blur(8px);">
             <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);">${S[L].appStatus}</span>
@@ -745,7 +560,7 @@ function buildResult(d) {
           <svg width="150" height="150" viewBox="0 0 150 150">
             <circle class="track" cx="75" cy="75" r="56"/>
             <circle class="fill" id="serArc" cx="75" cy="75" r="56"
-              stroke="${c}" stroke-dasharray="${2 * Math.PI * 56}" stroke-dashoffset="${2 * Math.PI * 56}" data-offset="${2 * Math.PI * 56 - pct * 2 * Math.PI * 56}"/>
+              stroke="${c}" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" data-offset="${circ - pct * circ}"/>
           </svg>
           <div class="ser-label" style="color:${c};font-size:36px;">
             <span id="serNum">0.0</span><small style="font-size:14px;">/ 4</small>
@@ -754,7 +569,6 @@ function buildResult(d) {
         <div class="ser-title" style="text-align:center;margin-top:6px;">${S[L].rsScore}</div>
       </div>
     </div>
-
     <div class="winny-comment">
       <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
         <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
@@ -785,7 +599,6 @@ function buildNotFound(name) {
   </div>`;
 }
 
-/* Animate the RS ring counter 0 → target (0–4 range, 1 decimal) */
 function animateRs(target) {
   const arc = document.getElementById('serArc');
   const num = document.getElementById('serNum');
@@ -802,7 +615,6 @@ function animateRs(target) {
 
 function setWinny(state, name, verdict) {
   let msg = '';
-
   function showFace(mood) {
     ['happy','neutral','sad'].forEach(f => {
       const el = document.getElementById('face-' + f);
@@ -815,12 +627,17 @@ function setWinny(state, name, verdict) {
     showFace('neutral');
     if (window._winnyWave) window._winnyWave(800);
   } else if (state === 'done') {
-    const k = verdict==='highrisk' ? 'danger' : verdict==='anomaly' ? 'warn' : verdict==='normalplus' ? 'normalplus' : verdict==='normal' ? 'normal' : 'safe';
-    msg = t(k)(name);
+    /* CHANGED: verdict key 'normal' → 'moderate' */
+    const k = verdict==='highrisk'   ? 'danger'
+            : verdict==='anomaly'    ? 'warn'
+            : verdict==='normalplus' ? 'normalplus'
+            : verdict==='moderate'   ? 'moderate'
+            : 'safe';
+    msg = tStr(k)(name);
     if (verdict === 'safe') {
       showFace('happy');
       if (window._winnyJump) window._winnyJump(-28);
-    } else if (verdict === 'normal') {
+    } else if (verdict === 'moderate') {   /* CHANGED: 'normal' → 'moderate' */
       showFace('neutral');
     } else if (verdict === 'anomaly') {
       showFace('neutral');
@@ -843,534 +660,254 @@ function setWinny(state, name, verdict) {
   }
 }
 
-/* ═══════════════════════════════════════════════
-   WINNY — spring physics engine
-═══════════════════════════════════════════════ */
+/* ═══ WINNY physics engine ═══ */
 (function () {
-  const floatEl    = document.getElementById('winnyFloat');
-  const svgEl      = document.getElementById('winnySvg');
-  const bubble     = document.getElementById('winnyBubble');
-  const pupilL     = document.getElementById('pupilL');
-  const pupilR     = document.getElementById('pupilR');
-  const armL       = document.getElementById('winnyArmL');
-  const capeEl     = document.getElementById('winnyCape');
-  const feetEl     = document.getElementById('winnyFeet');
-  const capeBodyEl = document.getElementById('capeBody');
+  const floatEl = document.getElementById('winnyFloat');
+  const svgEl   = document.getElementById('winnySvg');
+  const bubble  = document.getElementById('winnyBubble');
+  const armL    = document.getElementById('winnyArmL');
 
-  /* ─ Spring state ─ */
-  // Bob (vertical idle float)
-  let bobY = 0, bobVY = 0;
-  // Tilt (lean toward cursor)
-  let tilt = 0, tiltV = 0;
-  // Squash/stretch on land
-  let scaleY = 1, scaleYV = 0;
-  let scaleX = 1, scaleXV = 0;
-  // Eye pupils (smooth lag)
-  let eyeX = 0, eyeXV = 0;
-  let eyeY = 0, eyeYV = 0;
-  // Jump impulse
-  let jumpY = 0, jumpVY = 0;
-  // Wave angle
-  let waveAngle = 0, waveAngleV = 0;
-  let isWaving = false;
-  let waveTimer = null;
-
-  // Mouse position (normalized, -1..1 from center of viewport)
-  let mouseNX = 0, mouseNY = 0;
+  let bobY=0,bobVY=0,tilt=0,tiltV=0;
+  let scaleY=1,scaleYV=0,scaleX=1,scaleXV=0;
+  let eyeX=0,eyeXV=0,eyeY=0,eyeYV=0;
+  let jumpY=0,jumpVY=0;
+  let waveAngle=0,waveAngleV=0;
+  let isWaving=false,waveTimer=null;
+  let mouseNX=0,mouseNY=0;
 
   document.addEventListener('mousemove', e => {
-    mouseNX = (e.clientX / window.innerWidth  - 0.5) * 2;
-    mouseNY = (e.clientY / window.innerHeight - 0.5) * 2;
+    mouseNX = (e.clientX/window.innerWidth  - 0.5)*2;
+    mouseNY = (e.clientY/window.innerHeight - 0.5)*2;
   });
 
-  /* ─ Spring helper: stiffness k, damping d ─ */
-  function spring(pos, vel, target, k, d) {
-    const force = (target - pos) * k - vel * d;
-    vel += force;
-    pos += vel;
-    return [pos, vel];
+  function spring(pos,vel,target,k,d) {
+    const f = (target-pos)*k - vel*d;
+    return [pos+vel+f, vel+f];
   }
 
-  /* ─ Idle bob oscillator ─ */
-  let bobTime = 0;
-
-  /* ─ rAF loop ─ */
+  let bobTime=0;
   function tick() {
     bobTime += 0.018;
+    [bobY,bobVY]   = spring(bobY,bobVY, Math.sin(bobTime)*9+Math.sin(bobTime*1.7)*3, 0.04,0.18);
+    [tilt,tiltV]   = spring(tilt,tiltV, mouseNX*6, 0.06,0.22);
+    [jumpY,jumpVY] = spring(jumpY,jumpVY, 0, 0.07,0.28);
+    const land = Math.abs(jumpVY)*0.08;
+    [scaleY,scaleYV] = spring(scaleY,scaleYV, 1-land*0.5, 0.25,0.55);
+    [scaleX,scaleXV] = spring(scaleX,scaleXV, 1+land*0.3, 0.25,0.55);
+    [eyeX,eyeXV] = spring(eyeX,eyeXV, mouseNX*2.2, 0.08,0.30);
+    [eyeY,eyeYV] = spring(eyeY,eyeYV, mouseNY*1.8, 0.08,0.30);
+    if (isWaving) [waveAngle,waveAngleV] = spring(waveAngle,waveAngleV, Math.sin(bobTime*12)*25, 0.35,0.28);
+    else          [waveAngle,waveAngleV] = spring(waveAngle,waveAngleV, 0, 0.12,0.45);
 
-    // Smooth idle bob — sinusoidal target
-    const bobTarget = Math.sin(bobTime) * 9 + Math.sin(bobTime * 1.7) * 3;
-    [bobY, bobVY] = spring(bobY, bobVY, bobTarget, 0.04, 0.18);
-
-    // Tilt toward mouse X (lean left/right gently)
-    const tiltTarget = mouseNX * 6; // max ±6deg
-    [tilt, tiltV] = spring(tilt, tiltV, tiltTarget, 0.06, 0.22);
-
-    // Jump spring (impulse added externally via jumpVY)
-    const jumpTarget = 0;
-    [jumpY, jumpVY] = spring(jumpY, jumpVY, jumpTarget, 0.07, 0.28);
-
-    // Squash when landing (scaleY inverse of jumpY derivative)
-    const land = Math.abs(jumpVY) * 0.08;
-    const squashY = 1 - land * 0.5;
-    const squashX = 1 + land * 0.3;
-    [scaleY, scaleYV] = spring(scaleY, scaleYV, squashY, 0.25, 0.55);
-    [scaleX, scaleXV] = spring(scaleX, scaleXV, squashX, 0.25, 0.55);
-
-    // Eye pupils — lag behind mouse with spring
-    const eyeTargetX = mouseNX * 2.2;
-    const eyeTargetY = mouseNY * 1.8;
-    [eyeX, eyeXV] = spring(eyeX, eyeXV, eyeTargetX, 0.08, 0.30);
-    [eyeY, eyeYV] = spring(eyeY, eyeYV, eyeTargetY, 0.08, 0.30);
-
-    // Wave arm spring
-    if (isWaving) {
-      const waveTarget = Math.sin(bobTime * 12) * 25;
-      [waveAngle, waveAngleV] = spring(waveAngle, waveAngleV, waveTarget, 0.35, 0.28);
-    } else {
-      [waveAngle, waveAngleV] = spring(waveAngle, waveAngleV, 0, 0.12, 0.45);
-    }
-
-    // ── Apply transforms ──
-    const totalY = bobY + jumpY;
-    svgEl.style.transform =
-      `translateY(${totalY}px) rotate(${tilt}deg) scaleY(${scaleY}) scaleX(${scaleX})`;
+    svgEl.style.transform = `translateY(${bobY+jumpY}px) rotate(${tilt}deg) scaleY(${scaleY}) scaleX(${scaleX})`;
     svgEl.style.transformOrigin = 'center bottom';
-
-    // Pupils — base L: 86,70  R: 118,70
-    if (pupilL) {
-      pupilL.setAttribute('cx', 86 + eyeX);
-      pupilL.setAttribute('cy', 70 + eyeY);
-    }
-    if (pupilR) {
-      pupilR.setAttribute('cx', 118 + eyeX);
-      pupilR.setAttribute('cy', 70 + eyeY);
-    }
-
-    // Wave arm
-    if (armL) {
-      armL.style.transform = `rotate(${waveAngle}deg)`;
-      armL.style.transformOrigin = '45px 146px';
-    }
-
-    // Avoidance position spring
+    if (armL) { armL.style.transform = `rotate(${waveAngle}deg)`; armL.style.transformOrigin = '45px 146px'; }
     tickAvoidance();
-
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 
-  /* ─ Position: scroll tracking + drag ─ */
-  let posX = 32;   // distance from right edge (or left edge in Arabic)
-  let posY = 220;
-  let curPosX = 32, curPosY = 220;
-  let posVX = 0,   posVY = 0;
+  let posX=32,posY=220,curPosX=32,curPosY=220,posVX=0,posVY=0;
+  let isDragging=false,dragOffX=0,dragOffY=0,userDragged=false,dragMoved=false;
+  let prevClientX=0,prevClientY=0;
 
-  let isDragging = false;
-  let dragOffX = 0, dragOffY = 0;
-  let userDragged = false;
+  window.addEventListener('scroll', () => {
+    if (userDragged||isDragging) return;
+    const ratio = window.scrollY / Math.max(1, document.body.scrollHeight-window.innerHeight);
+    posY = 220 - ratio*(220-32);
+  }, {passive:true});
 
-  // ── Scroll tracking ──
-  function onScroll() {
-    if (userDragged || isDragging) return;
-    const scrolled  = window.scrollY;
-    const maxScroll = document.body.scrollHeight - window.innerHeight;
-    const ratio     = maxScroll > 0 ? scrolled / maxScroll : 0;
-    const startBottom = 220;
-    const endBottom   = 32;
-    posY = startBottom - ratio * (startBottom - endBottom);
+  function startDrag(cx,cy) {
+    isDragging=true; userDragged=true;
+    const r = floatEl.getBoundingClientRect();
+    dragOffX=cx-r.left; dragOffY=cy-r.top;
+    svgEl.style.cursor='grabbing';
   }
-  window.addEventListener('scroll', onScroll, { passive: true });
-
-  // ── Drag ──
-  function startDrag(clientX, clientY) {
-    isDragging = true;
-    userDragged = true;
-    const rect = floatEl.getBoundingClientRect();
-    dragOffX = clientX - rect.left;
-    dragOffY = clientY - rect.top;
-    floatEl.style.cursor = 'grabbing';
-    svgEl.style.cursor   = 'grabbing';
-  }
-
-  function moveDrag(clientX, clientY) {
+  function moveDrag(cx,cy) {
     if (!isDragging) return;
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const winW = floatEl.offsetWidth  || 220;
-    const winH = floatEl.offsetHeight || 280;
-    if (lang === 'ar') {
-      // In Arabic, posX = distance from LEFT edge
-      posX = Math.max(8, Math.min(clientX - dragOffX, vw - winW - 8));
-    } else {
-      // In English, posX = distance from RIGHT edge
-      const newRight = vw - (clientX - dragOffX) - winW;
-      posX = Math.max(8, Math.min(newRight, vw - winW - 8));
-    }
-    const newBottom = vh - (clientY - dragOffY) - winH;
-    posY = Math.max(8, Math.min(newBottom, vh - winH - 8));
+    const vw=window.innerWidth, vh=window.innerHeight;
+    const winW=floatEl.offsetWidth||220, winH=floatEl.offsetHeight||280;
+    if (lang==='ar') posX=Math.max(8,Math.min(cx-dragOffX, vw-winW-8));
+    else { const nr=vw-(cx-dragOffX)-winW; posX=Math.max(8,Math.min(nr, vw-winW-8)); }
+    posY=Math.max(8,Math.min(vh-(cy-dragOffY)-winH, vh-winH-8));
+  }
+  function endDrag(cx,cy) {
+    if (!isDragging) return;
+    isDragging=false; svgEl.style.cursor='grab';
+    const vx=cx-prevClientX, vy=cy-prevClientY;
+    const speed=Math.sqrt(vx*vx+vy*vy);
+    if (speed>18 && dragMoved) { doLaunch(vx,vy); return; }
+    const vw=window.innerWidth, winW=floatEl.offsetWidth||220;
+    if (lang==='ar') posX=curPosX<vw/2?32:vw-winW-32;
+    else { posX=(vw-curPosX-winW)<vw/2?vw-winW-32:32; }
   }
 
-  let lastDragX = 0, lastDragY = 0;
-  let dragVelX = 0, dragVelY = 0;
-  let prevClientX = 0, prevClientY = 0;
+  svgEl.addEventListener('mousedown', e => { e.preventDefault(); dragMoved=false; prevClientX=e.clientX; prevClientY=e.clientY; startDrag(e.clientX,e.clientY); });
+  document.addEventListener('mousemove', e => { if(isDragging){prevClientX=e.clientX;prevClientY=e.clientY;dragMoved=true;} moveDrag(e.clientX,e.clientY); });
+  document.addEventListener('mouseup', e => endDrag(e.clientX,e.clientY));
+  svgEl.addEventListener('touchstart', e => { e.preventDefault(); dragMoved=false; prevClientX=e.touches[0].clientX; prevClientY=e.touches[0].clientY; startDrag(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
+  document.addEventListener('touchmove', e => { if(!isDragging)return; e.preventDefault(); prevClientX=e.touches[0].clientX; prevClientY=e.touches[0].clientY; dragMoved=true; moveDrag(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
+  document.addEventListener('touchend', e => { const t=e.changedTouches[0]; endDrag(t.clientX,t.clientY); });
 
-  function endDrag(clientX, clientY) {
-    if (!isDragging) return;
-    isDragging = false;
-    svgEl.style.cursor = 'grab';
-    dragVelX = clientX - prevClientX;
-    dragVelY = clientY - prevClientY;
-    const speed = Math.sqrt(dragVelX * dragVelX + dragVelY * dragVelY);
-    if (speed > 18 && dragMoved) {
-      doLaunch(dragVelX, dragVelY);
-    } else {
-      const vw   = window.innerWidth;
-      const winW = floatEl.offsetWidth || 220;
-      if (lang === 'ar') {
-        posX = curPosX < vw / 2 ? 32 : vw - winW - 32;
-      } else {
-        const currentLeft = vw - curPosX - winW;
-        posX = currentLeft < vw / 2 ? vw - winW - 32 : 32;
-      }
-    }
-  }
+  let isFlying=false;
+  const cape=document.getElementById('winnyCape');
+  const feet=document.getElementById('winnyFeet');
+  const mouth=document.getElementById('winnyMouth');
+  const speedLines=document.getElementById('winnySpeedLines');
 
-  // Mouse events
-  svgEl.addEventListener('mousedown', e => {
-    e.preventDefault();
-    dragMoved = false;
-    prevClientX = e.clientX; prevClientY = e.clientY;
-    startDrag(e.clientX, e.clientY);
-  });
-  document.addEventListener('mousemove', e => {
-    if (isDragging) { prevClientX = e.clientX; prevClientY = e.clientY; dragMoved = true; }
-    moveDrag(e.clientX, e.clientY);
-  });
-  document.addEventListener('mouseup', e => endDrag(e.clientX, e.clientY));
-
-  // Touch events
-  svgEl.addEventListener('touchstart', e => {
-    e.preventDefault();
-    dragMoved = false;
-    prevClientX = e.touches[0].clientX; prevClientY = e.touches[0].clientY;
-    startDrag(e.touches[0].clientX, e.touches[0].clientY);
-  }, { passive: false });
-  document.addEventListener('touchmove', e => {
-    if (!isDragging) return;
-    e.preventDefault();
-    prevClientX = e.touches[0].clientX; prevClientY = e.touches[0].clientY;
-    dragMoved = true;
-    moveDrag(e.touches[0].clientX, e.touches[0].clientY);
-  }, { passive: false });
-  document.addEventListener('touchend', e => {
-    const t = e.changedTouches[0];
-    endDrag(t.clientX, t.clientY);
-  });
-
-  /* ─ LAUNCH — superhero flight across screen ─ */
-  let isFlying = false;
-  const cape       = document.getElementById('winnyCape');
-  const speedLines = document.getElementById('winnySpeedLines');
-  const feet       = document.getElementById('winnyFeet');
-  const mouth      = document.getElementById('winnyMouth');
-
-  function doLaunch(velX, velY) {
+  function doLaunch(velX,velY) {
     if (isFlying) return;
-    isFlying = true;
-    userDragged = false;
-
-    if (cape)       cape.style.display       = 'block';
-    if (speedLines) speedLines.style.display  = 'block';
-    if (feet)       feet.style.display        = 'none';
-    if (mouth)      mouth.setAttribute('d', 'M88 86 Q100 96 112 86');
-
-    const vw   = window.innerWidth;
-    const winW = floatEl.offsetWidth || 220;
-    const currentLeft = lang === 'ar' ? curPosX : vw - curPosX - winW;
-    const flyingRight = velX > 0 || currentLeft < vw / 2;
-
-    if (speedLines) {
-      speedLines.style.transform = flyingRight ? 'scaleX(-1)' : 'scaleX(1)';
-      speedLines.style.transformOrigin = 'center';
-    }
-    if (cape) {
-      cape.style.transform = flyingRight ? 'scaleX(-1)' : 'scaleX(1)';
-      cape.style.transformOrigin = '100px 138px';
-    }
-
-    const startRight  = curPosX;
-    const startBottom = curPosY;
-    const endRight    = 32;
-    const endBottom   = curPosY;
-    const duration    = 1400;
-    const startTime   = performance.now();
-
+    isFlying=true; userDragged=false;
+    if(cape) cape.style.display='block';
+    if(speedLines) speedLines.style.display='block';
+    if(feet) feet.style.display='none';
+    if(mouth) mouth.setAttribute('d','M88 86 Q100 96 112 86');
+    const vw=window.innerWidth, winW=floatEl.offsetWidth||220;
+    const curLeft=lang==='ar'?curPosX:vw-curPosX-winW;
+    const flyR=velX>0||curLeft<vw/2;
+    if(speedLines){speedLines.style.transform=flyR?'scaleX(-1)':'scaleX(1)';speedLines.style.transformOrigin='center';}
+    if(cape){cape.style.transform=flyR?'scaleX(-1)':'scaleX(1)';cape.style.transformOrigin='100px 138px';}
+    const sR=curPosX,sB=curPosY,eR=32,eB=curPosY,dur=1400,t0=performance.now();
     function flyTick(now) {
-      const t    = Math.min((now - startTime) / duration, 1);
-      const ease = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
-      const arc  = Math.sin(t * Math.PI) * -280;
-      const r    = startRight  + (endRight  - startRight)  * ease;
-      const b    = startBottom + (endBottom - startBottom) * ease + arc;
-
-      // Apply to correct side
-      if (lang === 'ar') {
-        floatEl.style.left  = r + 'px';
-        floatEl.style.right = 'auto';
-      } else {
-        floatEl.style.right = r + 'px';
-        floatEl.style.left  = 'auto';
-      }
-      floatEl.style.bottom = b + 'px';
-      curPosX = r; curPosY = b;
-
-      const angle = flyingRight
-        ? -30 + Math.sin(t * Math.PI) * -20
-        :  30 + Math.sin(t * Math.PI) *  20;
-      svgEl.style.transform = `rotate(${angle}deg) scaleX(${flyingRight ? -1 : 1})`;
-
-      if (t < 1) requestAnimationFrame(flyTick);
-      else landWinny(32, endBottom);
+      const t=Math.min((now-t0)/dur,1);
+      const ease=t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+      const arc=Math.sin(t*Math.PI)*-280;
+      const r=sR+(eR-sR)*ease, b=sB+(eB-sB)*ease+arc;
+      if(lang==='ar'){floatEl.style.left=r+'px';floatEl.style.right='auto';}
+      else{floatEl.style.right=r+'px';floatEl.style.left='auto';}
+      floatEl.style.bottom=b+'px';
+      curPosX=r;curPosY=b;
+      const angle=flyR?-30+Math.sin(t*Math.PI)*-20:30+Math.sin(t*Math.PI)*20;
+      svgEl.style.transform=`rotate(${angle}deg) scaleX(${flyR?-1:1})`;
+      if(t<1) requestAnimationFrame(flyTick);
+      else landWinny(32,eB);
     }
     requestAnimationFrame(flyTick);
   }
 
-  function landWinny(newPosX, newPosY) {
-    isFlying = false;
-    svgEl.style.transform = '';
-    posX = newPosX; posY = newPosY; curPosX = newPosX; posVX = 0;
-
-    setTimeout(() => {
-      if (cape)       cape.style.display       = 'none';
-      if (speedLines) speedLines.style.display  = 'none';
-      if (feet)       feet.style.display        = 'block';
-      if (mouth)      mouth.setAttribute('d', 'M88 88 Q100 98 112 88');
-    }, 120);
-
-    scaleYV = 0; scaleXV = 0;
-    scaleY = 0.6; scaleX = 1.4;
+  function landWinny(nx,ny) {
+    isFlying=false; svgEl.style.transform='';
+    posX=nx;posY=ny;curPosX=nx;posVX=0;
+    setTimeout(()=>{
+      if(cape)cape.style.display='none';
+      if(speedLines)speedLines.style.display='none';
+      if(feet)feet.style.display='block';
+      if(mouth)mouth.setAttribute('d','M88 88 Q100 98 112 88');
+    },120);
+    scaleYV=0;scaleXV=0;scaleY=0.6;scaleX=1.4;
     doJump(-16);
-
-    if (window._winnyPendingMsg) {
-      showBubble(window._winnyPendingMsg, 5000);
-      window._winnyPendingMsg = null;
-    } else {
-      const msg = lang === 'ar' ? '💨 وصلت! دعنا نرى النتائج... 🔍' : '💨 I\'m back with the results! 🔍';
-      showBubble(msg, 3000);
-    }
+    if(window._winnyPendingMsg){showBubble(window._winnyPendingMsg,5000);window._winnyPendingMsg=null;}
+    else showBubble(lang==='ar'?'💨 وصلت! دعنا نرى النتائج... 🔍':"💨 I'm back with the results! 🔍",3000);
   }
 
-  // ── Apply position spring each frame ──
   function tickAvoidance() {
-    if (isFlying) return;
-    if (isDragging) {
-      curPosX = posX; curPosY = posY;
-      posVX = 0;      posVY = 0;
-    } else {
-      [curPosX, posVX] = spring(curPosX, posVX, posX, 0.045, 0.32);
-      [curPosY, posVY] = spring(curPosY, posVY, posY, 0.045, 0.32);
-    }
-    // Arabic: anchor LEFT; English: anchor RIGHT
-    if (lang === 'ar') {
-      floatEl.style.left  = curPosX + 'px';
-      floatEl.style.right = 'auto';
-    } else {
-      floatEl.style.right = curPosX + 'px';
-      floatEl.style.left  = 'auto';
-    }
-    floatEl.style.bottom = curPosY + 'px';
+    if(isFlying)return;
+    if(isDragging){curPosX=posX;curPosY=posY;posVX=0;posVY=0;}
+    else{[curPosX,posVX]=spring(curPosX,posVX,posX,0.045,0.32);[curPosY,posVY]=spring(curPosY,posVY,posY,0.045,0.32);}
+    if(lang==='ar'){floatEl.style.left=curPosX+'px';floatEl.style.right='auto';}
+    else{floatEl.style.right=curPosX+'px';floatEl.style.left='auto';}
+    floatEl.style.bottom=curPosY+'px';
   }
 
-  /* ─ Jump impulse ─ */
-  function doJump(strength = -18) { jumpVY += strength; }
+  function doJump(s=-18){jumpVY+=s;}
+  function doWave(d=1200){isWaving=true;clearTimeout(waveTimer);waveTimer=setTimeout(()=>isWaving=false,d);}
 
-  /* ─ Wave ─ */
-  function doWave(duration = 1200) {
-    isWaving = true;
-    clearTimeout(waveTimer);
-    waveTimer = setTimeout(() => { isWaving = false; }, duration);
-  }
-
-  /* ─ Bubble helpers ─ */
-  let bubbleTimer = null;
-  function showBubble(html, duration = 4000) {
-    const el = document.getElementById('winnyText');
-    if (el) el.innerHTML = html;
+  let bubbleTimer=null;
+  function showBubble(html,dur=4000) {
+    const el=document.getElementById('winnyText');
+    if(el)el.innerHTML=html;
     bubble.classList.add('visible');
     clearTimeout(bubbleTimer);
-    if (duration > 0) bubbleTimer = setTimeout(() => bubble.classList.remove('visible'), duration);
+    if(dur>0)bubbleTimer=setTimeout(()=>bubble.classList.remove('visible'),dur);
   }
 
-  /* ─ Click → wave + message (only if not a drag) ─ */
-  let dragMoved = false;
-  svgEl.addEventListener('mousedown', () => { dragMoved = false; });
-  document.addEventListener('mousemove', () => { if (isDragging) dragMoved = true; });
+  svgEl.addEventListener('mousedown',()=>{dragMoved=false;});
+  document.addEventListener('mousemove',()=>{if(isDragging)dragMoved=true;});
 
-  const hiMessages = {
-    en: ["Need help? Type an app name up there! 👆", "I scan apps so you don't have to worry 🛡️", "Ask me about any Windows app! 🔍", "Privacy is literally my job. 😄"],
-    ar: ["تحتاج مساعدة؟ اكتب اسم تطبيق هناك! 👆", "أفحص التطبيقات حتى لا تقلق 🛡️", "اسألني عن أي تطبيق ويندوز! 🔍", "الخصوصية هي اختصاصي! 😄"]
+  const hiMsgs={
+    en:["Need help? Type an app name up there! 👆","I scan apps so you don't have to worry 🛡️","Ask me about any Windows app! 🔍","Privacy is literally my job. 😄"],
+    ar:["تحتاج مساعدة؟ اكتب اسم تطبيق هناك! 👆","أفحص التطبيقات حتى لا تقلق 🛡️","اسألني عن أي تطبيق ويندوز! 🔍","الخصوصية هي اختصاصي! 😄"]
   };
-  let hiIdx = 0;
-  svgEl.addEventListener('dblclick', () => {
-    if (isFlying) return;
-    const vw = window.innerWidth;
-    const winW = floatEl.offsetWidth || 220;
-    const currentLeft = vw - curPosX - winW;
-    const flyRight = currentLeft < vw / 2;
-    doLaunch(flyRight ? 30 : -30, 0);
+  let hiIdx=0;
+
+  svgEl.addEventListener('dblclick',()=>{
+    if(isFlying)return;
+    const vw=window.innerWidth,winW=floatEl.offsetWidth||220;
+    doLaunch((vw-curPosX-winW)<vw/2?30:-30,0);
+  });
+  svgEl.addEventListener('click',()=>{
+    if(dragMoved||isFlying)return;
+    const msgs=hiMsgs[lang]||hiMsgs.en;
+    showBubble(msgs[hiIdx%msgs.length],4000);hiIdx++;doWave(1400);doJump(-14);
+  });
+  svgEl.addEventListener('mouseenter',()=>{
+    if(!bubble.classList.contains('visible'))
+      showBubble(lang==='ar'?'أهلاً! اضغط عليّ 😊':"Hi! Click me 😊",2500);
   });
 
-  svgEl.addEventListener('click', () => {
-    if (dragMoved || isFlying) return;
-    const msgs = hiMessages[lang] || hiMessages.en;
-    showBubble(msgs[hiIdx % msgs.length], 4000);
-    hiIdx++;
-    doWave(1400);
-    doJump(-14);
-  });
-
-  /* ─ Hover ─ */
-  svgEl.addEventListener('mouseenter', () => {
-    if (!bubble.classList.contains('visible')) {
-      const greet = lang === 'ar' ? 'أهلاً! اضغط عليّ 😊' : "Hi! Click me 😊";
-      showBubble(greet, 2500);
-    }
-  });
-
-  /* ─ Scroll-aware messages ─ */
-  const sectionMsgs = {
-    how:     { en: "This is how I work my magic! 🔮", ar: "هكذا أعمل بسحرتي! 🔮" },
-    results: { en: "Results are in — let's see! 🔍",  ar: "النتائج جاهزة! 🔍" }
-  };
-  let lastSection = '';
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      const id = entry.target.id;
-      if (id === lastSection) return;
-      lastSection = id;
-      const msgs = sectionMsgs[id];
-      if (msgs) { showBubble(msgs[lang] || msgs.en, 3500); doJump(-20); }
+  const secMsgs={how:{en:"This is how I work my magic! 🔮",ar:"هكذا أعمل بسحرتي! 🔮"},results:{en:"Results are in — let's see! 🔍",ar:"النتائج جاهزة! 🔍"}};
+  let lastSec='';
+  new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting)return;
+      const id=e.target.id;if(id===lastSec)return;lastSec=id;
+      const m=secMsgs[id];if(m){showBubble(m[lang]||m.en,3500);doJump(-20);}
     });
-  }, { threshold: 0.3 });
-  ['how', 'results'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) observer.observe(el);
-  });
+  },{threshold:0.3}).observe&&['how','results'].forEach(id=>{const el=document.getElementById(id);if(el)new IntersectionObserver(entries=>{entries.forEach(e=>{if(!e.isIntersecting)return;const id2=e.target.id;if(id2===lastSec)return;lastSec=id2;const m=secMsgs[id2];if(m){showBubble(m[lang]||m.en,3500);doJump(-20);}});},{threshold:0.3}).observe(el);});
 
-  /* ─ Search input ─ */
-  const inp = document.getElementById('appInput');
-  if (inp) {
-    inp.addEventListener('focus', () => {
-      showBubble(lang === 'ar' ? 'هيا! أدخل اسم التطبيق 🎯' : 'Go ahead, type an app name! 🎯', 3000);
-      doWave(900);
-    });
-    inp.addEventListener('input', () => {
-      clearTimeout(bubbleTimer);
-      bubble.classList.remove('visible');
-    });
+  const inp=document.getElementById('appInput');
+  if(inp){
+    inp.addEventListener('focus',()=>{showBubble(lang==='ar'?'هيا! أدخل اسم التطبيق 🎯':'Go ahead, type an app name! 🎯',3000);doWave(900);});
+    inp.addEventListener('input',()=>{clearTimeout(bubbleTimer);bubble.classList.remove('visible');});
   }
 
-  /* ─ Initial greeting ─ */
-  setTimeout(() => {
-    showBubble(
-      lang === 'ar'
-        ? "أهلاً! أنا <strong>ويني</strong> 👋<br>اكتب اسم أي تطبيق ويندوز وسأخبرك بمدى أمانه!"
-        : "Hey! I'm <strong>Winny</strong> 👋<br>Type any Windows app and I'll tell you how safe it is!",
-      5000
-    );
+  setTimeout(()=>{
+    showBubble(lang==='ar'?"أهلاً! أنا <strong>ويني</strong> 👋<br>اكتب اسم أي تطبيق ويندوز وسأخبرك بمدى أمانه!":"Hey! I'm <strong>Winny</strong> 👋<br>Type any Windows app and I'll tell you how safe it is!",5000);
     doWave(1000);
-  }, 1200);
+  },1200);
 
-  /* ─ Expose to setWinny ─ */
-  window._winnyShowBubble = showBubble;
-  window._winnyJump = doJump;
-  window._winnyWave = doWave;
-  window._winnyIsFlying = () => isFlying;
-
-  window._winnyLaunch = function() {
-    if (isFlying) return;
-    const vw = window.innerWidth;
-    const winW = floatEl.offsetWidth || 220;
-    const currentLeft = vw - curPosX - winW;
-    const flyRight = currentLeft < vw / 2;
-    doLaunch(flyRight ? 30 : -30, 0);
-  };
+  window._winnyShowBubble=showBubble;
+  window._winnyJump=doJump;
+  window._winnyWave=doWave;
+  window._winnyIsFlying=()=>isFlying;
+  window._winnyLaunch=function(){if(isFlying)return;const vw=window.innerWidth,winW=floatEl.offsetWidth||220;doLaunch((vw-curPosX-winW)<vw/2?30:-30,0);};
 })();
 
-/* ═══════════════════════════════════════════════
-   THEME
-═══════════════════════════════════════════════ */
 function toggleTheme() {
-  isDark = !isDark;
-  document.body.classList.toggle('light', !isDark);
-  document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
-  const lbl = document.getElementById('themeLabel');
-  lbl.textContent = isDark ? (lang==='ar'?'فاتح':'Light') : (lang==='ar'?'داكن':'Dark');
-  lbl.setAttribute('data-en', isDark?'Light':'Dark');
-  lbl.setAttribute('data-ar', isDark?'فاتح':'داكن');
+  isDark=!isDark;
+  document.body.classList.toggle('light',!isDark);
+  document.getElementById('themeIcon').textContent=isDark?'☀️':'🌙';
+  const lbl=document.getElementById('themeLabel');
+  lbl.textContent=isDark?(lang==='ar'?'فاتح':'Light'):(lang==='ar'?'داكن':'Dark');
+  lbl.setAttribute('data-en',isDark?'Light':'Dark');
+  lbl.setAttribute('data-ar',isDark?'فاتح':'داكن');
 }
 
-/* ═══════════════════════════════════════════════
-   LANGUAGE — also repositions Winny
-═══════════════════════════════════════════════ */
 function toggleLang() {
-  lang = lang==='en' ? 'ar' : 'en';
-  const isAr = lang==='ar';
-  document.documentElement.lang = lang;
-  document.documentElement.dir  = isAr ? 'rtl' : 'ltr';
-  document.getElementById('langLabel').textContent = isAr ? 'English' : 'العربية';
-
-  /* Swap all data-en / data-ar text */
-  document.querySelectorAll('[data-en]').forEach(el => {
-    const v = el.getAttribute(isAr ? 'data-ar' : 'data-en');
-    if (v !== null) el.innerHTML = v;
-  });
-
-  /* Input placeholder */
-  const inp = document.getElementById('appInput');
-  inp.placeholder = inp.getAttribute(isAr ? 'data-ph-ar' : 'data-ph-en');
-
-  /* Theme label */
-  const lbl = document.getElementById('themeLabel');
-  lbl.textContent = isDark ? (isAr?'فاتح':'Light') : (isAr?'داكن':'Dark');
-
-  /* ── Winny: flip side ──
-     In Arabic we anchor LEFT and flip the bubble tail.
-     The physics engine's applyPos() already reads `lang` so
-     the spring will naturally slide Winny to the new side. */
-  const floatEl = document.getElementById('winnyFloat');
-  const bubble  = document.getElementById('winnyBubble');
-
-  if (isAr) {
-    floatEl.style.alignItems = 'flex-start';
-    bubble.classList.add('ar-mode');
-  } else {
-    floatEl.style.alignItems = 'flex-end';
-    bubble.classList.remove('ar-mode');
-  }
-
-  /* Re-render results in new language if visible */
-  const wrap = document.getElementById('results');
-  if (wrap.style.display !== 'none') {
-    const val = inp.value.trim();
-    if (val) {
-      const inner = document.getElementById('resultsInner');
-      if (typeof runSearchByRaw === 'function') runSearchByRaw(val);
-    }
-  }
+  lang=lang==='en'?'ar':'en';
+  const isAr=lang==='ar';
+  document.documentElement.lang=lang;
+  document.documentElement.dir=isAr?'rtl':'ltr';
+  document.getElementById('langLabel').textContent=isAr?'English':'العربية';
+  document.querySelectorAll('[data-en]').forEach(el=>{const v=el.getAttribute(isAr?'data-ar':'data-en');if(v!==null)el.innerHTML=v;});
+  const inp=document.getElementById('appInput');
+  inp.placeholder=inp.getAttribute(isAr?'data-ph-ar':'data-ph-en');
+  const lbl=document.getElementById('themeLabel');
+  lbl.textContent=isDark?(isAr?'فاتح':'Light'):(isAr?'داكن':'Dark');
+  const floatEl=document.getElementById('winnyFloat');
+  const bbl=document.getElementById('winnyBubble');
+  if(isAr){floatEl.style.alignItems='flex-start';bbl.classList.add('ar-mode');}
+  else{floatEl.style.alignItems='flex-end';bbl.classList.remove('ar-mode');}
+  const wrap=document.getElementById('results');
+  if(wrap.style.display!=='none'){const val=inp.value.trim();if(val&&typeof runSearchByRaw==='function')runSearchByRaw(val);}
 }
 </script>
 <script>
 function toggleDetails(btn) {
-  const box = btn.nextElementSibling;
-  const L = typeof lang !== 'undefined' ? lang : 'en';
-  if (box.style.display === 'none') {
-    box.style.display = 'block';
-    btn.textContent = L === 'ar' ? 'إخفاء التفاصيل' : 'See less';
-  } else {
-    box.style.display = 'none';
-    btn.textContent = L === 'ar' ? 'عرض التفاصيل' : 'See more';
-  }
+  const box=btn.nextElementSibling;
+  const L=typeof lang!=='undefined'?lang:'en';
+  if(box.style.display==='none'){box.style.display='block';btn.textContent=L==='ar'?'إخفاء التفاصيل':'See less';}
+  else{box.style.display='none';btn.textContent=L==='ar'?'عرض التفاصيل':'See more';}
 }
 </script>
 <script src="js/search.js"></script>
