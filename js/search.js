@@ -127,35 +127,112 @@ function parsePermissions(effectivePerms) {
 // ════════════════════════════════════════
 // ROW → APP SHAPE
 // ════════════════════════════════════════
-function rowToApp(row) {
-  const verdict    = mapVerdict(row.final_decision);
-  const levelMap   = { 'low':'Low','medium':'Medium','high':'High','very high':'Very High','safe':'Safe/Very Low' };
-  const rsLevelKey = levelMap[(row.rs_level||'').toLowerCase()] || 'Medium';
-  const cleanName  = cleanAppName(row.app_name || '');
-  const riskReason = row.risk_reason && row.risk_reason !== 'None (Typical)' ? row.risk_reason : '';
-  const flags      = row.custom_flags && row.custom_flags !== '—' ? row.custom_flags : '';
-  const ac         = row.anomalous_count || 0;
-  const pc         = row.permission_count || 0;
 
-  let commentEn = row.winny_analysis || '';
-  if (!commentEn) {
-    if      (verdict==='highrisk')   commentEn = `⚠️ <strong>${cleanName}</strong> is flagged HIGH RISK — ${pc} permissions, ${ac} anomalous. Risk triggers: ${riskReason}. ${flags ? 'Custom flags: '+flags+'.' : ''} <strong class="hl">Do not install.</strong>`;
-    else if (verdict==='anomaly')    commentEn = `<strong>${cleanName}</strong> reached maximum RS score (3.0) without critical API flags. ${pc} permissions, ${ac} anomalous. Exercise caution.`;
-    else if (verdict==='normalplus') commentEn = `<strong>${cleanName}</strong> requests more permissions than most peers in its category (${pc} total, ${ac} elevated). Not critical but worth noting.`;
-    // CHANGED: 'normal' → 'moderate'
-    else if (verdict==='moderate')   commentEn = `<strong>${cleanName}</strong> has a moderate risk profile for its category with ${pc} permissions. No critical anomalies detected.`;
-    else                             commentEn = `<strong>${cleanName}</strong> is safe — ${pc} permissions, all within expected range. ✅`;
+function rowToApp(row) {
+  const fd = (row.final_decision || '').toLowerCase().trim();
+  const verdict =
+    fd === 'high risk'    ? 'highrisk' :
+    fd === 'anomaly det.' ? 'anomaly'  :
+    fd === 'normal+'      ? 'normalplus' :
+    fd === 'safe'         ? 'safe'     :
+    fd === 'normal'       ? 'normal'   : 'normal';
+
+  const levelMap = { 
+    'low':'Low', 'medium':'Medium', 'high':'High', 
+    'very high':'Very High', 'safe':'Safe/Very Low' 
+  };
+  const rsLevelKey = levelMap[(row.rs_level || '').toLowerCase()] || 'Medium';
+
+  const permMeta = {
+    microphone:                 { icon: '🎙️', risk: 'high'   },
+    webcam:                     { icon: '📷', risk: 'high'   },
+    privatenetworkclientserver: { icon: '🔒', risk: 'high'   },
+    sharedusercertificates:     { icon: '🔑', risk: 'high'   },
+    documentslibrary:           { icon: '📄', risk: 'high'   },
+    enterpriseauthentication:   { icon: '🏢', risk: 'high'   },
+    videoslibrary:              { icon: '🎬', risk: 'high'   },
+    musiclibrary:               { icon: '🎵', risk: 'medium' },
+    removablestorage:           { icon: '💾', risk: 'high'   },
+    broadfilesystemaccess:      { icon: '📁', risk: 'high'   },
+    internetclient:             { icon: '🌐', risk: 'low'    },
+    internetclientserver:       { icon: '🔗', risk: 'medium' },
+    runfulltrust:               { icon: '⚙️', risk: 'medium' },
+    systemmanagement:           { icon: '🖥️', risk: 'medium' },
+    location:                   { icon: '📍', risk: 'medium' },
+    appointments:               { icon: '📅', risk: 'medium' },
+    usernotificationlistener:   { icon: '🔔', risk: 'high'   },
+    backgroundmediaplayback:    { icon: '🎵', risk: 'medium' },
+  };
+  const riskWidth = { high: 88, medium: 55, low: 25 };
+
+  // معالجة الأذونات (Permissions)
+  const seen = new Set();
+  const permissions = (row.effective_permissions || '')
+    .split(',').map(p => p.trim()).filter(Boolean)
+    .filter(p => {
+      const k = p.toLowerCase().replace(/[^a-z]/g, '');
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    })
+    .map(p => {
+      const key  = p.toLowerCase().replace(/[^a-z]/g, '');
+      const meta = permMeta[key] || { icon: '🔧', risk: 'medium' };
+      const name = p.replace(/([A-Z])/g, ' $1').trim();
+      return { name: { en: name, ar: name }, icon: meta.icon, risk: meta.risk, level: riskWidth[meta.risk] };
+    });
+
+  const cleanName = cleanAppName(row.app_name || '');
+  const fullAnalysis = row.winny_analysis || '';
+  let shortIntro = '';
+  let technicalDetails = '';
+
+  // --- منطق التقسيم والتنسيق (كل نقطة في سطر) ---
+  if (fullAnalysis && fullAnalysis.includes('Winny says:')) {
+    let cleanText = fullAnalysis.replace('Winny says:', '').trim();
+    
+    // التقسيم عند العناوين الرئيسية
+    const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:)/g;
+    const parts = cleanText.split(splitPattern);
+    
+    shortIntro = parts[0].trim(); 
+    
+    if (parts.length > 1) {
+        // تنسيق باقي الأجزاء لتظهر سطر بسطر عند وجود النقطة •
+        technicalDetails = parts.slice(1).map(part => {
+            return part.trim().replace(/•/g, '<br>•');
+        }).join('<br><br>');
+    }
+  }
+
+  // إعدادات احتياطية (Fallback)
+  if (!shortIntro) {
+      shortIntro = verdict === 'safe' ? `🛡️ ${cleanName} appears safe and uses expected permissions only.` : `⚠️ ${cleanName} analysis is ready. See details below.`;
+  }
+  
+  if (!technicalDetails) {
+      technicalDetails = `
+        <strong>Technical Data:</strong><br>
+        • Total Permissions: ${row.permission_count || 0}<br>
+        • Risk Category: ${rsLevelKey}<br><br>
+        <strong>Detected Permissions:</strong><br>
+        ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>')}
+      `;
   }
 
   return {
-    name: cleanName, rawName: row.app_name,
-    publisher: (row.category||'').replace(/_/g,' '),
+    name: cleanName,
+    rawName: row.app_name,
+    publisher: (row.category || '').replace(/_/g, ' '),
     version: '—',
-    cat: { en:(row.category||'').replace(/_/g,' '), ar:(row.category||'').replace(/_/g,' ') },
-    date: '2025', rs: parseFloat(row.rs)||0,
-    rsLevelKey, verdict, rawCategory: row.category,
-    permissions: parsePermissions(row.effective_permissions),
-    comment: { en:commentEn, ar:commentEn }
+    cat: { en: (row.category || '').replace(/_/g, ' '), ar: (row.category || '').replace(/_/g, ' ') },
+    date: '2025', 
+    rs: parseFloat(row.rs) || 0,
+    rsLevelKey, 
+    verdict, 
+    permissions,
+    rawCategory: row.category,
+    comment: { en: shortIntro, ar: shortIntro }, 
+    details: { en: technicalDetails, ar: technicalDetails }
   };
 }
 
