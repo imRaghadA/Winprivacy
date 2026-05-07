@@ -947,16 +947,16 @@ function toggleLang() {
 }
 </script>
 <script>
-  function toggleDetails(btn) {
-  const box = btn.nextElementSibling;
-  const L = typeof lang !== 'undefined' ? lang : 'en';
-
-  if (box.style.display === 'none') {
+function toggleDetails(btn) {
+  const box = btn.nextElementSibling; // هذا يبحث عن الصندوق اللي تحت الزر
+  if (!box) return; 
+  
+  if (box.style.display === 'none' || box.style.display === '') {
     box.style.display = 'block';
-    btn.textContent = L === 'ar' ? 'إخفاء التفاصيل' : 'See less';
+    btn.textContent = (lang === 'ar' ? 'عرض أقل' : 'See less');
   } else {
     box.style.display = 'none';
-    btn.textContent = L === 'ar' ? 'عرض التفاصيل' : 'See more';
+    btn.textContent = (lang === 'ar' ? 'عرض التفاصيل' : 'See more');
   }
 }
   
