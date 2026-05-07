@@ -569,14 +569,58 @@ function buildResult(d) {
         <div class="ser-title" style="text-align:center;margin-top:6px;">${S[L].rsScore}</div>
       </div>
     </div>
+
     <div class="winny-comment">
-      <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
-        <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
-        <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
-        <path d="M15 17.5l2.5 2.5 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <p><strong>${S[L].winnySays}</strong> ${d.comment[L]}</p>
+  <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
+    <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
+    <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
+    <path d="M15 17.5l2.5 2.5 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+
+  <div style="flex:1;">
+
+    <p>
+      <strong>${S[L].winnySays}</strong>
+      ${d.comment[L]}
+    </p>
+
+    <div style="margin-top:12px;">
+
+      <button onclick="toggleDetails(this)"
+        style="
+          background:none;
+          border:none;
+          color:var(--accent);
+          cursor:pointer;
+          font-size:13px;
+          font-weight:600;
+          padding:0;
+        ">
+
+        See more
+
+      </button>
+
+      <div class="extra-details"
+        style="
+          display:none;
+          margin-top:12px;
+          padding-top:12px;
+          border-top:1px solid var(--border);
+          font-size:13px;
+          color:var(--muted);
+          line-height:1.7;
+        ">
+
+        ${d.details[L]}
+
+      </div>
+
     </div>
+
+  </div>
+</div>
+   
   </div>`;
 }
 
