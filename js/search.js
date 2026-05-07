@@ -229,7 +229,7 @@ function rowToApp(row) {
     rs: parseFloat(row.rs) || 0,
     rsLevelKey, 
     verdict, 
-    permissions,
+    permissions: permissions, // تأكدي إنها كذا بدون parsePermissions
     rawCategory: row.category,
     comment: { en: shortIntro, ar: shortIntro }, 
     details: { en: technicalDetails, ar: technicalDetails }
