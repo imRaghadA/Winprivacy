@@ -611,7 +611,7 @@ function buildResult(d) {
           line-height:1.7;
         ">
 
-        ${d.details[L]}
+        ${d.details?.[L] || ''}
 
       </div>
 
