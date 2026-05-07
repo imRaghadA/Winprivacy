@@ -3,7 +3,6 @@
 
 const SUPABASE_URL = 'https://mthksiaihxgyesvxxtbt.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10aGtzaWFpaHhneWVzdnh4dGJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mzg2OTEsImV4cCI6MjA5MjUxNDY5MX0.STu8JYCABANBUkJtKQYYAIg_TVQF5GV-GrsPB2fSI3w';
-// Keys are managed by the backend server (.env file)
 
 const HEADERS = {
   'apikey': SUPABASE_KEY,
@@ -38,6 +37,7 @@ function cleanAppName(rawName) {
 
 // ════════════════════════════════════════
 // VERDICT HELPERS
+// CHANGED: 'normal' → 'moderate' throughout
 // ════════════════════════════════════════
 function mapVerdict(fd) {
   const v = (fd || '').toLowerCase().trim();
@@ -45,20 +45,34 @@ function mapVerdict(fd) {
          v === 'anomaly det.' ? 'anomaly'    :
          v === 'normal+'      ? 'normalplus' :
          v === 'safe'         ? 'safe'       :
-         v === 'normal'       ? 'normal'     : 'normal';
+         v === 'normal'       ? 'moderate'   :   // CHANGED: maps DB 'normal' → 'moderate'
+         v === 'moderate risk'? 'moderate'   :   // ADDED: also accept 'moderate risk' from DB
+                                'moderate';      // CHANGED: default → 'moderate'
 }
 
 function verdictColor(verdict) {
   return verdict === 'safe'       ? '#22c55e' :
-         verdict === 'normal'     ? '#3b82f6' :
+         verdict === 'moderate'   ? '#3b82f6' :   // CHANGED: 'normal' → 'moderate'
          verdict === 'normalplus' ? '#eab308' :
          verdict === 'anomaly'    ? '#f97316' : '#ef4444';
 }
 
 function verdictLabel(verdict) {
   const labels = {
-    en: { safe:'Safe', normal:'Normally Detected', normalplus:'Normal+', anomaly:'Anomaly Detected', highrisk:'High Risk' },
-    ar: { safe:'آمن', normal:'طبيعي', normalplus:'طبيعي+', anomaly:'شذوذ مكتشف', highrisk:'خطر مرتفع' }
+    en: {
+      safe:       'Safe',
+      moderate:   'Moderate Risk',   // CHANGED: was normal:'Normally Detected'
+      normalplus: 'Normal+',
+      anomaly:    'Anomaly Detected',
+      highrisk:   'High Risk'
+    },
+    ar: {
+      safe:       'آمن',
+      moderate:   'خطر متوسط',       // CHANGED: was normal:'طبيعي'
+      normalplus: 'طبيعي+',
+      anomaly:    'شذوذ مكتشف',
+      highrisk:   'خطر مرتفع'
+    }
   };
   return (labels[L()] || labels.en)[verdict] || verdict;
 }
@@ -125,10 +139,11 @@ function rowToApp(row) {
 
   let commentEn = row.winny_analysis || '';
   if (!commentEn) {
-    if (verdict==='highrisk')   commentEn = `⚠️ <strong>${cleanName}</strong> is flagged HIGH RISK — ${pc} permissions, ${ac} anomalous. Risk triggers: ${riskReason}. ${flags ? 'Custom flags: '+flags+'.' : ''} <strong class="hl">Do not install.</strong>`;
+    if      (verdict==='highrisk')   commentEn = `⚠️ <strong>${cleanName}</strong> is flagged HIGH RISK — ${pc} permissions, ${ac} anomalous. Risk triggers: ${riskReason}. ${flags ? 'Custom flags: '+flags+'.' : ''} <strong class="hl">Do not install.</strong>`;
     else if (verdict==='anomaly')    commentEn = `<strong>${cleanName}</strong> reached maximum RS score (3.0) without critical API flags. ${pc} permissions, ${ac} anomalous. Exercise caution.`;
     else if (verdict==='normalplus') commentEn = `<strong>${cleanName}</strong> requests more permissions than most peers in its category (${pc} total, ${ac} elevated). Not critical but worth noting.`;
-    else if (verdict==='normal')     commentEn = `<strong>${cleanName}</strong> behaves normally for its category with ${pc} permissions. No anomalies detected.`;
+    // CHANGED: 'normal' → 'moderate'
+    else if (verdict==='moderate')   commentEn = `<strong>${cleanName}</strong> has a moderate risk profile for its category with ${pc} permissions. No critical anomalies detected.`;
     else                             commentEn = `<strong>${cleanName}</strong> is safe — ${pc} permissions, all within expected range. ✅`;
   }
 
@@ -192,7 +207,6 @@ async function fetchSafeAlternatives(category, excludeRaw) {
   } catch { return []; }
 }
 
-// MS Store API removed — search is Supabase-only
 async function searchMSStore(query) { return []; }
 
 // ════════════════════════════════════════
@@ -252,13 +266,17 @@ function renderDropdown(dbResults, storeResults, q) {
     const color = fdColor(r.final_decision);
     const raw   = r.app_name.replace(/\\/g,'\\\\').replace(/'/g,"\'");
     const safe  = name.replace(/'/g,"\'");
+    // CHANGED: dropdown label — map 'normal' to 'Moderate Risk' for display
+    const displayFd = (r.final_decision || '').toLowerCase() === 'normal'
+      ? (L() === 'ar' ? 'خطر متوسط' : 'Moderate Risk')
+      : r.final_decision;
     return `<div onclick="selectFromDropdown('${raw}','${safe}')"
       style="padding:11px 16px;cursor:pointer;display:flex;justify-content:space-between;
       align-items:center;border-bottom:0.5px solid var(--border);transition:background .15s;"
       onmouseover="this.style.background='var(--surface2)'"
       onmouseout="this.style.background=''">
       <span style="font-size:14px;font-weight:500;">${name}</span>
-      <span style="font-size:11px;font-weight:700;color:${color};">${r.final_decision}</span>
+      <span style="font-size:11px;font-weight:700;color:${color};">${displayFd}</span>
     </div>`;
   }).join('');
 
@@ -271,11 +289,6 @@ function selectFromDropdown(rawName, cleanName) {
   if (dropdown) dropdown.style.display = 'none';
   runSearchByRaw(rawName);
 }
-
-
-// ════════════════════════════════════════
-// ANALYZE NOW CARD
-// ════════════════════════════════════════
 
 
 // ════════════════════════════════════════
@@ -320,7 +333,7 @@ async function showAlternatives(category, excludeRaw, container) {
 }
 
 // ════════════════════════════════════════
-// RUN SEARCH (by display name — for button/enter)
+// RUN SEARCH
 // ════════════════════════════════════════
 async function runSearchByRaw(rawName) {
   const wrap  = document.getElementById('results');
@@ -333,7 +346,6 @@ async function runSearchByRaw(rawName) {
   wrap.scrollIntoView({ behavior:'smooth', block:'start' });
   if (window._winnyLaunch) window._winnyLaunch();
 
-  // Try exact raw name first, then fuzzy
   let d = await fetchAppByRaw(rawName);
   if (!d) d = await fetchApp(rawName);
   if (d) {
@@ -351,18 +363,18 @@ async function runSearchByRaw(rawName) {
 // NOT FOUND + REQUEST FORM
 // ════════════════════════════════════════
 function buildNotFound(name) {
-  const L       = typeof lang !== 'undefined' ? lang : 'en';
+  const Lv      = typeof lang !== 'undefined' ? lang : 'en';
   const display = cleanAppName(name) || sanitize(name);
   const safeName = sanitize(display).replace(/'/g, "\\'");
 
   return `<div class="result-card" style="text-align:center;padding:48px 32px;">
     <div style="font-size:48px;margin-bottom:16px;">🔍</div>
     <div style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:10px;">
-      ${L === 'ar' ? 'التطبيق غير موجود في قاعدة البيانات' : 'App not found in database'}
+      ${Lv === 'ar' ? 'التطبيق غير موجود في قاعدة البيانات' : 'App not found in database'}
     </div>
     <div style="color:var(--muted);font-size:14px;max-width:420px;margin:0 auto 28px;line-height:1.6;">
       <strong style="color:var(--text);">"${sanitize(display)}"</strong>
-      ${L === 'ar' ? ' غير موجود في قاعدة بياناتنا بعد.' : " isn't in our database yet."}
+      ${Lv === 'ar' ? ' غير موجود في قاعدة بياناتنا بعد.' : " isn't in our database yet."}
     </div>
 
     <button onclick="startAnalysisJob('${safeName}', '')"
@@ -371,29 +383,28 @@ function buildNotFound(name) {
       display:block;margin:0 auto 12px;transition:background .2s;"
       onmouseover="this.style.background='var(--accent2)'"
       onmouseout="this.style.background='var(--accent)'">
-      ⚡ ${L === 'ar' ? 'تحليل الآن' : 'Analyze Now'}
+      ⚡ ${Lv === 'ar' ? 'تحليل الآن' : 'Analyze Now'}
     </button>
 
     <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">
-      ${L === 'ar'
+      ${Lv === 'ar'
         ? 'سيتم تحليل التطبيق وعرض النتائج خلال دقائق'
         : 'The app will be analyzed and results shown within minutes'}
     </div>
 
-    <div class="winny-comment" style="text-align:${L==='ar'?'right':'left'};">
+    <div class="winny-comment" style="text-align:${Lv==='ar'?'right':'left'};">
       <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
         <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
         <path d="M18 7l-7 3.5v5c0 4.4 2.8 8.5 7 9.5 4.2-1 7-5.1 7-9.5v-5L18 7z" fill="#4f8fff"/>
         <path d="M15 17.5l2.5 2.5 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <p>${L === 'ar'
+      <p>${Lv === 'ar'
         ? 'لم أجده بعد! اضغط <strong>تحليل الآن</strong> وسأعالجه وأعرض لك النتائج فور الانتهاء 🔍'
         : "Not in my database yet! Click <strong>Analyze Now</strong> and I'll process it and show you the results 🔍"
       }</p>
     </div>
   </div>`;
 }
-
 
 // ════════════════════════════════════════
 // REQUEST FORM
@@ -561,7 +572,6 @@ let chatMessages = [];
 let currentAppContext = null;
 
 function initWinnyChat() {
-  // Add chat button to Winny
   const floatEl = document.getElementById('winnyFloat');
   if (!floatEl) return;
 
@@ -579,7 +589,6 @@ function initWinnyChat() {
     </button>`;
   floatEl.insertBefore(chatBtn, floatEl.firstChild);
 
-  // Chat window
   const chatWin = document.createElement('div');
   chatWin.id = 'winnyChatWindow';
   chatWin.style.cssText = `
@@ -614,7 +623,6 @@ function initWinnyChat() {
     </div>`;
   document.body.appendChild(chatWin);
 
-  // Initial greeting
   addChatMessage('winny', t(
     "Hi! I'm <strong>Winny</strong> 👋 I can help you understand app privacy scores, permissions, and how WinPrivacy works. What would you like to know?",
     "مرحباً! أنا <strong>ويني</strong> 👋 يمكنني مساعدتك في فهم درجات خصوصية التطبيقات والأذونات وكيفية عمل WinPrivacy. ماذا تريد أن تعرف؟"
@@ -628,7 +636,6 @@ function toggleWinnyChat() {
   win.style.display = chatOpen ? 'flex' : 'none';
   if (chatOpen) {
     document.getElementById('chatInput')?.focus();
-    // Update button label
     const lbl = document.getElementById('chatBtnLabel');
     if (lbl) lbl.textContent = t('Close Chat', 'إغلاق الدردشة');
   } else {
@@ -686,7 +693,6 @@ async function sendChatMessage() {
   addChatMessage('user', message);
   addTypingIndicator();
 
-  // Build context about current app if one is being viewed
   let appContext = '';
   if (currentAppContext) {
     appContext = `The user is currently viewing: ${currentAppContext.name} 
@@ -695,13 +701,14 @@ async function sendChatMessage() {
       Permissions: ${currentAppContext.permissions?.map(p=>p.name.en).join(', ')}).`;
   }
 
+  // CHANGED: updated system prompt to use 'Moderate Risk' instead of 'Normal'
   const systemPrompt = `You are Winny, the friendly AI assistant for WinPrivacy — a Windows application privacy analysis tool.
 Your job is to help users understand:
 - What their app's privacy risk score means (RS score 0-4 scale)
 - What permissions mean and why they matter
-- How the SER (Seed Exclusiveness Ratio) scoring works
+- How the scoring works
 - How to use the WinPrivacy website
-- What Safe, Normal+, Anomaly Detected, and High Risk verdicts mean
+- What Safe, Moderate Risk, Normal+, Anomaly Detected, and High Risk verdicts mean
 - General Windows app privacy questions
 
 ${appContext}
@@ -716,7 +723,6 @@ STRICT RULES:
 - Keep responses under 150 words`;
 
   try {
-    // Chat uses Anthropic API directly via CONFIG key
     const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.ANTHROPIC_KEY)
       ? CONFIG.ANTHROPIC_KEY : '';
 
@@ -764,7 +770,6 @@ STRICT RULES:
   }
 }
 
-// Update app context when results are shown
 function updateChatContext(appData) {
   currentAppContext = appData;
 }
@@ -781,11 +786,8 @@ if (document.readyState === 'loading') {
 // ════════════════════════════════════════
 // ANALYSIS JOBS — queue + polling
 // ════════════════════════════════════════
-
 async function queueAnalysisJob(appName, storeId) {
   const q = sanitize(appName);
-
-  // Check if job already queued or processing
   try {
     const res  = await fetch(
       `${SUPABASE_URL}/rest/v1/analysis_jobs?app_name=ilike.*${encodeURIComponent(q)}*&status=in.(queued,processing)&limit=1&select=job_id`,
@@ -798,7 +800,6 @@ async function queueAnalysisJob(appName, storeId) {
     }
   } catch(e) {}
 
-  // Create new job
   const storeIdClean = (storeId && !storeId.endsWith('-requested') && !storeId.endsWith('-queued'))
     ? storeId
     : appName.toLowerCase().replace(/\s+/g, '-') + '-queued';
@@ -847,7 +848,6 @@ async function pollJobStatus(jobId, appName) {
       if ((job.status === 'done' || job.status === 'complete')) {
         clearInterval(timer);
 
-        // Fetch the real store ID from the job (worker updates it)
         const jobRes = await fetch(
           `${SUPABASE_URL}/rest/v1/analysis_jobs?job_id=eq.${jobId}&select=microsoft_store_id`,
           { headers: HEADERS }
@@ -855,20 +855,15 @@ async function pollJobStatus(jobId, appName) {
         const jobRows = jobRes.ok ? await jobRes.json() : [];
         const realStoreId = jobRows[0]?.microsoft_store_id || '';
 
-        // Wait 3 seconds first to ensure worker has finished saving
         await new Promise(r => setTimeout(r, 3000));
 
         let d = null;
         for (let attempt = 0; attempt < 6; attempt++) {
           if (attempt > 0) await new Promise(r => setTimeout(r, 2000));
-
-          // Try app_id first (most accurate for new apps)
           if (realStoreId && !realStoreId.endsWith('-queued')) {
             d = await fetchAppById(realStoreId);
             if (d) break;
           }
-
-          // Fall back to name search
           const terms = [appName, appName.split(' ')[0]];
           for (const term of terms) {
             d = await fetchApp(term);
@@ -885,20 +880,19 @@ async function pollJobStatus(jobId, appName) {
           if (d.verdict === 'highrisk') showAlternatives(d.rawCategory, d.rawName, inner);
           if (window.updateChatContext) updateChatContext(d);
         } else {
-          // Found in jobs but not in app_analysis yet — show retry
-          const L = typeof lang !== 'undefined' ? lang : 'en';
+          const Lv = typeof lang !== 'undefined' ? lang : 'en';
           inner.innerHTML = `<div class="result-card" style="text-align:center;padding:48px 32px;">
             <div style="font-size:48px;margin-bottom:16px;">✅</div>
             <div style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:12px;">
-              ${L==='ar' ? 'اكتمل التحليل!' : 'Analysis Complete!'}
+              ${Lv==='ar' ? 'اكتمل التحليل!' : 'Analysis Complete!'}
             </div>
             <div style="color:var(--muted);font-size:14px;margin-bottom:24px;">
-              ${L==='ar' ? 'تم تحليل التطبيق. ابحث عنه الآن.' : 'App analyzed successfully. Search for it now.'}
+              ${Lv==='ar' ? 'تم تحليل التطبيق. ابحث عنه الآن.' : 'App analyzed successfully. Search for it now.'}
             </div>
             <button onclick="document.getElementById('appInput').value='${appName}';runSearch();"
               style="background:var(--accent);color:white;border:none;cursor:pointer;
               padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
-              🔍 ${L==='ar' ? 'عرض النتائج' : 'View Results'}
+              🔍 ${Lv==='ar' ? 'عرض النتائج' : 'View Results'}
             </button>
           </div>`;
         }
@@ -915,24 +909,24 @@ async function pollJobStatus(jobId, appName) {
 }
 
 function showJobProgress(appName, progress, msgEn, msgAr) {
-  const L      = typeof lang !== 'undefined' ? lang : 'en';
+  const Lv     = typeof lang !== 'undefined' ? lang : 'en';
   const failed = progress === -1;
   const pct    = failed ? 0 : progress;
-  const msg    = L === 'ar' ? msgAr : msgEn;
+  const msg    = Lv === 'ar' ? msgAr : msgEn;
 
   const estTime =
-    pct < 20 ? (L==='ar' ? '~4 دقائق متبقية'  : '~4 min remaining') :
-    pct < 50 ? (L==='ar' ? '~3 دقائق متبقية'  : '~3 min remaining') :
-    pct < 75 ? (L==='ar' ? '~2 دقيقة متبقية'  : '~2 min remaining') :
-    pct < 90 ? (L==='ar' ? '~دقيقة متبقية'    : '~1 min remaining') :
-               (L==='ar' ? 'اكتمل تقريباً!'   : 'Almost done!');
+    pct < 20 ? (Lv==='ar' ? '~4 دقائق متبقية'  : '~4 min remaining') :
+    pct < 50 ? (Lv==='ar' ? '~3 دقائق متبقية'  : '~3 min remaining') :
+    pct < 75 ? (Lv==='ar' ? '~2 دقيقة متبقية'  : '~2 min remaining') :
+    pct < 90 ? (Lv==='ar' ? '~دقيقة متبقية'    : '~1 min remaining') :
+               (Lv==='ar' ? 'اكتمل تقريباً!'   : 'Almost done!');
 
   const steps = [
-    { label: L==='ar' ? '⬇️ التنزيل'       : '⬇️ Downloading',  t: 10 },
-    { label: L==='ar' ? '📦 الاستخراج'     : '📦 Extracting',   t: 40 },
-    { label: L==='ar' ? '🔍 فحص الـ API'   : '🔍 Scanning APIs',t: 65 },
-    { label: L==='ar' ? '📊 الحساب'        : '📊 Scoring',      t: 85 },
-    { label: L==='ar' ? '💾 الحفظ'         : '💾 Saving',       t: 95 },
+    { label: Lv==='ar' ? '⬇️ التنزيل'       : '⬇️ Downloading',  t: 10 },
+    { label: Lv==='ar' ? '📦 الاستخراج'     : '📦 Extracting',   t: 40 },
+    { label: Lv==='ar' ? '🔍 فحص الـ API'   : '🔍 Scanning APIs',t: 65 },
+    { label: Lv==='ar' ? '📊 الحساب'        : '📊 Scoring',      t: 85 },
+    { label: Lv==='ar' ? '💾 الحفظ'         : '💾 Saving',       t: 95 },
   ];
 
   const stepsHtml = steps.map(s => {
@@ -948,8 +942,8 @@ function showJobProgress(appName, progress, msgEn, msgAr) {
       <div style="font-size:${failed?'48':'40'}px;margin-bottom:16px;">${failed ? '❌' : '⚙️'}</div>
       <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px;">
         ${failed
-          ? (L==='ar' ? 'فشل التحليل' : 'Analysis Failed')
-          : (L==='ar' ? `جاري تحليل <em>${appName}</em>` : `Analyzing <em>${appName}</em>`)}
+          ? (Lv==='ar' ? 'فشل التحليل' : 'Analysis Failed')
+          : (Lv==='ar' ? `جاري تحليل <em>${appName}</em>` : `Analyzing <em>${appName}</em>`)}
       </div>
       <div style="color:var(--muted);font-size:14px;margin-bottom:32px;">${msg}</div>
       ${!failed ? `
@@ -964,17 +958,17 @@ function showJobProgress(appName, progress, msgEn, msgAr) {
         <button onclick="document.getElementById('appInput').value='${appName}';runSearch();"
           style="background:var(--accent);color:white;border:none;cursor:pointer;
           padding:12px 28px;border-radius:30px;font-family:inherit;font-size:14px;font-weight:600;">
-          ${L==='ar' ? 'حاول مرة أخرى' : 'Try Again'}
+          ${Lv==='ar' ? 'حاول مرة أخرى' : 'Try Again'}
         </button>
       `}
       <div style="margin-top:24px;font-size:12px;color:var(--muted);">
-        ${L==='ar' ? '🔒 لا تغلق هذه الصفحة.' : '🔒 Keep this page open.'}
+        ${Lv==='ar' ? '🔒 لا تغلق هذه الصفحة.' : '🔒 Keep this page open.'}
       </div>
     </div>`;
 }
 
 async function startAnalysisJob(appName, storeId) {
-  const L    = typeof lang !== 'undefined' ? lang : 'en';
+  const Lv   = typeof lang !== 'undefined' ? lang : 'en';
   const wrap = document.getElementById('results');
   wrap.style.display = 'block';
   wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -987,7 +981,7 @@ async function startAnalysisJob(appName, storeId) {
 
     if (window._winnyShowBubble)
       window._winnyShowBubble(
-        L === 'ar'
+        Lv === 'ar'
           ? 'طلبك في قائمة الانتظار! سأعلمك عند انتهاء التحليل 🔍'
           : "Queued! I'll show you the results when ready 🔍",
         5000
