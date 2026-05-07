@@ -43,7 +43,7 @@ function mapVerdict(fd) {
   const v = (fd || '').toLowerCase().trim();
   return v === 'high risk'    ? 'highrisk'   :
          v === 'anomaly det.' ? 'anomaly'    :
-         v === 'normal+'      ? 'normalplus' :
+     
          v === 'safe'         ? 'safe'       :
          v === 'normal'       ? 'moderate'   :   // CHANGED: maps DB 'normal' → 'moderate'
          v === 'moderate risk'? 'moderate'   :   // ADDED: also accept 'moderate risk' from DB
@@ -51,10 +51,11 @@ function mapVerdict(fd) {
 }
 
 function verdictColor(verdict) {
-  return verdict === 'safe'       ? '#22c55e' :
-         verdict === 'moderate'   ? '#3b82f6' :   // CHANGED: 'normal' → 'moderate'
-         verdict === 'normalplus' ? '#eab308' :
-         verdict === 'anomaly'    ? '#f97316' : '#ef4444';
+  return verdict === 'safe'       ? '#22c55e' : // أخضر (آمن)
+         verdict === 'moderate'   ? '#3b82f6' : // أزرق (خطر متوسط)
+       
+         verdict === 'anomaly'    ? '#facc15' : // اصفر (شذوذ)
+         verdict === 'highrisk'   ? '#ef4444' : // أحمر (خطر مرتفع)
 }
 
 function verdictLabel(verdict) {
@@ -62,15 +63,15 @@ function verdictLabel(verdict) {
     en: {
       safe:       'Safe',
       moderate:   'Moderate Risk',   // CHANGED: was normal:'Normally Detected'
-      normalplus: 'Normal+',
+   
       anomaly:    'Anomaly Detected',
       highrisk:   'High Risk'
     },
     ar: {
       safe:       'آمن',
       moderate:   'خطر متوسط',       // CHANGED: was normal:'طبيعي'
-      normalplus: 'طبيعي+',
-      anomaly:    'شذوذ مكتشف',
+    
+      anomaly:    'سلوك غير معتاد',
       highrisk:   'خطر مرتفع'
     }
   };
@@ -133,7 +134,7 @@ function rowToApp(row) {
   const verdict =
     fd === 'high risk'    ? 'highrisk' :
     fd === 'anomaly det.' ? 'anomaly'  :
-    fd === 'normal+'      ? 'normalplus' :
+    fd === 'moderate'      ? 'moderate' :
     fd === 'safe'         ? 'safe'     :
     fd === 'normal'       ? 'normal'   : 'normal';
 
