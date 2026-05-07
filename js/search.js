@@ -294,27 +294,48 @@ function selectFromDropdown(rawName, cleanName) {
 // ════════════════════════════════════════
 // SAFE ALTERNATIVES
 // ════════════════════════════════════════
-async function showAlternatives(category, excludeRaw, container) {
+async function showAlternatives(category, excludeRaw, container, verdict) {
   const alts = await fetchSafeAlternatives(category, excludeRaw);
   if (!alts.length) return;
 
+  // Heading and intro copy vary by how risky the app is
+  const isHigh = verdict === 'highrisk';
+  const isAnomaly = verdict === 'anomaly';
+
+  const icon    = isHigh ? '🚨' : isAnomaly ? '⚠️' : '💡';
+  const titleEn = isHigh    ? 'Safer Alternatives — Strongly Recommended'
+                : isAnomaly ? 'Safer Alternatives — Consider Switching'
+                :             'Safer Alternatives Available';
+  const titleAr = isHigh    ? 'بدائل أكثر أماناً — موصى بها بشدة'
+                : isAnomaly ? 'بدائل أكثر أماناً — ننصح بالتبديل'
+                :             'بدائل أكثر أماناً متاحة';
+  const subEn   = isHigh    ? 'These apps do the same job with a Safe rating and far fewer privacy risks.'
+                : isAnomaly ? 'These apps share the same category and carry significantly lower risk.'
+                :             'These apps in the same category have a cleaner privacy profile.';
+  const subAr   = isHigh    ? 'هذه التطبيقات تؤدي نفس المهمة بتقييم آمن ومخاطر خصوصية أقل بكثير.'
+                : isAnomaly ? 'هذه التطبيقات في نفس الفئة وتحمل مخاطر أقل بكثير.'
+                :             'هذه التطبيقات في نفس الفئة ولديها ملف خصوصية أنظف.';
+
+  const borderColor = isHigh ? 'rgba(239,68,68,0.3)' : isAnomaly ? 'rgba(249,115,22,0.3)' : 'rgba(34,197,94,0.3)';
+
   const html = `
-    <div style="background:var(--surface);border:0.5px solid rgba(34,197,94,0.35);
+    <div style="background:var(--surface);border:0.5px solid ${borderColor};
       border-radius:22px;padding:28px;margin-top:16px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
-        <span style="font-size:22px;">✅</span>
+        <span style="font-size:22px;">${icon}</span>
         <div>
           <div style="font-family:var(--font-display);font-size:16px;font-weight:700;">
-            ${t('Safer Alternatives','بدائل أكثر أماناً')}
+            ${t(titleEn, titleAr)}
           </div>
-          <div style="font-size:13px;color:var(--muted);">
-            ${t('Apps in the same category with a Safe rating','تطبيقات في نفس الفئة بتقييم آمن')}
+          <div style="font-size:13px;color:var(--muted);margin-top:3px;">
+            ${t(subEn, subAr)}
           </div>
         </div>
       </div>
       ${alts.map(a => {
-        const name = cleanAppName(a.app_name);
-        const safe = name.replace(/'/g,"\\'");
+        const name  = cleanAppName(a.app_name);
+        const safe  = name.replace(/'/g,"\\'");
+        const rsVal = parseFloat(a.rs).toFixed(2);
         return `<div onclick="document.getElementById('appInput').value='${safe}';runSearch();"
           style="display:flex;justify-content:space-between;align-items:center;
           padding:12px 16px;margin-bottom:8px;border-radius:12px;cursor:pointer;
@@ -324,10 +345,13 @@ async function showAlternatives(category, excludeRaw, container) {
           onmouseout="this.style.background='rgba(34,197,94,0.07)'">
           <span style="font-size:14px;font-weight:500;">${name}</span>
           <span style="font-size:12px;color:#22c55e;font-weight:700;">
-            RS ${parseFloat(a.rs).toFixed(2)} · ${t('Safe','آمن')} ✅
+            RS ${rsVal} · ${t('Safe','آمن')} ✅
           </span>
         </div>`;
       }).join('')}
+      <div style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center;">
+        ${t('Click any app above to check its full privacy report','انقر على أي تطبيق أعلاه لعرض تقرير الخصوصية الكامل')}
+      </div>
     </div>`;
   container.insertAdjacentHTML('beforeend', html);
 }
@@ -352,7 +376,8 @@ async function runSearchByRaw(rawName) {
     inner.innerHTML = buildResult(d);
     animateRs(d.rs);
     setWinny('done', d.name, d.verdict);
-    if (d.verdict === 'highrisk') showAlternatives(d.rawCategory, d.rawName, inner);
+    // Show safer alternatives for any non-safe verdict
+    if (d.verdict !== 'safe') showAlternatives(d.rawCategory, d.rawName, inner, d.verdict);
   } else {
     inner.innerHTML = buildNotFound(rawName);
     setWinny('notfound', rawName);
@@ -877,7 +902,7 @@ async function pollJobStatus(jobId, appName) {
           inner.innerHTML = buildResult(d);
           animateRs(d.rs);
           setWinny('done', d.name, d.verdict);
-          if (d.verdict === 'highrisk') showAlternatives(d.rawCategory, d.rawName, inner);
+          if (d.verdict !== 'safe') showAlternatives(d.rawCategory, d.rawName, inner, d.verdict);
           if (window.updateChatContext) updateChatContext(d);
         } else {
           const Lv = typeof lang !== 'undefined' ? lang : 'en';
