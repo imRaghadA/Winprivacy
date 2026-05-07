@@ -82,7 +82,7 @@ function fdColor(fd) {
   const v = (fd || '').toLowerCase().trim();
   return v === 'high risk'    ? '#ef4444' :
          v === 'anomaly det.' ? '#f97316' :
-         v === 'normal+'      ? '#eab308' :
+         v === 'moderate'      ? '#3b82f6' :
          v === 'safe'         ? '#22c55e' : '#3b82f6';
 }
 
@@ -131,12 +131,12 @@ function parsePermissions(effectivePerms) {
 
 function rowToApp(row) {
   const fd = (row.final_decision || '').toLowerCase().trim();
-  const verdict =
+const verdict =
     fd === 'high risk'    ? 'highrisk' :
     fd === 'anomaly det.' ? 'anomaly'  :
-    fd === 'moderate'      ? 'moderate' :
     fd === 'safe'         ? 'safe'     :
-    fd === 'normal'       ? 'normal'   : 'normal';
+    'moderate';
+   
 
   const levelMap = { 
     'low':'Low', 'medium':'Medium', 'high':'High', 
