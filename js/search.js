@@ -37,43 +37,28 @@ function cleanAppName(rawName) {
 
 // ════════════════════════════════════════
 // VERDICT HELPERS
-// CHANGED: 'normal' → 'moderate' throughout
 // ════════════════════════════════════════
 function mapVerdict(fd) {
   const v = (fd || '').toLowerCase().trim();
   return v === 'high risk'    ? 'highrisk'   :
          v === 'anomaly det.' ? 'anomaly'    :
-     
          v === 'safe'         ? 'safe'       :
-         v === 'normal'       ? 'moderate'   :   // CHANGED: maps DB 'normal' → 'moderate'
-         v === 'moderate risk'? 'moderate'   :   // ADDED: also accept 'moderate risk' from DB
-                                'moderate';      // CHANGED: default → 'moderate'
+         v === 'normal'       ? 'moderate'   :
+         v === 'moderate risk'? 'moderate'   :
+                                'moderate';
 }
 
 function verdictColor(verdict) {
-  return verdict === 'safe'       ? '#22c55e' : // أخضر (آمن)
-         verdict === 'moderate'   ? '#3b82f6' : // أزرق (خطر متوسط)
-       
-         verdict === 'anomaly'    ? '#facc15' : // اصفر (شذوذ)
-         verdict === 'highrisk'   ? '#ef4444' : // أحمر (خطر مرتفع)
+  return verdict === 'safe'     ? '#22c55e' :
+         verdict === 'moderate' ? '#3b82f6' :
+         verdict === 'anomaly'  ? '#facc15' :
+         verdict === 'highrisk' ? '#ef4444' : '#3b82f6';
 }
 
 function verdictLabel(verdict) {
   const labels = {
-    en: {
-      safe:       'Safe',
-      moderate:   'Moderate Risk',   // CHANGED: was normal:'Normally Detected'
-   
-      anomaly:    'Anomaly Detected',
-      highrisk:   'High Risk'
-    },
-    ar: {
-      safe:       'آمن',
-      moderate:   'خطر متوسط',       // CHANGED: was normal:'طبيعي'
-    
-      anomaly:    'سلوك غير معتاد',
-      highrisk:   'خطر مرتفع'
-    }
+    en: { safe:'Safe', moderate:'Moderate Risk', anomaly:'Anomaly Detected', highrisk:'High Risk' },
+    ar: { safe:'آمن',  moderate:'خطر متوسط',      anomaly:'سلوك غير معتاد',  highrisk:'خطر مرتفع' }
   };
   return (labels[L()] || labels.en)[verdict] || verdict;
 }
@@ -82,7 +67,7 @@ function fdColor(fd) {
   const v = (fd || '').toLowerCase().trim();
   return v === 'high risk'    ? '#ef4444' :
          v === 'anomaly det.' ? '#f97316' :
-         v === 'moderate'      ? '#3b82f6' :
+         v === 'moderate'     ? '#3b82f6' :
          v === 'safe'         ? '#22c55e' : '#3b82f6';
 }
 
@@ -121,52 +106,26 @@ function parsePermissions(effectivePerms) {
       const key  = p.toLowerCase().replace(/[^a-z]/g,'');
       const meta = permMeta[key] || { icon:'🔧', risk:'medium' };
       const name = p.replace(/([A-Z])/g,' $1').trim();
-      return { name:{ en:name, ar:name }, icon:meta.icon, risk:meta.risk, level:riskWidth[meta.risk] };
+      return { name:{en:name,ar:name}, icon:meta.icon, risk:meta.risk, level:riskWidth[meta.risk] };
     });
 }
 
 // ════════════════════════════════════════
 // ROW → APP SHAPE
 // ════════════════════════════════════════
-
 function rowToApp(row) {
   const fd = (row.final_decision || '').toLowerCase().trim();
-const verdict =
+  const verdict =
     fd === 'high risk'    ? 'highrisk' :
     fd === 'anomaly det.' ? 'anomaly'  :
-    fd === 'safe'         ? 'safe'     :
-    'moderate';
-   
+    fd === 'safe'         ? 'safe'     : 'moderate';
 
-  const levelMap = { 
-    'low':'Low', 'medium':'Medium', 'high':'High', 
-    'very high':'Very High', 'safe':'Safe/Very Low' 
+  const levelMap = {
+    'low':'Low', 'medium':'Medium', 'high':'High',
+    'very high':'Very High', 'safe':'Safe/Very Low'
   };
   const rsLevelKey = levelMap[(row.rs_level || '').toLowerCase()] || 'Medium';
 
-  const permMeta = {
-    microphone:                 { icon: '🎙️', risk: 'high'   },
-    webcam:                     { icon: '📷', risk: 'high'   },
-    privatenetworkclientserver: { icon: '🔒', risk: 'high'   },
-    sharedusercertificates:     { icon: '🔑', risk: 'high'   },
-    documentslibrary:           { icon: '📄', risk: 'high'   },
-    enterpriseauthentication:   { icon: '🏢', risk: 'high'   },
-    videoslibrary:              { icon: '🎬', risk: 'high'   },
-    musiclibrary:               { icon: '🎵', risk: 'medium' },
-    removablestorage:           { icon: '💾', risk: 'high'   },
-    broadfilesystemaccess:      { icon: '📁', risk: 'high'   },
-    internetclient:             { icon: '🌐', risk: 'low'    },
-    internetclientserver:       { icon: '🔗', risk: 'medium' },
-    runfulltrust:               { icon: '⚙️', risk: 'medium' },
-    systemmanagement:           { icon: '🖥️', risk: 'medium' },
-    location:                   { icon: '📍', risk: 'medium' },
-    appointments:               { icon: '📅', risk: 'medium' },
-    usernotificationlistener:   { icon: '🔔', risk: 'high'   },
-    backgroundmediaplayback:    { icon: '🎵', risk: 'medium' },
-  };
-  const riskWidth = { high: 88, medium: 55, low: 25 };
-
-  // معالجة الأذونات (Permissions)
   const seen = new Set();
   const permissions = (row.effective_permissions || '')
     .split(',').map(p => p.trim()).filter(Boolean)
@@ -179,7 +138,7 @@ const verdict =
       const key  = p.toLowerCase().replace(/[^a-z]/g, '');
       const meta = permMeta[key] || { icon: '🔧', risk: 'medium' };
       const name = p.replace(/([A-Z])/g, ' $1').trim();
-      return { name: { en: name, ar: name }, icon: meta.icon, risk: meta.risk, level: riskWidth[meta.risk] };
+      return { name:{en:name,ar:name}, icon:meta.icon, risk:meta.risk, level:riskWidth[meta.risk] };
     });
 
   const cleanName = cleanAppName(row.app_name || '');
@@ -187,37 +146,29 @@ const verdict =
   let shortIntro = '';
   let technicalDetails = '';
 
-  // --- منطق التقسيم والتنسيق (كل نقطة في سطر) ---
   if (fullAnalysis && fullAnalysis.includes('Winny says:')) {
     let cleanText = fullAnalysis.replace('Winny says:', '').trim();
-    
-    // التقسيم عند العناوين الرئيسية
     const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:)/g;
     const parts = cleanText.split(splitPattern);
-    
-    shortIntro = parts[0].trim(); 
-    
+    shortIntro = parts[0].trim();
     if (parts.length > 1) {
-        // تنسيق باقي الأجزاء لتظهر سطر بسطر عند وجود النقطة •
-        technicalDetails = parts.slice(1).map(part => {
-            return part.trim().replace(/•/g, '<br>•');
-        }).join('<br><br>');
+      technicalDetails = parts.slice(1).map(part => part.trim().replace(/•/g, '<br>•')).join('<br><br>');
     }
   }
 
-  // إعدادات احتياطية (Fallback)
   if (!shortIntro) {
-      shortIntro = verdict === 'safe' ? `🛡️ ${cleanName} appears safe and uses expected permissions only.` : `⚠️ ${cleanName} analysis is ready. See details below.`;
+    shortIntro = verdict === 'safe'
+      ? `🛡️ ${cleanName} appears safe and uses expected permissions only.`
+      : `⚠️ ${cleanName} analysis is ready. See details below.`;
   }
-  
   if (!technicalDetails) {
-      technicalDetails = `
-        <strong>Technical Data:</strong><br>
-        • Total Permissions: ${row.permission_count || 0}<br>
-        • Risk Category: ${rsLevelKey}<br><br>
-        <strong>Detected Permissions:</strong><br>
-        ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>')}
-      `;
+    technicalDetails = `
+      <strong>Technical Data:</strong><br>
+      • Total Permissions: ${row.permission_count || 0}<br>
+      • Risk Category: ${rsLevelKey}<br><br>
+      <strong>Detected Permissions:</strong><br>
+      ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>')}
+    `;
   }
 
   return {
@@ -225,15 +176,15 @@ const verdict =
     rawName: row.app_name,
     publisher: (row.category || '').replace(/_/g, ' '),
     version: '—',
-    cat: { en: (row.category || '').replace(/_/g, ' '), ar: (row.category || '').replace(/_/g, ' ') },
-    date: '2025', 
+    cat: { en:(row.category||'').replace(/_/g,' '), ar:(row.category||'').replace(/_/g,' ') },
+    date: '2025',
     rs: parseFloat(row.rs) || 0,
-    rsLevelKey, 
-    verdict, 
-    permissions: permissions, // تأكدي إنها كذا بدون parsePermissions
+    rsLevelKey,
+    verdict,
+    permissions,
     rawCategory: row.category,
-    comment: { en: shortIntro, ar: shortIntro }, 
-    details: { en: technicalDetails, ar: technicalDetails }
+    comment: { en:shortIntro, ar:shortIntro },
+    details: { en:technicalDetails, ar:technicalDetails }
   };
 }
 
@@ -243,13 +194,18 @@ const verdict =
 async function fetchApp(name) {
   const q = sanitize(name);
   if (!q) return null;
-  const url = `${SUPABASE_URL}/rest/v1/app_analysis?app_name=ilike.*${encodeURIComponent(q)}*&limit=1&select=*`;
   try {
+    const url = `${SUPABASE_URL}/rest/v1/app_analysis?app_name=ilike.*${encodeURIComponent(q)}*&limit=1&select=*`;
     const res  = await fetch(url, { headers: HEADERS });
-    if (!res.ok) return null;
-    const rows = await res.json();
-    return rows && rows.length > 0 ? rowToApp(rows[0]) : null;
-  } catch { return null; }
+    if (res.ok) {
+      const rows = await res.json();
+      if (rows && rows.length > 0) return rowToApp(rows[0]);
+    }
+    return null;
+  } catch(e) {
+    console.error('fetchApp error:', e);
+    return null;
+  }
 }
 
 async function fetchAppById(appId) {
@@ -260,7 +216,7 @@ async function fetchAppById(appId) {
     if (!res.ok) return null;
     const rows = await res.json();
     return rows && rows.length > 0 ? rowToApp(rows[0]) : null;
-  } catch (e) {
+  } catch(e) {
     console.error('fetchAppById error:', e);
     return null;
   }
@@ -342,9 +298,8 @@ function renderDropdown(dbResults, storeResults, q) {
   const html = dbResults.map(r => {
     const name  = cleanAppName(r.app_name);
     const color = fdColor(r.final_decision);
-    const raw   = r.app_name.replace(/\\/g,'\\\\').replace(/'/g,"\'");
-    const safe  = name.replace(/'/g,"\'");
-    // CHANGED: dropdown label — map 'normal' to 'Moderate Risk' for display
+    const raw   = r.app_name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const safe  = name.replace(/'/g,"\\'");
     const displayFd = (r.final_decision || '').toLowerCase() === 'normal'
       ? (L() === 'ar' ? 'خطر متوسط' : 'Moderate Risk')
       : r.final_decision;
@@ -368,7 +323,6 @@ function selectFromDropdown(rawName, cleanName) {
   runSearchByRaw(rawName);
 }
 
-
 // ════════════════════════════════════════
 // SAFE ALTERNATIVES
 // ════════════════════════════════════════
@@ -376,24 +330,21 @@ async function showAlternatives(category, excludeRaw, container, verdict) {
   const alts = await fetchSafeAlternatives(category, excludeRaw);
   if (!alts.length) return;
 
-  // Heading and intro copy vary by how risky the app is
-  const isHigh = verdict === 'highrisk';
+  const isHigh    = verdict === 'highrisk';
   const isAnomaly = verdict === 'anomaly';
-
-  const icon    = isHigh ? '🚨' : isAnomaly ? '⚠️' : '💡';
-  const titleEn = isHigh    ? 'Safer Alternatives — Strongly Recommended'
-                : isAnomaly ? 'Safer Alternatives — Consider Switching'
-                :             'Safer Alternatives Available';
-  const titleAr = isHigh    ? 'بدائل أكثر أماناً — موصى بها بشدة'
-                : isAnomaly ? 'بدائل أكثر أماناً — ننصح بالتبديل'
-                :             'بدائل أكثر أماناً متاحة';
-  const subEn   = isHigh    ? 'These apps do the same job with a Safe rating and far fewer privacy risks.'
-                : isAnomaly ? 'These apps share the same category and carry significantly lower risk.'
-                :             'These apps in the same category have a cleaner privacy profile.';
-  const subAr   = isHigh    ? 'هذه التطبيقات تؤدي نفس المهمة بتقييم آمن ومخاطر خصوصية أقل بكثير.'
-                : isAnomaly ? 'هذه التطبيقات في نفس الفئة وتحمل مخاطر أقل بكثير.'
-                :             'هذه التطبيقات في نفس الفئة ولديها ملف خصوصية أنظف.';
-
+  const icon      = isHigh ? '🚨' : isAnomaly ? '⚠️' : '💡';
+  const titleEn   = isHigh    ? 'Safer Alternatives — Strongly Recommended'
+                  : isAnomaly ? 'Safer Alternatives — Consider Switching'
+                  :             'Safer Alternatives Available';
+  const titleAr   = isHigh    ? 'بدائل أكثر أماناً — موصى بها بشدة'
+                  : isAnomaly ? 'بدائل أكثر أماناً — ننصح بالتبديل'
+                  :             'بدائل أكثر أماناً متاحة';
+  const subEn     = isHigh    ? 'These apps do the same job with a Safe rating and far fewer privacy risks.'
+                  : isAnomaly ? 'These apps share the same category and carry significantly lower risk.'
+                  :             'These apps in the same category have a cleaner privacy profile.';
+  const subAr     = isHigh    ? 'هذه التطبيقات تؤدي نفس المهمة بتقييم آمن ومخاطر خصوصية أقل بكثير.'
+                  : isAnomaly ? 'هذه التطبيقات في نفس الفئة وتحمل مخاطر أقل بكثير.'
+                  :             'هذه التطبيقات في نفس الفئة ولديها ملف خصوصية أنظف.';
   const borderColor = isHigh ? 'rgba(239,68,68,0.3)' : isAnomaly ? 'rgba(249,115,22,0.3)' : 'rgba(34,197,94,0.3)';
 
   const html = `
@@ -405,26 +356,21 @@ async function showAlternatives(category, excludeRaw, container, verdict) {
           <div style="font-family:var(--font-display);font-size:16px;font-weight:700;">
             ${t(titleEn, titleAr)}
           </div>
-          <div style="font-size:13px;color:var(--muted);margin-top:3px;">
-            ${t(subEn, subAr)}
-          </div>
+          <div style="font-size:13px;color:var(--muted);margin-top:3px;">${t(subEn, subAr)}</div>
         </div>
       </div>
       ${alts.map(a => {
-        const name  = cleanAppName(a.app_name);
-        const safe  = name.replace(/'/g,"\\'");
+        const name = cleanAppName(a.app_name);
+        const safe = name.replace(/'/g,"\\'");
         const rsVal = parseFloat(a.rs).toFixed(2);
         return `<div onclick="document.getElementById('appInput').value='${safe}';runSearch();"
           style="display:flex;justify-content:space-between;align-items:center;
           padding:12px 16px;margin-bottom:8px;border-radius:12px;cursor:pointer;
-          background:rgba(34,197,94,0.07);border:0.5px solid rgba(34,197,94,0.2);
-          transition:all .2s;"
+          background:rgba(34,197,94,0.07);border:0.5px solid rgba(34,197,94,0.2);transition:all .2s;"
           onmouseover="this.style.background='rgba(34,197,94,0.14)'"
           onmouseout="this.style.background='rgba(34,197,94,0.07)'">
           <span style="font-size:14px;font-weight:500;">${name}</span>
-          <span style="font-size:12px;color:#22c55e;font-weight:700;">
-            RS ${rsVal} · ${t('Safe','آمن')} ✅
-          </span>
+          <span style="font-size:12px;color:#22c55e;font-weight:700;">RS ${rsVal} · ${t('Safe','آمن')} ✅</span>
         </div>`;
       }).join('')}
       <div style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center;">
@@ -454,7 +400,6 @@ async function runSearchByRaw(rawName) {
     inner.innerHTML = buildResult(d);
     animateRs(d.rs);
     setWinny('done', d.name, d.verdict);
-    // Show safer alternatives for any non-safe verdict
     if (d.verdict !== 'safe') showAlternatives(d.rawCategory, d.rawName, inner, d.verdict);
   } else {
     inner.innerHTML = buildNotFound(rawName);
@@ -463,7 +408,7 @@ async function runSearchByRaw(rawName) {
 }
 
 // ════════════════════════════════════════
-// NOT FOUND + REQUEST FORM
+// NOT FOUND
 // ════════════════════════════════════════
 function buildNotFound(name) {
   const Lv      = typeof lang !== 'undefined' ? lang : 'en';
@@ -479,7 +424,6 @@ function buildNotFound(name) {
       <strong style="color:var(--text);">"${sanitize(display)}"</strong>
       ${Lv === 'ar' ? ' غير موجود في قاعدة بياناتنا بعد.' : " isn't in our database yet."}
     </div>
-
     <button onclick="startAnalysisJob('${safeName}', '')"
       style="background:var(--accent);color:white;border:none;cursor:pointer;
       padding:14px 36px;border-radius:30px;font-family:inherit;font-size:15px;font-weight:700;
@@ -488,13 +432,11 @@ function buildNotFound(name) {
       onmouseout="this.style.background='var(--accent)'">
       ⚡ ${Lv === 'ar' ? 'تحليل الآن' : 'Analyze Now'}
     </button>
-
     <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">
       ${Lv === 'ar'
         ? 'سيتم تحليل التطبيق وعرض النتائج خلال دقائق'
         : 'The app will be analyzed and results shown within minutes'}
     </div>
-
     <div class="winny-comment" style="text-align:${Lv==='ar'?'right':'left'};">
       <svg width="36" height="36" viewBox="0 0 36 36" style="flex-shrink:0">
         <rect width="36" height="36" rx="10" fill="rgba(79,143,255,0.15)"/>
@@ -608,7 +550,7 @@ function showRequestPending(appName, email) {
         ${t('Already Requested!','تم الطلب مسبقاً!')}
       </div>
       <div style="color:var(--muted);font-size:15px;line-height:1.7;max-width:440px;margin:0 auto 28px;">
-        ${t(`You've already submitted a request for`,`لقد أرسلت طلباً مسبقاً لـ`)}
+        ${t('You\'ve already submitted a request for','لقد أرسلت طلباً مسبقاً لـ')}
         <strong style="color:var(--text);"> ${appName}</strong>
         ${t('using','باستخدام')}
         <strong style="color:var(--accent2);"> ${email}</strong>.
@@ -617,7 +559,7 @@ function showRequestPending(appName, email) {
         background:rgba(79,143,255,0.08);border:0.5px solid rgba(79,143,255,0.25);
         border-radius:14px;padding:16px 24px;margin-bottom:32px;max-width:440px;">
         <span style="font-size:22px;">🛡️</span>
-        <span style="font-size:13px;color:var(--muted);text-align:left;line-height:1.6;">
+        <span style="font-size:13px;color:var(--muted);text-align:${L()==='ar'?'right':'left'};line-height:1.6;">
           ${t("Don't worry — we are going to process your request as soon as possible.",
               'لا تقلق — سنعالج طلبك في أقرب وقت ممكن.')}
         </span>
@@ -651,7 +593,7 @@ function showRequestSuccess(appName, email) {
         background:rgba(79,143,255,0.08);border:0.5px solid rgba(79,143,255,0.25);
         border-radius:14px;padding:14px 24px;margin-bottom:32px;">
         <span style="font-size:18px;">⏳</span>
-        <span style="font-size:13px;color:var(--muted);">
+        <span style="font-size:13px;color:var(--muted);text-align:${L()==='ar'?'right':'left'};">
           ${t('Most requested apps are prioritised. The more requests, the faster we process it!',
               'يتم إعطاء الأولوية للتطبيقات الأكثر طلباً. كلما زادت الطلبات، كلما أسرعنا!')}
         </span>
@@ -740,10 +682,10 @@ function toggleWinnyChat() {
   if (chatOpen) {
     document.getElementById('chatInput')?.focus();
     const lbl = document.getElementById('chatBtnLabel');
-    if (lbl) lbl.textContent = t('Close Chat', 'إغلاق الدردشة');
+    if (lbl) lbl.textContent = t('Close Chat','إغلاق الدردشة');
   } else {
     const lbl = document.getElementById('chatBtnLabel');
-    if (lbl) lbl.textContent = t('Chat with Winny', 'تحدث مع ويني');
+    if (lbl) lbl.textContent = t('Chat with Winny','تحدث مع ويني');
   }
 }
 
@@ -798,37 +740,34 @@ async function sendChatMessage() {
 
   let appContext = '';
   if (currentAppContext) {
-    appContext = `The user is currently viewing: ${currentAppContext.name} 
-      (RS Score: ${currentAppContext.rs}/4, Verdict: ${currentAppContext.verdict}, 
-      Category: ${currentAppContext.cat?.en}, 
+    appContext = `The user is currently viewing: ${currentAppContext.name}
+      (RS Score: ${currentAppContext.rs}/4, Verdict: ${currentAppContext.verdict},
+      Category: ${currentAppContext.cat?.en},
       Permissions: ${currentAppContext.permissions?.map(p=>p.name.en).join(', ')}).`;
   }
 
-  // CHANGED: updated system prompt to use 'Moderate Risk' instead of 'Normal'
   const systemPrompt = `You are Winny, the friendly AI assistant for WinPrivacy — a Windows application privacy analysis tool.
 Your job is to help users understand:
 - What their app's privacy risk score means (RS score 0-4 scale)
 - What permissions mean and why they matter
 - How the scoring works
 - How to use the WinPrivacy website
-- What Safe, Moderate Risk, Normal+, Anomaly Detected, and High Risk verdicts mean
+- What Safe, Moderate Risk, Anomaly Detected, and High Risk verdicts mean
 - General Windows app privacy questions
 
 ${appContext}
 
 STRICT RULES:
 - Only answer questions related to WinPrivacy, app privacy, Windows permissions, and cybersecurity
-- If asked about anything unrelated (weather, cooking, coding help, etc.), politely say you can only help with WinPrivacy-related topics
-- Be friendly, concise, and clear
-- Use simple language for non-technical users
-- If the user's language seems to be Arabic, respond in Arabic
+- If asked about anything unrelated, politely say you can only help with WinPrivacy-related topics
+- Be friendly, concise, and clear — use simple language for non-technical users
+- If the user writes in Arabic, respond fully in Arabic
+- If the user writes in English, respond fully in English
 - Never make up app scores or data you don't have
 - Keep responses under 150 words`;
 
   try {
-    const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.ANTHROPIC_KEY)
-      ? CONFIG.ANTHROPIC_KEY : '';
-
+    const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.ANTHROPIC_KEY) ? CONFIG.ANTHROPIC_KEY : '';
     if (!apiKey) {
       removeTypingIndicator();
       addChatMessage('winny', t(
@@ -851,20 +790,19 @@ STRICT RULES:
         max_tokens: 300,
         system: systemPrompt,
         messages: [
-          ...chatMessages.slice(-6).map(m => ({ role: m.role, content: m.content })),
-          { role: 'user', content: message }
+          ...chatMessages.slice(-6).map(m => ({ role:m.role, content:m.content })),
+          { role:'user', content:message }
         ]
       })
     });
 
     removeTypingIndicator();
-
     if (!response.ok) throw new Error('API error');
     const data = await response.json();
     const reply = data.content?.[0]?.text || t('Sorry, I had trouble responding.','عذراً، واجهت مشكلة في الرد.');
     addChatMessage('winny', reply);
 
-  } catch (e) {
+  } catch(e) {
     removeTypingIndicator();
     addChatMessage('winny', t(
       'Sorry, I\'m having trouble connecting right now. Please try again in a moment.',
@@ -873,9 +811,7 @@ STRICT RULES:
   }
 }
 
-function updateChatContext(appData) {
-  currentAppContext = appData;
-}
+function updateChatContext(appData) { currentAppContext = appData; }
 
 // ════════════════════════════════════════
 // INIT
@@ -887,10 +823,49 @@ if (document.readyState === 'loading') {
 }
 
 // ════════════════════════════════════════
+// NORMALIZE APP NAME (before sending to worker)
+// ════════════════════════════════════════
+function normalizeAppName(name) {
+  // 1. Trim and collapse spaces
+  let n = name.trim().replace(/\s+/g, ' ');
+  // 2. Title case
+  n = n.replace(/\b\w/g, c => c.toUpperCase());
+  // 3. Common corrections
+  const corrections = {
+    'Whatsapp':       'WhatsApp',
+    'Watsapp':        'WhatsApp',
+    'Whats App':      'WhatsApp',
+    'You Tube':       'YouTube',
+    'Youtube':        'YouTube',
+    'Tiktok':         'TikTok',
+    'Tick Tock':      'TikTok',
+    'Notpad':         'Notepads App',
+    'Notepad App':    'Notepads App',
+    'Vlc':            'VLC',
+    'Itunes':         'iTunes',
+    'I Tunes':        'iTunes',
+    'Ms Teams':       'Microsoft Teams',
+    'Microsof Teams': 'Microsoft Teams',
+    'Adobe Reader':   'Adobe Acrobat Reader',
+  };
+  for (const [wrong, right] of Object.entries(corrections)) {
+    if (n.toLowerCase() === wrong.toLowerCase()) return right;
+  }
+  return n;
+}
+
+// ════════════════════════════════════════
 // ANALYSIS JOBS — queue + polling
 // ════════════════════════════════════════
 async function queueAnalysisJob(appName, storeId) {
+  // Normalize before sending to worker
+  const normalizedName = normalizeAppName(appName);
+  if (normalizedName !== appName) {
+    console.log(`[WinPrivacy] Name normalized: "${appName}" → "${normalizedName}"`);
+  }
+  appName = normalizedName;
   const q = sanitize(appName);
+
   try {
     const res  = await fetch(
       `${SUPABASE_URL}/rest/v1/analysis_jobs?app_name=ilike.*${encodeURIComponent(q)}*&status=in.(queued,processing)&limit=1&select=job_id`,
@@ -1002,9 +977,100 @@ async function pollJobStatus(jobId, appName) {
 
       } else if ((job.status === 'failed' || job.status === 'error')) {
         clearInterval(timer);
-        showJobProgress(appName, -1,
-          job.error_detail || 'Analysis failed. Please try again.',
-          'فشل التحليل. يرجى المحاولة مرة أخرى.');
+        const isAr  = (typeof lang !== 'undefined' ? lang : 'en') === 'ar';
+        const errMsg = (job.message || '').toLowerCase();
+        const inner  = document.getElementById('resultsInner');
+
+        let icon, title, body, tip, btnLabel, btnAction;
+
+        if (errMsg.includes('not available on the ms store') ||
+            errMsg.includes('all strategies failed') ||
+            errMsg.includes('no package found') ||
+            errMsg.includes('could not download')) {
+          icon      = '🖥️';
+          title     = isAr ? 'التطبيق غير متوفر في متجر مايكروسوفت' : 'Not a Microsoft Store App';
+          body      = isAr
+            ? `يبدو أن <strong>${appName}</strong> تطبيق ويندوز تقليدي (Win32) وليس من متجر مايكروسوفت. يحلل WinPrivacy تطبيقات المتجر فقط حالياً.`
+            : `<strong>${appName}</strong> appears to be a traditional Windows app (Win32), not available on the Microsoft Store. WinPrivacy currently analyzes Store apps only.`;
+          tip       = isAr
+            ? '💡 جرّب البحث عن نسخة المتجر — كثير من التطبيقات لها نسختان مثل "VLC for Windows Store"'
+            : '💡 Try the Store version — many apps have both editions, e.g. "VLC for Windows Store"';
+          btnLabel  = isAr ? '🔍 ابحث مجدداً' : '🔍 Search Again';
+          btnAction = `document.getElementById('appInput').value='';document.getElementById('appInput').focus();`;
+
+        } else if (errMsg.includes('extraction failed') ||
+                   errMsg.includes('could not read package')) {
+          icon      = '⚙️';
+          title     = isAr ? 'تعذّر قراءة بيانات التطبيق' : 'Could Not Read App Data';
+          body      = isAr
+            ? `واجهنا مشكلة أثناء فحص ملفات <strong>${appName}</strong>. قد يكون التطبيق محمياً أو تالفاً.`
+            : `We had trouble reading <strong>${appName}</strong>'s package files. The app may be protected or corrupted.`;
+          tip       = isAr
+            ? '💡 حاول مرة أخرى — أو تواصل معنا عبر "إرسال طلب" إذا تكررت المشكلة'
+            : '💡 Try again — or use "Submit App" if the problem persists';
+          btnLabel  = isAr ? '🔄 حاول مجدداً' : '🔄 Try Again';
+          btnAction = `document.getElementById('appInput').value='${appName}';runSearch();`;
+
+        } else if (errMsg.includes('scoring failed') ||
+                   errMsg.includes('database save')) {
+          icon      = '📊';
+          title     = isAr ? 'خطأ في حساب درجة الخطورة' : 'Scoring Error';
+          body      = isAr
+            ? `تم تحليل <strong>${appName}</strong> بنجاح لكن حدث خطأ أثناء حفظ النتائج. يرجى المحاولة مجدداً.`
+            : `<strong>${appName}</strong> was analyzed but we hit an error saving the results. Please try again.`;
+          tip       = isAr
+            ? '💡 المشكلة مؤقتة — حاول مرة أخرى بعد لحظات'
+            : '💡 This is likely temporary — try again in a moment';
+          btnLabel  = isAr ? '🔄 حاول مجدداً' : '🔄 Try Again';
+          btnAction = `document.getElementById('appInput').value='${appName}';runSearch();`;
+
+        } else {
+          icon      = '❓';
+          title     = isAr ? 'حدث خطأ غير متوقع' : 'Something Went Wrong';
+          body      = isAr
+            ? `لم نتمكن من تحليل <strong>${appName}</strong> في هذه المرة. قد يكون الاسم غير دقيق أو التطبيق غير مدعوم.`
+            : `We couldn't analyze <strong>${appName}</strong> this time. The name may be incorrect or the app may not be supported.`;
+          tip       = isAr
+            ? '💡 تأكد من كتابة الاسم كما يظهر في متجر مايكروسوفت'
+            : '💡 Make sure the name matches exactly as it appears in the Microsoft Store';
+          btnLabel  = isAr ? '🔍 ابحث مجدداً' : '🔍 Try Again';
+          btnAction = `document.getElementById('appInput').value='${appName}';document.getElementById('appInput').focus();`;
+        }
+
+        inner.innerHTML = `
+          <div class="result-card" style="text-align:center;padding:48px 32px;">
+            <div style="font-size:56px;margin-bottom:16px;">${icon}</div>
+            <div style="font-family:var(--font-display);font-size:22px;font-weight:800;
+                        margin-bottom:14px;color:var(--text);">${title}</div>
+            <div style="color:var(--muted);font-size:15px;line-height:1.7;
+                        margin-bottom:16px;max-width:520px;margin-left:auto;margin-right:auto;">
+              ${body}
+            </div>
+            <div style="background:rgba(79,143,255,0.07);border:1px solid rgba(79,143,255,0.2);
+                        border-radius:14px;padding:14px 20px;font-size:13px;color:var(--muted);
+                        margin-bottom:28px;max-width:520px;margin-left:auto;margin-right:auto;
+                        text-align:${isAr ? 'right' : 'left'};">
+              ${tip}
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+              <button onclick="${btnAction}"
+                style="background:var(--accent);color:white;border:none;cursor:pointer;
+                       padding:12px 28px;border-radius:30px;font-family:inherit;
+                       font-size:14px;font-weight:600;transition:background .2s;"
+                onmouseover="this.style.background='var(--accent2)'"
+                onmouseout="this.style.background='var(--accent)'">
+                ${btnLabel}
+              </button>
+              <button onclick="document.getElementById('submitSection')?.scrollIntoView({behavior:'smooth'})"
+                style="background:transparent;color:var(--accent);border:1.5px solid var(--accent);
+                       cursor:pointer;padding:12px 28px;border-radius:30px;font-family:inherit;
+                       font-size:14px;font-weight:600;transition:all .2s;"
+                onmouseover="this.style.background='rgba(79,143,255,0.08)'"
+                onmouseout="this.style.background='transparent'">
+                ${isAr ? '📩 إرسال طلب تحليل' : '📩 Request Analysis'}
+              </button>
+            </div>
+          </div>`;
       }
 
     } catch(e) { console.error('Poll error:', e); }
@@ -1025,11 +1091,11 @@ function showJobProgress(appName, progress, msgEn, msgAr) {
                (Lv==='ar' ? 'اكتمل تقريباً!'   : 'Almost done!');
 
   const steps = [
-    { label: Lv==='ar' ? '⬇️ التنزيل'       : '⬇️ Downloading',  t: 10 },
-    { label: Lv==='ar' ? '📦 الاستخراج'     : '📦 Extracting',   t: 40 },
-    { label: Lv==='ar' ? '🔍 فحص الـ API'   : '🔍 Scanning APIs',t: 65 },
-    { label: Lv==='ar' ? '📊 الحساب'        : '📊 Scoring',      t: 85 },
-    { label: Lv==='ar' ? '💾 الحفظ'         : '💾 Saving',       t: 95 },
+    { label: Lv==='ar' ? '⬇️ التنزيل'     : '⬇️ Downloading',  t: 10 },
+    { label: Lv==='ar' ? '📦 الاستخراج'   : '📦 Extracting',   t: 40 },
+    { label: Lv==='ar' ? '🔍 فحص الـ API' : '🔍 Scanning APIs',t: 65 },
+    { label: Lv==='ar' ? '📊 الحساب'      : '📊 Scoring',      t: 85 },
+    { label: Lv==='ar' ? '💾 الحفظ'       : '💾 Saving',       t: 95 },
   ];
 
   const stepsHtml = steps.map(s => {
