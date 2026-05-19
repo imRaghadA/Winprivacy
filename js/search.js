@@ -145,11 +145,11 @@ function rowToApp(row) {
 
   
   const fullAnalysisEn = row.winny_analysis || '';
-  const fullAnalysisAr = row['winny-text-transleted'] || fullAnalysisEn;
+  const fullAnalysisAr = row.winny_text_translated || fullAnalysisEn;
 
   
   let shortIntro = '';
-let technicalDetails = '';
+  let technicalDetails = '';
 
 const fullAnalysis = L() === 'ar'
   ? fullAnalysisAr
@@ -205,15 +205,13 @@ if (fullAnalysis) {
     permissions,
     rawCategory: row.category,
 
-    comment: {
-  en: shortIntro,
-  ar: shortIntro
-},
-
-details: {
-  en: technicalDetails,
-  ar: technicalDetails
-}
+   comment: {
+      en: enRes.intro,
+      ar: arRes.intro
+    },
+    details: {
+      en: enRes.details,
+      ar: arRes.details
 
    
   };
