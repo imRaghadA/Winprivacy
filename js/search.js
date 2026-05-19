@@ -113,6 +113,12 @@ function parsePermissions(effectivePerms) {
 // ════════════════════════════════════════
 // ROW → APP SHAPE
 // ════════════════════════════════════════
+
+
+
+// ════════════════════════════════════════
+// ROW → APP SHAPE
+// ════════════════════════════════════════
 function rowToApp(row) {
   const fd = (row.final_decision || '').toLowerCase().trim();
   const verdict =
@@ -138,59 +144,52 @@ function rowToApp(row) {
       const key  = p.toLowerCase().replace(/[^a-z]/g, '');
       const meta = permMeta[key] || { icon: '🔧', risk: 'medium' };
       const name = p.replace(/([A-Z])/g, ' $1').trim();
-      return { name:{en:name,ar:name}, icon:meta.icon, risk:meta.risk, level:riskWidth[meta.risk] };
+      return { name:{en:name, ar:name}, icon:meta.icon, risk:meta.risk, level:riskWidth[meta.risk] };
     });
 
   const cleanName = cleanAppName(row.app_name || '');
 
   
   const fullAnalysisEn = row.winny_analysis || '';
-  const fullAnalysisAr = row.winny_text_translated || fullAnalysisEn;
+  const fullAnalysisAr = row.winny_text_translated || fullAnalysisEn; 
 
   
-  let shortIntro = '';
-  let technicalDetails = '';
+  function splitText(fullAnalysis, isAr) {
+    let intro = '';
+    let details = '';
+    if (fullAnalysis) {
+      let cleanText = fullAnalysis
+        .replace('Winny says:', '')
+        .replace('يقول ويني:', '')
+        .trim();
 
-const fullAnalysis = L() === 'ar'
-  ? fullAnalysisAr
-  : fullAnalysisEn;
+     
+      const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:|الصلاحيات الإضافية|الخلاصة:)/g;
+      const parts = cleanText.split(splitPattern);
+      intro = parts[0].trim();
 
-if (fullAnalysis) {
-
-  let cleanText = fullAnalysis
-    .replace('Winny says:', '')
-    .replace('يقول ويني:', '')
-    .trim();
-
-  const splitPattern =
-    /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:|الصلاحيات الإضافية|الخلاصة:)/g;
-
-  const parts = cleanText.split(splitPattern);
-
-  shortIntro = parts[0].trim();
-
-  if (parts.length > 1) {
-    technicalDetails = parts
-      .slice(1)
-      .map(part => part.trim().replace(/•/g, '<br>•'))
-      .join('<br><br>');
+      if (parts.length > 1) {
+        details = parts.slice(1).map(part => part.trim().replace(/•/g, '<br>•')).join('<br><br>');
+      }
+    }
+    
+    if (!intro) {
+      intro = isAr 
+        ? (verdict === 'safe' ? `🛡️ يبدو ${cleanName} آمناً ويستخدم الأذونات المتوقعة فقط.` : `⚠️ تحليل ${cleanName} جاهز. انظر التفاصيل أدناه.`)
+        : (verdict === 'safe' ? `🛡️ ${cleanName} appears safe and uses expected permissions only.` : `⚠️ ${cleanName} analysis is ready. See details below.`);
+    }
+    
+    if (!details) {
+      details = isAr 
+        ? `<strong>البيانات الفنية:</strong><br>• إجمالي الأذونات: ${row.permission_count || 0}<br>• فئة الخطورة: ${rsLevelKey}`
+        : `<strong>Technical Data:</strong><br>• Total Permissions: ${row.permission_count || 0}<br>• Risk Category: ${rsLevelKey}`;
+    }
+    return { intro, details };
   }
-}
 
-  if (!shortIntro) {
-    shortIntro = verdict === 'safe'
-      ? `🛡️ ${cleanName} appears safe and uses expected permissions only.`
-      : `⚠️ ${cleanName} analysis is ready. See details below.`;
-  }
-  if (!technicalDetails) {
-    technicalDetails = `
-      <strong>Technical Data:</strong><br>
-      • Total Permissions: ${row.permission_count || 0}<br>
-      • Risk Category: ${rsLevelKey}<br><br>
-      <strong>Detected Permissions:</strong><br>
-      ${permissions.map(p => `• ${p.icon} ${p.name.en}`).join('<br>')}
-    `;
-  }
+  
+  const enRes = splitText(fullAnalysisEn, false);
+  const arRes = splitText(fullAnalysisAr, true);
 
   return {
     name: cleanName,
@@ -205,17 +204,19 @@ if (fullAnalysis) {
     permissions,
     rawCategory: row.category,
 
-   comment: {
+    comment: {
       en: enRes.intro,
       ar: arRes.intro
     },
     details: {
       en: enRes.details,
       ar: arRes.details
-
-   
+    }
   };
 }
+
+
+
 
 // ════════════════════════════════════════
 // SUPABASE FETCH
