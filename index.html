@@ -1022,7 +1022,7 @@ function toggleLang() {
 </script>
 <script>
 function toggleDetails(btn) {
-  const box = btn.nextElementSibling; // هذا يبحث عن الصندوق اللي تحت الزر
+  const box = btn.nextElementSibling || btn.parentElement.nextElementSibling; // هذا يبحث عن الصندوق اللي تحت الزر
   if (!box) return; 
   
   if (box.style.display === 'none' || box.style.display === '') {
@@ -1033,7 +1033,7 @@ function toggleDetails(btn) {
     btn.textContent = (lang === 'ar' ? 'عرض التفاصيل' : 'See more');
   }
 }
-}
+
 </script>
 <script src="js/search.js"></script>
 <script src="js/winny-chat.js"></script>
