@@ -142,19 +142,40 @@ function rowToApp(row) {
     });
 
   const cleanName = cleanAppName(row.app_name || '');
-  const fullAnalysis = row.winny_analysis || '';
-  let shortIntro = '';
-  let technicalDetails = '';
 
-  if (fullAnalysis && fullAnalysis.includes('Winny says:')) {
-    let cleanText = fullAnalysis.replace('Winny says:', '').trim();
-    const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:)/g;
-    const parts = cleanText.split(splitPattern);
-    shortIntro = parts[0].trim();
-    if (parts.length > 1) {
-      technicalDetails = parts.slice(1).map(part => part.trim().replace(/•/g, '<br>•')).join('<br><br>');
-    }
+  
+  const fullAnalysisEn = row.winny_analysis || '';
+  const fullAnalysisAr = row['winny-text-transleted'] || fullAnalysisEn;
+
+  
+  let shortIntro = '';
+let technicalDetails = '';
+
+const fullAnalysis = L() === 'ar'
+  ? fullAnalysisAr
+  : fullAnalysisEn;
+
+if (fullAnalysis) {
+
+  let cleanText = fullAnalysis
+    .replace('Winny says:', '')
+    .replace('يقول ويني:', '')
+    .trim();
+
+  const splitPattern =
+    /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:|الصلاحيات الإضافية|الخلاصة:)/g;
+
+  const parts = cleanText.split(splitPattern);
+
+  shortIntro = parts[0].trim();
+
+  if (parts.length > 1) {
+    technicalDetails = parts
+      .slice(1)
+      .map(part => part.trim().replace(/•/g, '<br>•'))
+      .join('<br><br>');
   }
+}
 
   if (!shortIntro) {
     shortIntro = verdict === 'safe'
@@ -183,8 +204,18 @@ function rowToApp(row) {
     verdict,
     permissions,
     rawCategory: row.category,
-    comment: { en:shortIntro, ar:shortIntro },
-    details: { en:technicalDetails, ar:technicalDetails }
+
+    comment: {
+  en: shortIntro,
+  ar: shortIntro
+},
+
+details: {
+  en: technicalDetails,
+  ar: technicalDetails
+}
+
+   
   };
 }
 
