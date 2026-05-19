@@ -162,6 +162,7 @@ function splitText(fullAnalysis, isAr) {
       let cleanText = fullAnalysis
         .replace(/Winny says:/gi, '') // الحرف i يضمن حذفها سواء كانت S كابيتال أو سمول
         .replace(/يقول ويني:/g, '')
+        .replace(/تطبيق ويني/g, '')
         .replace(/يقول:/g, '')
         .trim();
 
