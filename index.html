@@ -528,6 +528,20 @@ function levelBg(k) {
   return 'rgba(239,68,68,0.14)';
 }
 
+
+function cleanComment(text) {
+  if (!text) return '';
+
+  return text
+    .replace(/Conclusion:.*$/is, '')
+    .replace(/الخلاصة:.*$/is, '')
+    .trim();
+}
+
+
+
+
+  
 function buildResult(d) {
   const circ = 2 * Math.PI * 56;
   const pct  = Math.min(d.rs / 4, 1);
@@ -611,7 +625,7 @@ function buildResult(d) {
           line-height:1.7;
         ">
 
-        ${d.details?.[L] || ''}
+        ${cleanComment(d.details[L])}
 
       </div>
 
