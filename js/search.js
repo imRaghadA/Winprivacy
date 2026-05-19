@@ -157,11 +157,14 @@ function rowToApp(row) {
   function splitText(fullAnalysis, isAr) {
     let intro = '';
     let details = '';
-    if (fullAnalysis) {
-      let cleanText = fullAnalysis
-        .replace('Winny says:', '')
-        .replace('يقول ويني:', '')
-        .trim();
+    
+   // ✅ هذا الجزء الجديد (سيقوم بحذف أي تكرار لكلمة يقول أو يقول ويني)
+if (fullAnalysis) {
+  let cleanText = fullAnalysis
+    .replace(/Winny says:/g, '')
+    .replace(/يقول ويني:/g, '')
+    .replace(/يقول:/g, '') // سيحذف كلمة "يقول:" الزائدة أيضاً
+    .trim();
 
      
       const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:|الصلاحيات الإضافية|الخلاصة:)/g;
