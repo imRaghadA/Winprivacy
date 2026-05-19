@@ -154,25 +154,26 @@ function rowToApp(row) {
   const fullAnalysisAr = row.winny_text_translated || fullAnalysisEn; 
 
   
-  function splitText(fullAnalysis, isAr) {
+function splitText(fullAnalysis, isAr) {
     let intro = '';
     let details = '';
-    
- if (fullAnalysis) {
-  // ✅ أخذنا الجملة كاملة وزي ما هي من الداتا بيس بدون أي حذف
-  let cleanText = fullAnalysis.trim();
+    if (fullAnalysis) {
+      // تنظيف النص تماماً من الكلمات المكررة في الداتا بيس مهما كان شكلها
+      let cleanText = fullAnalysis
+        .replace(/Winny says:/gi, '') // الحرف i يضمن حذفها سواء كانت S كابيتال أو سمول
+        .replace(/يقول ويني:/g, '')
+        .replace(/يقول:/g, '')
+        .trim();
 
-  // ✅ التقسيم شغال بدون الـ Conclusion والخلاصة عشان ما يخرب الـ See more
-  const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|الصلاحيات الإضافية)/g;
-  const parts = cleanText.split(splitPattern);
-  
-  intro = parts[0].trim();
+      // التقسيم بدون كونكلوجن وخلاصة عشان الـ See more ما يخرب
+      const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|الصلاحيات الإضافية)/g;
+      const parts = cleanText.split(splitPattern);
+      intro = parts[0].trim();
 
-  if (parts.length > 1) {
-    details = parts.slice(1).map(part => part.trim().replace(/•/g, '<br>•')).join('<br><br>');
-  }
-}
-    
+      if (parts.length > 1) {
+        details = parts.slice(1).map(part => part.trim().replace(/•/g, '<br>•')).join('<br><br>');
+      }
+    }
     if (!intro) {
       intro = isAr 
         ? (verdict === 'safe' ? `🛡️ يبدو ${cleanName} آمناً ويستخدم الأذونات المتوقعة فقط.` : `⚠️ تحليل ${cleanName} جاهز. انظر التفاصيل أدناه.`)
