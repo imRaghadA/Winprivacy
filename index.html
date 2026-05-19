@@ -173,6 +173,66 @@ footer a:hover { color: var(--accent); }
   #results, .how-section { padding: 0 20px 60px; }
   footer { padding: 28px 20px; }
 }
+
+    /* ── TABLET (≤860px) ── */
+@media (max-width: 860px) {
+  nav { padding: 12px 16px; }
+  .nav-links { display: none; }
+  .hero { grid-template-columns: 1fr; padding: 120px 20px 60px; gap: 36px; }
+  .how-grid { grid-template-columns: 1fr; }
+  #results, .how-section { padding: 0 20px 60px; }
+  footer { padding: 28px 20px; }
+  .result-card { padding: 28px 20px; }
+  .search-box input { font-size: 15px; }
+}
+
+/* ── MOBILE (≤600px) ── */
+@media (max-width: 600px) {
+  nav { padding: 10px 14px; gap: 8px; }
+  .nav-logo span { font-size: 15px; }
+  .nav-right { gap: 6px; }
+  .nav-right button, .nav-right a { font-size: 11px; padding: 6px 10px; }
+
+  #winnyFloat { display: none !important; }
+  .hero-visual { display: none !important; }
+  .winny-hero { display: none !important; }
+
+  .search-box { border-radius: 16px; }
+  .search-box input { font-size: 14px; padding: 13px 14px; }
+  .search-box button { padding: 13px 16px; font-size: 13px; border-radius: 0 16px 16px 0; }
+  
+
+  #results { padding: 0 14px 48px; }
+  .result-card { padding: 22px 16px; border-radius: 20px; }
+
+  #winnyFloat { right: 12px !important; bottom: 12px !important; gap: 8px !important; }
+  #winnyChatWindow { width: calc(100vw - 24px) !important; right: 12px !important; bottom: 200px !important; max-height: 60vh !important; }
+
+  .how-section { padding: 0 14px 48px; }
+  .section-title { font-size: 22px; }
+  .how-grid { gap: 14px; }
+  .how-card { padding: 20px 16px; }
+
+  footer { padding: 20px 14px; flex-direction: column; text-align: center; gap: 8px; }
+
+  #winnyChatSection { padding: 0 14px 60px !important; }
+  .winny-chat-card { grid-template-columns: 1fr !important; min-height: unset !important; }
+  .winny-chat-sidebar { flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; padding: 16px 14px !important; }
+  .sidebar-winny-svg { width: 70px !important; height: 78px !important; }
+  .sidebar-name { font-size: 16px !important; }
+  .sidebar-caps { flex-direction: row !important; flex-wrap: wrap !important; }
+  .cap-chip { flex: 1 1 120px !important; font-size: 11px !important; }
+  .winny-chat-messages { min-height: 200px !important; }
+  #winnyChatInput { font-size: 13px !important; padding: 9px 14px !important; }
+}
+
+/* ── SMALL MOBILE (≤390px — iPhone SE) ── */
+@media (max-width: 390px) {
+  .hero-title { font-size: 26px; }
+  .search-box input { font-size: 13px; padding: 12px 12px; }
+  .search-box button { font-size: 12px; padding: 12px 12px; }
+  .nav-logo span { display: none; }
+  #winnyChatWindow { width: calc(100vw - 16px) !important; right: 8px !important; }
 </style>
 </head>
 <body>
@@ -973,65 +1033,6 @@ function toggleDetails(btn) {
     btn.textContent = (lang === 'ar' ? 'عرض التفاصيل' : 'See more');
   }
 }
-  /* ── TABLET (≤860px) ── */
-@media (max-width: 860px) {
-  nav { padding: 12px 16px; }
-  .nav-links { display: none; }
-  .hero { grid-template-columns: 1fr; padding: 120px 20px 60px; gap: 36px; }
-  .how-grid { grid-template-columns: 1fr; }
-  #results, .how-section { padding: 0 20px 60px; }
-  footer { padding: 28px 20px; }
-  .result-card { padding: 28px 20px; }
-  .search-box input { font-size: 15px; }
-}
-
-/* ── MOBILE (≤600px) ── */
-@media (max-width: 600px) {
-  nav { padding: 10px 14px; gap: 8px; }
-  .nav-logo span { font-size: 15px; }
-  .nav-right { gap: 6px; }
-  .nav-right button, .nav-right a { font-size: 11px; padding: 6px 10px; }
-
-  #winnyFloat { display: none !important; }
-  .hero-visual { display: none !important; }
-  .winny-hero { display: none !important; }
-
-  .search-box { border-radius: 16px; }
-  .search-box input { font-size: 14px; padding: 13px 14px; }
-  .search-box button { padding: 13px 16px; font-size: 13px; border-radius: 0 16px 16px 0; }
-  
-
-  #results { padding: 0 14px 48px; }
-  .result-card { padding: 22px 16px; border-radius: 20px; }
-
-  #winnyFloat { right: 12px !important; bottom: 12px !important; gap: 8px !important; }
-  #winnyChatWindow { width: calc(100vw - 24px) !important; right: 12px !important; bottom: 200px !important; max-height: 60vh !important; }
-
-  .how-section { padding: 0 14px 48px; }
-  .section-title { font-size: 22px; }
-  .how-grid { gap: 14px; }
-  .how-card { padding: 20px 16px; }
-
-  footer { padding: 20px 14px; flex-direction: column; text-align: center; gap: 8px; }
-
-  #winnyChatSection { padding: 0 14px 60px !important; }
-  .winny-chat-card { grid-template-columns: 1fr !important; min-height: unset !important; }
-  .winny-chat-sidebar { flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; padding: 16px 14px !important; }
-  .sidebar-winny-svg { width: 70px !important; height: 78px !important; }
-  .sidebar-name { font-size: 16px !important; }
-  .sidebar-caps { flex-direction: row !important; flex-wrap: wrap !important; }
-  .cap-chip { flex: 1 1 120px !important; font-size: 11px !important; }
-  .winny-chat-messages { min-height: 200px !important; }
-  #winnyChatInput { font-size: 13px !important; padding: 9px 14px !important; }
-}
-
-/* ── SMALL MOBILE (≤390px — iPhone SE) ── */
-@media (max-width: 390px) {
-  .hero-title { font-size: 26px; }
-  .search-box input { font-size: 13px; padding: 12px 12px; }
-  .search-box button { font-size: 12px; padding: 12px 12px; }
-  .nav-logo span { display: none; }
-  #winnyChatWindow { width: calc(100vw - 16px) !important; right: 8px !important; }
 }
 </script>
 <script src="js/search.js"></script>
