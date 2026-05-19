@@ -158,23 +158,20 @@ function rowToApp(row) {
     let intro = '';
     let details = '';
     
-   // ✅ هذا الجزء الجديد (سيقوم بحذف أي تكرار لكلمة يقول أو يقول ويني)
-if (fullAnalysis) {
-  let cleanText = fullAnalysis
-    .replace(/Winny says:/g, '')
-    .replace(/يقول ويني:/g, '')
-    .replace(/يقول:/g, '') // سيحذف كلمة "يقول:" الزائدة أيضاً
-    .trim();
+ if (fullAnalysis) {
+  // ✅ أخذنا الجملة كاملة وزي ما هي من الداتا بيس بدون أي حذف
+  let cleanText = fullAnalysis.trim();
 
-     
-      const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|Conclusion:|الصلاحيات الإضافية|الخلاصة:)/g;
-      const parts = cleanText.split(splitPattern);
-      intro = parts[0].trim();
+  // ✅ التقسيم شغال بدون الـ Conclusion والخلاصة عشان ما يخرب الـ See more
+  const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|الصلاحيات الإضافية)/g;
+  const parts = cleanText.split(splitPattern);
+  
+  intro = parts[0].trim();
 
-      if (parts.length > 1) {
-        details = parts.slice(1).map(part => part.trim().replace(/•/g, '<br>•')).join('<br><br>');
-      }
-    }
+  if (parts.length > 1) {
+    details = parts.slice(1).map(part => part.trim().replace(/•/g, '<br>•')).join('<br><br>');
+  }
+}
     
     if (!intro) {
       intro = isAr 
