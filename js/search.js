@@ -392,19 +392,26 @@ async function showAlternatives(category, excludeRaw, container, verdict) {
         </div>
       </div>
       ${alts.map(a => {
-        const name = cleanAppName(a.app_name);
-        const safe = name.replace(/'/g,"\\'");
-        const rsVal = parseFloat(a.rs).toFixed(2);
-        return `<div onclick="document.getElementById('appInput').value='${safe}';runSearch();"
-          style="display:flex;justify-content:space-between;align-items:center;
-          padding:12px 16px;margin-bottom:8px;border-radius:12px;cursor:pointer;
-          background:rgba(34,197,94,0.07);border:0.5px solid rgba(34,197,94,0.2);transition:all .2s;"
-          onmouseover="this.style.background='rgba(34,197,94,0.14)'"
-          onmouseout="this.style.background='rgba(34,197,94,0.07)'">
-          <span style="font-size:14px;font-weight:500;">${name}</span>
-          <span style="font-size:12px;color:#22c55e;font-weight:700;">RS ${rsVal} · ${t('Safe','آمن')} ✅</span>
+          const name = cleanAppName(a.app_name);
+          const raw  = a.app_name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          const safe = name.replace(/'/g,"\\'");
+          const rsVal = parseFloat(a.rs).toFixed(2);
+
+         return `<div onclick="document.getElementById('appInput').value='${safe}';runSearchByRaw('${raw}');"
+         style="display:flex;justify-content:space-between;align-items:center;
+         padding:12px 16px;margin-bottom:8px;border-radius:12px;cursor:pointer;
+         background:rgba(34,197,94,0.07);border:0.5px solid rgba(34,197,94,0.2);transition:all .2s;"
+         onmouseover="this.style.background='rgba(34,197,94,0.14)'"
+         onmouseout="this.style.background='rgba(34,197,94,0.07)'">
+    
+       <span style="font-size:14px;font-weight:500;">${name}</span>
+
+       <span style="font-size:12px;color:#22c55e;font-weight:700;">
+         RS ${rsVal} · ${t('Safe','آمن')} ✅
+       </span>
+
         </div>`;
-      }).join('')}
+    }).join('')}
       <div style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center;">
         ${t('Click any app above to check its full privacy report','انقر على أي تطبيق أعلاه لعرض تقرير الخصوصية الكامل')}
       </div>
