@@ -732,7 +732,9 @@ function setWinny(state, name, verdict) {
   function showFace(mood) {
     ['happy','neutral','sad'].forEach(f => {
       const el = document.getElementById('face-' + f);
-      if (el) el.setAttribute('display', f === mood ? 'inline' : 'none');
+     if (!el) return;
+      el.setAttribute('display', f === mood ? 'inline' : 'none');
+      el.style.display = f === mood ? 'inline' : 'none';
     });
   }
 
