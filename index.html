@@ -727,30 +727,60 @@ function animateRs(target) {
   }, 16);
 }
 
+لقيت المشكلة! الكود انكسر — `showFace` أصبحت **خارج** `setWinny` وباقي كود `setWinny` بدون `function` تعريف. شوفي الكود الحالي:
+
+```js
+function showFace(mood) { ... }  // ← خارج setWinny
+
+  if (state === 'scanning') {    // ← هذا الكود يطير في الهواء بدون function!
+```
+
+الإصلاح — استبدلي كل هذا الجزء المكسور بالكود الصحيح:
+
+**ابحثي عن:**
+```js
 function showFace(mood) {
   ['happy','neutral','sad'].forEach(f => {
-    const el = document.getElementById('face-' + f);
-    if (!el) return;
-    if (f === mood) {
-      el.removeAttribute('display');
-      el.style.display = 'inline';
-      el.style.visibility = 'visible';
-      el.style.opacity = '1';
-    } else {
-      el.setAttribute('display', 'none');
-      el.style.display = 'none';
-      el.style.visibility = 'hidden';
-      el.style.opacity = '0';
-    }
-  });
+```
+
+**وكل شي من بعدها لحد:**
+```js
+  if (msg) {
+    if (window._winnyIsFlying && window._winnyIsFlying()) window._winnyPendingMsg = msg;
+    else if (window._winnyShowBubble) window._winnyShowBubble(msg, 6000);
+  }
 }
+```
+
+**استبدليه بهذا كاملاً:**
+
+
+function setWinny(state, name, verdict) {
+  let msg = '';
+
+  function showFace(mood) {
+    ['happy','neutral','sad'].forEach(f => {
+      const el = document.getElementById('face-' + f);
+      if (!el) return;
+      if (f === mood) {
+        el.removeAttribute('display');
+        el.style.display = 'inline';
+        el.style.visibility = 'visible';
+        el.style.opacity = '1';
+      } else {
+        el.setAttribute('display', 'none');
+        el.style.display = 'none';
+        el.style.visibility = 'hidden';
+        el.style.opacity = '0';
+      }
+    });
+  }
 
   if (state === 'scanning') {
     msg = tStr('scanning')(name);
     showFace('neutral');
     if (window._winnyWave) window._winnyWave(800);
   } else if (state === 'done') {
-    /* CHANGED: verdict key 'normal' → 'moderate' */
     const k = verdict==='highrisk'   ? 'danger'
             : verdict==='anomaly'    ? 'warn'
             : verdict==='normalplus' ? 'normalplus'
@@ -760,10 +790,15 @@ function showFace(mood) {
     if (verdict === 'safe') {
       showFace('happy');
       if (window._winnyJump) window._winnyJump(-28);
-    } else if (verdict === 'moderate') {   /* CHANGED: 'normal' → 'moderate' */
+    } else if (verdict === 'moderate') {
       showFace('neutral');
     } else if (verdict === 'anomaly') {
-      showFace('neutral');
+      showFace('sad');
+      let s = 0;
+      const shudder = setInterval(() => {
+        if (window._winnyJump) window._winnyJump(-5);
+        if (++s >= 3) clearInterval(shudder);
+      }, 180);
     } else {
       showFace('sad');
       let s = 0;
@@ -782,6 +817,8 @@ function showFace(mood) {
     else if (window._winnyShowBubble) window._winnyShowBubble(msg, 6000);
   }
 }
+
+
 
 /* ═══ WINNY physics engine ═══ */
 (function () {
