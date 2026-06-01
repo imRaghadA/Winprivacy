@@ -727,16 +727,23 @@ function animateRs(target) {
   }, 16);
 }
 
-function setWinny(state, name, verdict) {
-  let msg = '';
-  function showFace(mood) {
-    ['happy','neutral','sad'].forEach(f => {
-      const el = document.getElementById('face-' + f);
-     if (!el) return;
-      el.setAttribute('display', f === mood ? 'inline' : 'none');
-      el.style.display = f === mood ? 'inline' : 'none';
-    });
-  }
+function showFace(mood) {
+  ['happy','neutral','sad'].forEach(f => {
+    const el = document.getElementById('face-' + f);
+    if (!el) return;
+    if (f === mood) {
+      el.removeAttribute('display');
+      el.style.display = 'inline';
+      el.style.visibility = 'visible';
+      el.style.opacity = '1';
+    } else {
+      el.setAttribute('display', 'none');
+      el.style.display = 'none';
+      el.style.visibility = 'hidden';
+      el.style.opacity = '0';
+    }
+  });
+}
 
   if (state === 'scanning') {
     msg = tStr('scanning')(name);
