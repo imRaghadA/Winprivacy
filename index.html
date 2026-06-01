@@ -728,10 +728,12 @@ function animateRs(target) {
 
 function setWinny(state, name, verdict) {
   let msg = '';
+
   function showFace(mood) {
     ['happy','neutral','sad'].forEach(f => {
       const el = document.getElementById('face-' + f);
-      if (el) el.setAttribute('display', f === mood ? 'inline' : 'none');
+      if (!el) return;
+      el.style.display = f === mood ? 'block' : 'none';
     });
   }
 
@@ -740,7 +742,6 @@ function setWinny(state, name, verdict) {
     showFace('neutral');
     if (window._winnyWave) window._winnyWave(800);
   } else if (state === 'done') {
-    /* CHANGED: verdict key 'normal' → 'moderate' */
     const k = verdict==='highrisk'   ? 'danger'
             : verdict==='anomaly'    ? 'warn'
             : verdict==='normalplus' ? 'normalplus'
@@ -750,10 +751,15 @@ function setWinny(state, name, verdict) {
     if (verdict === 'safe') {
       showFace('happy');
       if (window._winnyJump) window._winnyJump(-28);
-    } else if (verdict === 'moderate') {   /* CHANGED: 'normal' → 'moderate' */
+    } else if (verdict === 'moderate') {
       showFace('neutral');
     } else if (verdict === 'anomaly') {
-      showFace('neutral');
+      showFace('sad');
+      let s = 0;
+      const shudder = setInterval(() => {
+        if (window._winnyJump) window._winnyJump(-5);
+        if (++s >= 3) clearInterval(shudder);
+      }, 180);
     } else {
       showFace('sad');
       let s = 0;
