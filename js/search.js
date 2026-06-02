@@ -158,15 +158,14 @@ function splitText(fullAnalysis, isAr) {
     let intro = '';
     let details = '';
     if (fullAnalysis) {
-      // تنظيف النص تماماً من الكلمات المكررة في الداتا بيس مهما كان شكلها
+    
       let cleanText = fullAnalysis
-        .replace(/Winny says:/gi, '') // الحرف i يضمن حذفها سواء كانت S كابيتال أو سمول
+        .replace(/Winny says:/gi, '') 
         .replace(/يقول ويني:/g, '')
         .replace(/تطبيق ويني/g, '')
         .replace(/يقول:/g, '')
         .trim();
 
-      // التقسيم بدون كونكلوجن وخلاصة عشان الـ See more ما يخرب
       const splitPattern = /(?=Additional Permissions|Anomalous Permissions|Technical Risk Flags|الصلاحيات الإضافية)/g;
       const parts = cleanText.split(splitPattern);
       intro = parts[0].trim();
